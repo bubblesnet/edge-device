@@ -1,0 +1,3 @@
+export GOPATH=/Users/rodley/go
+env GOOS=linux GOARCH=arm GOARM=7 go build -o sense_go ./...
+# cp sense_go ../../../bubbles2/sense-go
