@@ -1,0 +1,1 @@
+python -m grpc_tools.protoc -I../go/src/bubblesgrpc/bubblesgrpc --python_out=./python/src/bubblesgrpc --grpc_python_out=./python/src/bubblesgrpc ../go/src/bubblesgrpc/bubblesgrpc/bubblesgrpc.proto

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/adc"
+	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc/bubblesgrpc"
+	globals "bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	//	bu "bitbucket.org/jrodley/balena-utils-go"
 	"encoding/json"
@@ -13,8 +15,6 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-	globals "bubblesnet/edge-device/sense-go/globals"
-	"bubblesnet/edge-device/sense-go/grpc"
 
 	//	"icebreaker/icebreaker/grpc"
 	"io/ioutil"
@@ -158,7 +158,8 @@ func makeControlDecisions() {
 	i := 0
 
 	for {
-		grpc.SendGetStateMessage(grpc.GetSequenceNumber(),"")
+		gsm := grpc.GetStateRequest{}
+		grpc. (gsm)
 		if i % 60 == 0 {
 			log.Debug(fmt.Sprintf( "LocalCurrentState = %v", globals.LocalCurrentState))
 			log.Debug(fmt.Sprintf( "globals.Configuration = %v", globals.Config ))
