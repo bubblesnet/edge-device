@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "../bubblesgrpc/bubblesgrpc"
+	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	"context"
 	"encoding/json"
 	"fmt"

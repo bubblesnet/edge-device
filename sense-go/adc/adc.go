@@ -6,7 +6,7 @@ import (
 	"github.com/go-playground/log"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-	"bubblesnet/edge-device/sense-go/grpc"
+//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"time"
 )
 
@@ -118,15 +118,16 @@ func RunADCPoller() (error) {
 			log.Error(fmt.Sprintf("loopforever error %v", err))
 			break
 		} else {
-			bytearray, err := json.Marshal(adcMessage)
+//			bytearray, err := json.Marshal(adcMessage)
+			_, err := json.Marshal(adcMessage)
 			if err != nil {
 				fmt.Println("loopforever error %v", err)
 				break
 			}
-			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]),3)
-			if err != nil {
-				log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
-			}
+//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]),3)
+//			if err != nil {
+//				log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
+//			}
 		}
 
 		adcMessage = new(ADCMessage)
@@ -135,15 +136,16 @@ func RunADCPoller() (error) {
 			log.Error(fmt.Sprintf("loopforever error %v", err))
 			break
 		} else {
-			bytearray, err := json.Marshal(adcMessage)
+//			bytearray, err := json.Marshal(adcMessage)
+			_, err := json.Marshal(adcMessage)
 			if err != nil {
 				fmt.Println("loopforever error %v", err)
 				break
 			}
-			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-			if err != nil {
-				log.Error(fmt.Sprintf("runADCPoller2 ERROR %v", err))
-			}
+//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
+//			if err != nil {
+//				log.Error(fmt.Sprintf("runADCPoller2 ERROR %v", err))
+//			}
 		}
 		//		readAllChannels(ads1115s[1],a1)
 		time.Sleep(time.Second * 15)

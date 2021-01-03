@@ -50,6 +50,7 @@ type ACOutlet struct {
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Configuration, currentStageSchedule *StageSchedule) error {
 	log.Debug(fmt.Sprintf("readConfig"))
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
+	fmt.Printf("readConfig from %s", fullpath)
 	file, _ := ioutil.ReadFile(fullpath)
 
 	_ = json.Unmarshal([]byte(file), config)

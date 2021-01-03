@@ -2,10 +2,9 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/adc"
-	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc/bubblesgrpc"
-	globals "bubblesnet/edge-device/sense-go/globals"
+//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/powerstrip"
-	//	bu "bitbucket.org/jrodley/balena-utils-go"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,17 +14,11 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-
-	//	"icebreaker/icebreaker/grpc"
 	"io/ioutil"
 	"math"
 	"sync"
 	"time"
 )
-
-
-
-
 
 func runTamperDetector() {
 	adxl345Adaptor := raspi.NewAdaptor()
@@ -54,15 +47,17 @@ func runTamperDetector() {
 					tamperMessage.XMove = xmove
 					tamperMessage.YMove = ymove
 					tamperMessage.ZMove = zmove
-					bytearray, err := json.Marshal(tamperMessage)
-					if err != nil {
-						fmt.Println(err)
-						return
-					}
-					err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-					if err != nil {
-						log.Error(fmt.Sprintf("runTamperDetector ERROR %v", err))
-					}
+//					bytearray, err := json.Marshal(tamperMessage)
+//					if err != nil {
+//						fmt.Println(err)
+//						return
+//					}
+
+//					msg := bubblesgrpc.SensorRequest{}
+//					_, err = bubblesgrpc.SensorStoreAndForwardClient.StoreAndForward(ctx,msg)
+//					if err != nil {
+//						log.Error(fmt.Sprintf("runTamperDetector ERROR %v", err))
+//					}
 
 				} else {
 //					log.Debug(fmt.Sprintf("x: %.3f | y: %.3f | z: %.3f \n", xmove, ymove, zmove))
@@ -102,10 +97,10 @@ func runDistanceWatcher() {
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
-			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-			if err != nil {
-				log.Error(fmt.Sprintf("runDistanceWatcher ERROR %v", err))
-			}
+//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
+//			if err != nil {
+//				log.Error(fmt.Sprintf("runDistanceWatcher ERROR %v", err))
+//			}
 		} else {
 			log.Error(fmt.Sprintf("rundistancewatcher error = %v", err ))
 			break
@@ -120,10 +115,10 @@ func runLocalStateWatcher() {
 		bytearray, err := json.Marshal(globals.LocalCurrentState)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending local current state msg %s?", string(bytearray)))
-			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-			if err != nil {
-				log.Error(fmt.Sprintf("runLocalStateWatcher ERROR %v", err))
-			}
+//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
+//			if err != nil {
+//				log.Error(fmt.Sprintf("runLocalStateWatcher ERROR %v", err))
+//			}
 		} else {
 			log.Debug(fmt.Sprintf("runLocalStateWatcher error = %v", err ))
 			break
@@ -158,8 +153,8 @@ func makeControlDecisions() {
 	i := 0
 
 	for {
-		gsm := grpc.GetStateRequest{}
-		grpc. (gsm)
+//		gsm := bubblesgrpc.GetStateRequest{}
+//		grpc. (gsm)
 		if i % 60 == 0 {
 			log.Debug(fmt.Sprintf( "LocalCurrentState = %v", globals.LocalCurrentState))
 			log.Debug(fmt.Sprintf( "globals.Configuration = %v", globals.Config ))
@@ -178,9 +173,10 @@ func makeControlDecisions() {
 }
 
 func main() {
+	fmt.Printf("sense-go")
 	log.Info(fmt.Sprintf("sense-go"))
 
-	err := globals.ReadFromPersistentStore("/globals.Configuration", "", "globals.Config.json", &globals.Config, &globals.CurrentStageSchedule)
+	err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule)
 	globals.ConfigureLogging(globals.Config,"sense-go")
 
 	log.Debug("debug")
@@ -285,12 +281,13 @@ func readPh() (error) {
 			break
 		} else {
 			phm := globals.PhMessage{getNowMillis(), ph}
-			bytearray, err := json.Marshal(phm)
+//			bytearray, err := json.Marshal(phm)
+			_, err := json.Marshal(phm)
 			if err == nil {
-				err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-				if err != nil {
-					log.Error(fmt.Sprintf("readPh ERROR %v", err))
-				}
+//				err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
+//				if err != nil {
+//					log.Error(fmt.Sprintf("readPh ERROR %v", err))
+//				}
 			} else {
 				log.Error(fmt.Sprintf("readph error = %v", err ))
 				e = err

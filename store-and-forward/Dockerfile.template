@@ -1,11 +1,11 @@
 FROM balenalib/%%BALENA_MACHINE_NAME%%-golang
 
 ADD ca-certificates.crt /etc/ssl/certs/
-ADD bubblesgrpc-server/bubblesgrpc_server /go/bin
+ADD bubblesgrpc-server/build/bubblesgrpc-server /go/bin
 
-RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/bubblesgrpc_server; ls -la /go/bin'
+RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/bubblesgrpc-server; ls -la /go/bin'
 
 # CMD ["modprobe i2c-dev; export I2C_BUS=1"]
-# CMD ["bash"]
-CMD ["/go/bin/bubblesgrpc_server"]
+CMD ["bash"]
+# CMD ["/go/bin/bubblesgrpc_server"]
 

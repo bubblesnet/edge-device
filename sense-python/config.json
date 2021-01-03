@@ -1,0 +1,82 @@
+{
+  "stage": "germination",
+  "light_on_hour": 5,
+  "stage_schedules": [
+    {
+      "name": "germination",
+      "hours_of_light": 18,
+      "environmental_targets": {
+        "temperature": 80,
+        "humidity": 60
+      }
+    },
+    {
+      "name": "seedling",
+      "hours_of_light": 18,
+      "environmental_targets": {
+        "temperature": 80,
+        "humidity": 60
+      }
+    },
+    {
+      "name": "vegetative",
+      "hours_of_light": 12,
+      "environmental_targets": {
+        "temperature": 80,
+        "humidity": 60
+      }
+    },
+    {
+      "name": "flowering",
+      "hours_of_light": 12,
+      "environmental_targets": {
+        "temperature": 80,
+        "humidity": 60
+      }
+    },
+    {
+      "name": "drying",
+      "hours_of_light": 0,
+      "environmental_targets": {
+        "temperature": 80,
+        "humidity": 60
+      }
+    },
+    {
+      "name": "curing",
+      "hours_of_light": 0,
+      "environmental_targets": {
+        "temperature": 80,
+        "humidity": 60
+      }
+    }
+  ],
+  "ac_outlets": [
+    { "name":  "Inlet fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
+    { "name":  "Water pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
+    { "name":  "Grow light - bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
+    { "name":  "Grow light - veg",   "index": 3, "bcm_pin_number":  5, "power_on": false },
+    { "name":  "Heat lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
+    { "name":  "Air pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
+    { "name":  "Outlet fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
+    { "name":  "Humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
+  ],
+
+  "time_between_pictures_in_seconds": 30,
+  "camera": {
+    "picamera": true,
+    "resolutionX": 2592,
+    "resolutionY": 1944
+  },
+
+  "time_between_sensor_polling_in_seconds": 15,
+
+  "bme280":    true,
+  "bh1750":    true,
+  "ads1115_1": true,
+  "ads1115_2": true,
+  "adxl345":   true,
+  "ezoph":     true,
+  "hcsr04":    true,
+  "relay":     true
+}

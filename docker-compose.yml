@@ -11,19 +11,39 @@ services:
       - NET_ADMIN
     environment:
       DBUS_SYSTEM_BUS_ADDRESS: "unix:path=/host/run/dbus/system_bus_socket"
-
-  store-and-forward:
-    build: ./bubblesgrpc-server
+  sense-go:
+    build: ./sense-go
     privileged: true
     restart: always
-    depends_on:
-    - wifi-connect
     labels:
       io.balena.features.kernel-modules: '1'
       io.balena.features.dbus: '1'
     volumes:
-    - 'resin-data:/data'
-    - 'resin-data:/config'
+      - 'resin-data:/config'
+
+  store-and-forward:
+    build: ./store-and-forward
+    privileged: true
+    restart: always
+    depends_on:
+      - wifi-connect
+    labels:
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.dbus: '1'
+    volumes:
+      - 'resin-data:/data'
+      - 'resin-data:/config'
     ports:
-    - "50051:50051"
-    - "8080:8080"
+      - "50051:50051"
+      - "8080:8080"
+  sense-python:
+    build: ./sense-python
+    privileged: true
+    labels:
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.dbus: '1'
+    volumes:
+      - 'resin-data:/config'
+
+
+

@@ -1,0 +1,12 @@
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang
+
+ADD ca-certificates.crt /etc/ssl/certs/
+ADD build/sense-go /go/bin
+ADD config.json /go
+
+RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/sense-go; ls -la /go/bin'
+
+CMD ["modprobe i2c-dev; export I2C_BUS=1"]
+# CMD ["/go/bin/sense-go"]
+CMD ["bash"]
+
