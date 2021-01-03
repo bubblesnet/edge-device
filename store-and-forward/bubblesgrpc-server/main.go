@@ -207,7 +207,7 @@ func main() {
 	go forwardMessages(messageBucketName)
 	go saveState(stateBucketName)
 
-	go StartApiServer()
+//	go StartApiServer()
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
