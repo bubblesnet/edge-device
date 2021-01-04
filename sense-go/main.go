@@ -2,11 +2,10 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/adc"
-//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-playground/log"
 	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
@@ -14,7 +13,6 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-	"io/ioutil"
 	"math"
 	"sync"
 	"time"
@@ -93,7 +91,10 @@ func runDistanceWatcher() {
 		seconds := nanos/1000000000.0
 		mydistance := (float64)(17150.00*seconds)
 //		log.Debug(fmt.Sprintf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := globals.DistanceMessage{getNowMillis(), mydistance, mydistance/2.54}
+		dm := globals.DistanceMessage{
+			SampleTimestamp: getNowMillis(),
+			DistanceCm: mydistance,
+			DistanceIn: mydistance/2.54}
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
@@ -128,7 +129,7 @@ func runLocalStateWatcher() {
 	}
 }
 
-
+/*
 func readConfig() error {
 	log.Debug(fmt.Sprintf("readglobals.Configuration"))
 	file, _ := ioutil.ReadFile("/globals.Configuration/globals.Configuration.json")
@@ -148,6 +149,8 @@ func readConfig() error {
 	return errors.New("No sc:hedule for stage")
 }
 
+
+ */
 
 func makeControlDecisions() {
 	i := 0
@@ -196,8 +199,13 @@ func main() {
 		return
 	}
 
-	rpio.Open()
-	defer rpio.Close()
+	_ = rpio.Open()
+	defer func(){
+		err := rpio.Close()
+		if err != nil {
+			log.Errorf("rpio.close %+v", err)
+		}
+	}()
 
 	powerstrip.InitRpioPins()
 	powerstrip.TurnAllOff(1)
@@ -235,12 +243,22 @@ func main() {
 		log.Warn(fmt.Sprint("No adxl345 Configured - skipping tamper detection"))
 	}
 	if globals.Config.ADS1115_1 || globals.Config.ADS1115_2 {
-		go adc.RunADCPoller()
+		go func() {
+			err :=  adc.RunADCPoller()
+			if err != nil {
+				log.Errorf("rpio.close %+v", err)
+			}
+		}()
 	} else {
 		log.Warn(fmt.Sprint("No ads1115s configured - skipping A to D conversion"))
 	}
 	if globals.Config.EZOPH {
-		go readPh()
+		go func() {
+			err = readPh()
+			if err != nil {
+				log.Errorf("readPh %+v", err)
+			}
+		}()
 	} else {
 		log.Warn(fmt.Sprint("No ezoph configured - skipping pH monitoring"))
 	}
@@ -264,7 +282,7 @@ func main() {
 
 }
 
-func readPh() (error) {
+func readPh() error {
 	ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 	err := ezoDriver.Start()
 	if err != nil {
@@ -280,7 +298,9 @@ func readPh() (error) {
 			e = err
 			break
 		} else {
-			phm := globals.PhMessage{getNowMillis(), ph}
+			phm := globals.PhMessage{
+				SampleTimestamp: getNowMillis(),
+				Ph: ph}
 //			bytearray, err := json.Marshal(phm)
 			_, err := json.Marshal(phm)
 			if err == nil {
@@ -304,5 +324,5 @@ func getNowMillis() int64 {
 	now := time.Now()
 	nanos := now.UnixNano()
 	millis := nanos / 1000000
-	return( millis )
+	return millis
 }

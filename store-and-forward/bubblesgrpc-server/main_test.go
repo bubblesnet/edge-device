@@ -1,13 +1,29 @@
 package main
 
 import (
-	"bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
+	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
+	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"context"
 	"reflect"
+	"runtime"
 	"testing"
 )
+func initTests(t *testing.T) {
+	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
+	storeMountPoint := "/config"
+	if  runtime.GOOS == "windows"{
+		storeMountPoint = "."
+		databaseFilename = "./testmessages.db"
+	}
+	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&config,&stageSchedule)
+
+	t.Logf("config = %v", config)
+	t.Logf("stageSchedule = %v", stageSchedule)
+	initDb(databaseFilename)
+}
 
 func Test_forwardMessages(t *testing.T) {
+	initTests(t)
 	type args struct {
 		bucketName string
 	}
@@ -17,6 +33,7 @@ func Test_forwardMessages(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{name: "forwardMessages", args: args{bucketName: "testbucket"}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -25,6 +42,7 @@ func Test_forwardMessages(t *testing.T) {
 			}
 		})
 	}
+	t.Logf("done")
 }
 
 func Test_parseMessage(t *testing.T) {
@@ -60,8 +78,8 @@ func Test_saveState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := saveState(tt.args.bucketName); (err != nil) != tt.wantErr {
-				t.Errorf("saveState() error = %v, wantErr %v", err, tt.wantErr)
+			if err := saveStateDaemon(tt.args.bucketName); (err != nil) != tt.wantErr {
+				t.Errorf("saveStateDaemon() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -69,7 +87,7 @@ func Test_saveState(t *testing.T) {
 
 func Test_server_GetRecordList(t *testing.T) {
 	type fields struct {
-		UnimplementedSensorStoreAndForwardServer bubblesgrpc.UnimplementedSensorStoreAndForwardServer
+		UnimplementedSensorStoreAndForwardServer pb.UnimplementedSensorStoreAndForwardServer
 	}
 	type args struct {
 		ctx context.Context
@@ -103,7 +121,7 @@ func Test_server_GetRecordList(t *testing.T) {
 
 func Test_server_GetState(t *testing.T) {
 	type fields struct {
-		UnimplementedSensorStoreAndForwardServer bubblesgrpc.UnimplementedSensorStoreAndForwardServer
+		UnimplementedSensorStoreAndForwardServer pb.UnimplementedSensorStoreAndForwardServer
 	}
 	type args struct {
 		ctx context.Context
@@ -137,7 +155,7 @@ func Test_server_GetState(t *testing.T) {
 
 func Test_server_StoreAndForward(t *testing.T) {
 	type fields struct {
-		UnimplementedSensorStoreAndForwardServer bubblesgrpc.UnimplementedSensorStoreAndForwardServer
+		UnimplementedSensorStoreAndForwardServer pb.UnimplementedSensorStoreAndForwardServer
 	}
 	type args struct {
 		ctx context.Context
@@ -168,3 +186,4 @@ func Test_server_StoreAndForward(t *testing.T) {
 		})
 	}
 }
+

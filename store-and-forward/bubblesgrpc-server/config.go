@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
+	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-playground/log"
 	"io/ioutil"
-	"strings"
 )
 
 type EnvironmentalTarget struct {
@@ -48,13 +46,13 @@ type ACOutlet struct {
 }
 
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Config, currentStageSchedule *StageSchedule) error {
-	log.Debug(fmt.Sprintf("readConfig"))
+	log.Debugf("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	file, _ := ioutil.ReadFile(fullpath)
 
 	_ = json.Unmarshal([]byte(file), config)
 
-	log.Debug(fmt.Sprintf("data = %v", *config))
+	log.Debugf("data = %v", *config)
 	for i := 0; i < len(config.StageSchedules); i++ {
 		if config.StageSchedules[i].Name == config.Stage {
 			*currentStageSchedule = config.StageSchedules[i]
@@ -62,7 +60,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 			return nil
 		}
 	}
-	log.Error(fmt.Sprintf("ERROR: No schedule for stage %s", config.Stage))
+	log.Errorf("ERROR: No schedule for stage %s", config.Stage)
 	return errors.New("No sc:hedule for stage")
 }
 
@@ -70,7 +68,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 type CustomHandler struct {
 	// whatever properties you need
 }
-
+/*
 // Log accepts log entries to be processed
 func (c *CustomHandler) Log(e log.Entry) {
 
@@ -95,28 +93,4 @@ func (c *CustomHandler) Log(e log.Entry) {
 	}
 	fmt.Println(b.String())
 }
-
-func ConfigureLogging( config Config, containerName string) {
-	cLog := new(CustomHandler)
-
-	if strings.Contains(config.LogLevel,"error") {
-		log.AddHandler(cLog, log.ErrorLevel)
-	}
-	if strings.Contains(config.LogLevel,"warn") {
-		log.AddHandler(cLog, log.WarnLevel)
-	}
-	if strings.Contains(config.LogLevel,"debug") {
-		log.AddHandler(cLog, log.DebugLevel)
-	}
-	if strings.Contains(config.LogLevel,"info") {
-		log.AddHandler(cLog, log.InfoLevel)
-	}
-	if strings.Contains(config.LogLevel,"notice") {
-		log.AddHandler(cLog, log.NoticeLevel)
-	}
-	if strings.Contains(config.LogLevel,"panic") {
-		log.AddHandler(cLog, log.PanicLevel)
-	}
-
-}
-
+*/

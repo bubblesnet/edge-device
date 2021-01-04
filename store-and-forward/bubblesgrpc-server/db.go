@@ -1,40 +1,43 @@
 package main
 
 import (
-	"bytes"
+	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
-	"github.com/go-playground/log"
 	"os"
 	"time"
 )
 
 var csvx = ""
 
-func openWriteable() {
+func openWriteable(dbFilename string) {
+	log.Debugf("openWriteable %s", dbFilename)
 	if writeableDb != nil {
 		return
 	}
-	xdb, err := bolt.Open(databaseFilename, mode_readwrite, &bolt.Options{Timeout: 1 * time.Second})
-	for i := 0; i < 5 && err == nil; i++ {
-		if err == nil {
-			break
-		}
-		log.Warn(fmt.Sprintf("writeable open timed out - sleeping 1 second"))
+	log.Debugf("bolt.Open %s\n", dbFilename)
+	xdb, err := bolt.Open(dbFilename, modeReadwrite, &bolt.Options{Timeout: 1 * time.Second})
+	for i := 0; i < 5 && err != nil; i++ {
+		log.Warnf("writeable open timed out - sleeping 1 second")
 		time.Sleep(time.Second)
-		xdb, err = bolt.Open(databaseFilename, mode_readwrite, &bolt.Options{Timeout: 1 * time.Second})
+		xdb, err = bolt.Open(dbFilename, modeReadwrite, &bolt.Options{Timeout: 1 * time.Second})
 
 	}
 	if err != nil {
-		log.Error(fmt.Sprintf("writeable open timed out after 5 attempts in 10 seconds"))
-		log.Fatal(err)
+		log.Errorf(fmt.Sprintf("writeable open timed out after 5 attempts in 10 seconds"))
+		log.Fatalf("%v",err)
 	}
+	defer func() {
+		_ = xdb.Close()
+	}()
 
 	writeableDb = xdb
 	//	defer writeableDb.Close()
 }
 
-func makeBuckets() {
+func makeBuckets( buckets []string) {
+	fmt.Printf("makeBuckets\n")
+	messageBucketName := buckets[0]
 	created, err := makeBucketIfNotExist(messageBucketName)
 	if err != nil {
 		return
@@ -44,6 +47,7 @@ func makeBuckets() {
 	} else  {
 		log.Debug("msg Bucket already existed")
 	}
+	stateBucketName := buckets[1]
 	created, err = makeBucketIfNotExist(stateBucketName)
 	if err != nil {
 		return
@@ -55,26 +59,32 @@ func makeBuckets() {
 	}
 }
 
-func initDb() {
-	openWriteable()
-	makeBuckets()
+func initDb(databaseFilename string) {
+	fmt.Printf("initdb\n")
+	openWriteable(databaseFilename)
+	makeBuckets([]string{messageBucketName,stateBucketName})
 }
 
 func makeBucketIfNotExist(bucketName string) (bool, error) {
+	log.Debugf("makeBucketIfNotExist %s\n", bucketName)
 	// Start a writable transaction.
 	tx, err := writeableDb.Begin(true)
 	if err != nil {
+		log.Errorf("begin transaction error %v", err)
 		return false, err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_= tx.Rollback()
+	}()
 
+	log.Debugf("CreateBucket %s\n", bucketName)
 	// Use the transaction...
 	blah, err := tx.CreateBucket([]byte(bucketName))
 	if err != nil {
-		log.Error(fmt.Sprintf("Create bucket error %v", err))
+		log.Errorf("Create bucket error %v", err)
 		return false, nil
 	}
-	log.Debug( fmt.Sprintf("bucket create = %v", blah))
+	log.Debugf( "bucket create = %v", blah)
 
 	// Commit the transaction and check for error.
 	if err := tx.Commit(); err != nil {
@@ -89,11 +99,11 @@ func addRecord(bucketName string, message string) error {
 
 //	key := fmt.Sprintf("%20.20d", currentTime.Unix())
 	log.Debug(fmt.Sprintf("adding record key %s value %s", key, message))
-	writeableDb.Update(func(tx *bolt.Tx) error {
+	_ = writeableDb.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		err := b.Put([]byte(key), []byte(message))
 		if err != nil {
-			log.Error(fmt.Sprintf("error addRecord %v", err ))
+			log.Errorf("error addRecord %v", err )
 		}
 		return err
 	})
@@ -106,9 +116,11 @@ func deleteFromBucket( bucketName string, key []byte ) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
-	tx.Bucket([]byte(bucketName)).Delete(key)
+	_ = tx.Bucket([]byte(bucketName)).Delete(key)
 
 	if err := tx.Commit(); err != nil {
 		return err
@@ -116,13 +128,15 @@ func deleteFromBucket( bucketName string, key []byte ) error {
 	return nil
 }
 
+/*
 func clearDatabase( bucketName string ) {
+	fmt.Printf("claerDatabase %s", bucketName)
 	var deleteThem []string
 
 	prefix := ""
 	log.Info(fmt.Sprintf("Deleting records prefixed %s", prefix ))
 
-	writeableDb.View(func(tx *bolt.Tx) error {
+	_ = writeableDb.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		c := tx.Bucket([]byte(bucketName)).Cursor()
 		// Iterate over the 90's.
@@ -138,7 +152,7 @@ func clearDatabase( bucketName string ) {
 	})
 	for _, element := range deleteThem {
 		log.Debug("Deleting key %s", element )
-		deleteFromBucket(stateBucketName, []byte(element))
+		_ = deleteFromBucket(stateBucketName, []byte(element))
 	}
 	log.Debug("Done finding")
 }
@@ -150,7 +164,7 @@ func deletePriorTo( bucketName string, unixtime int64 ) {
 	min := []byte("0")
 	log.Info(fmt.Sprintf("Deleting records between %s and %s", min, max))
 
-	writeableDb.View(func(tx *bolt.Tx) error {
+	_ = writeableDb.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		c := tx.Bucket([]byte(bucketName)).Cursor()
 		// Iterate over the 90's.
@@ -162,6 +176,7 @@ func deletePriorTo( bucketName string, unixtime int64 ) {
 		return nil
 	})
 }
+*/
 
 func getStatesAsJson(tx *bolt.Tx) error {
 
@@ -170,7 +185,7 @@ func getStatesAsJson(tx *bolt.Tx) error {
 	count := 0
 	log.Debug(fmt.Sprintf("getRecordList foreach"))
 	csvx = csvx + "[\n"
-	b.ForEach(func(k, v []byte) error {
+	_ = b.ForEach(func(k, v []byte) error {
 		if count == 0 {
 			csvx = csvx + "\n" + string(v)
 		} else {
@@ -184,12 +199,13 @@ func getStatesAsJson(tx *bolt.Tx) error {
 	return nil
 }
 
+/*
 func getStatesAsCsv(tx *bolt.Tx) error {
 	log.Debug(fmt.Sprintf("pid %d getRecordList getStates", os.Getpid()))
 	b := tx.Bucket([]byte(stateBucketName))
 	count := 0
 	log.Debug(fmt.Sprintf("getRecordList foreach"))
-	b.ForEach(func(k, v []byte) error {
+	_ = b.ForEach(func(k, v []byte) error {
 		count = count + 1
 		csvx = csvx + "\n" + string(v)
 		return nil
@@ -206,8 +222,10 @@ func getStateAsCsv( bucketName string, year int, month int, day int) (string, er
 	log.Debug(fmt.Sprintf("getStateAsCsv Returning nothing %v", err))
 	return csv, nil
 }
+*/
 
-func getStateAsJson( bucketName string, year int, month int, day int) (string, error) {
+
+func getStateAsJson( _ string, _ int, _ int, _ int) (string, error) {
 	csv := ""
 	log.Debug(fmt.Sprintf("pid %d getRecordList getStateAsCsv", os.Getpid()))
 	csvx = ""

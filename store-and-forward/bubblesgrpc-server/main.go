@@ -23,6 +23,7 @@ package main
 
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
+	log2 "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -30,6 +31,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"net"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -38,9 +40,9 @@ const (
 	port              = ":50051"
 	messageBucketName = "MessageBucket"
 	stateBucketName   = "StateBucket"
-	databaseFilename = "/data/messages.db"
-	mode_readwrite = 0600
+	modeReadwrite     = 0600
 )
+var databaseFilename  = "/data/messages.db"
 
 var writeableDb *bolt.DB
 
@@ -67,15 +69,17 @@ type state struct {
 var currentstate = state {}
 
 // StoreAndForward implements bubblesgrpc.StoreAndForward
-func (s *server) StoreAndForward(ctx context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
+func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
 //	log.Printf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
-	go addRecord(messageBucketName, in.GetData())
-	parseMessage(in.GetData())
+	go func() {
+		_ = addRecord(messageBucketName, in.GetData())
+	}()
+	_ = parseMessage(in.GetData())
 	return &pb.SensorReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Message: ""}, nil
 }
 
 // StoreAndForward implements bubblesgrpc.GetState
-func (s *server) GetState(ctx context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
+func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
 //	log.Printf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	if in.GetSequence() %5 == 0 {
 		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
@@ -85,9 +89,9 @@ func (s *server) GetState(ctx context.Context, in *pb.GetStateRequest) (*pb.GetS
 }
 
 // StoreAndForward implements bubblesgrpc.GetState
-func (s *server) GetRecordList(ctx context.Context, in *pb.GetRecordListRequest) (*pb.GetRecordListReply, error) {
+func (s *server) GetRecordList(_ context.Context, in *pb.GetRecordListRequest) (*pb.GetRecordListReply, error) {
 	log.Debug( fmt.Sprintf("GetRecordList Received: sequence %v - %s", in.GetSequence(), in.GetData()))
-	getStateAsJson(stateBucketName,2020,2,15)
+	_,_ = getStateAsJson(stateBucketName,2020,2,15)
 	return &pb.GetRecordListReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Data: csvx}, nil
 }
 
@@ -138,8 +142,8 @@ func parseMessage(message string) error {
 	return nil
 }
 
-func saveState( bucketName string ) error {
-	for ; 1 != 2; {
+func saveStateDaemon( bucketName string ) error {
+	for ;; {
 		log.Debug(fmt.Sprintf("Saving state to writeableDb"))
 		if currentstate.SampleTimestampS == "" {
 			currentstate.SampleTimestamp = time.Now().UnixNano()
@@ -150,18 +154,17 @@ func saveState( bucketName string ) error {
 			log.Error(err)
 		} else {
 			log.Debug(fmt.Sprintf("Saving state %s to writeableDb", string(stringState)))
-			addRecord(stateBucketName, string(stringState))
+			_ = addRecord(bucketName, string(stringState))
 		}
 		time.Sleep(time.Minute)
 	}
-	return nil
 }
 
 func forwardMessages(bucketName string) error {
-	for ; 1 != 2;  {
+	for ;;  {
 		var forwarded []string
 
-		writeableDb.View(func(tx *bolt.Tx) error {
+		_ = writeableDb.View(func(tx *bolt.Tx) error {
 			// Assume bucket exists and has keys
 			b := tx.Bucket([]byte(bucketName))
 
@@ -187,25 +190,33 @@ func forwardMessages(bucketName string) error {
 
 		time.Sleep(3*time.Second)
 	}
-	return nil
 }
 
 var config Config
 var stageSchedule StageSchedule
 
 func main() {
+	log2.ConfigureLogging("fatal,error,warn,info,debug,", ".")
+	storeMountPoint := "/config"
+	if  runtime.GOOS == "windows"{
+		storeMountPoint = "."
+		databaseFilename = "./messages.db"
+	}
+	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&config,&stageSchedule)
 
-	ReadFromPersistentStore("/config", "", "config.json",&config,&stageSchedule)
-
-	log.Info(fmt.Sprintf("config = %v", config))
-	log.Info(fmt.Sprintf("stageSchedule = %v", stageSchedule))
-	initDb()
+	fmt.Printf("config = %v", config)
+	fmt.Printf("stageSchedule = %v", stageSchedule)
+	initDb(databaseFilename)
 
 //	clearDatabase(stateBucketName)
 //	deletePriorTo(stateBucketName, 1581483579497)
 
-	go forwardMessages(messageBucketName)
-	go saveState(stateBucketName)
+	go func() {
+		_ = forwardMessages(messageBucketName)
+	}()
+	go func() {
+		_ = saveStateDaemon(stateBucketName)
+	}()
 
 //	go StartApiServer()
 

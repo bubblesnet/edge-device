@@ -2,10 +2,10 @@ package main
 
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
+	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/log"
 	"google.golang.org/grpc"
 	"io"
 	"net/http"
@@ -82,7 +82,7 @@ func StartApiServer() {
 		}
 	}
 	http.HandleFunc("/api/state/json", jsonHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatalf("%v", http.ListenAndServe(":8080", nil))
 }
 
 type getRecordsRequest struct {
@@ -97,7 +97,7 @@ func requestStateList() (string, error) {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Error(fmt.Sprintf("did not connect: %v", err))
+		log.Errorf("did not connect: %v", err)
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
@@ -111,7 +111,7 @@ func requestStateList() (string, error) {
 	}
 	bytearray, err := json.Marshal(getRecsReq)
 	if err != nil {
-		log.Error(fmt.Sprintln("requestStateList error %v", err))
+		log.Errorf("requestStateList error %v", err)
 		return "", err
 	}
 
@@ -121,7 +121,7 @@ func requestStateList() (string, error) {
 	log.Debug(fmt.Sprintf("c.GetRecordList"))
 	r, err1 := c.GetRecordList(ctx, &pbr)
 	if err1 != nil {
-		log.Error(fmt.Sprintf("GetRecordListRequest failed: %v", err1))
+		log.Errorf("GetRecordListRequest failed: %v", err1)
 		return "", err1
 	} else {
 		log.Debug(fmt.Sprintf("GetRecordListRequest Received ack for sequence: %d message: TOO LONG YOU DOPE!", r.GetSequence()))
