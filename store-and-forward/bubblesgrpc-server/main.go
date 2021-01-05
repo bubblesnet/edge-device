@@ -58,7 +58,7 @@ type state struct {
 	Light float32 `json:"light,omitempty"`
 	DistanceIn float32 `json:"distance_in,omitempty"`
 	Pressure float32 `json:"pressure,omitempty"`
-	Ph float32 `json:"pH,omitempty"`
+	Ph float32 `json:"ph,omitempty"`
 	Humidifier bool `json:"humidifier"`
 	Heater bool `json:"heater"`
 	HeaterPad bool `json:"heater_pad"`
@@ -145,7 +145,7 @@ func parseMessage(message string) (err error) {
 	return nil
 }
 
-func saveStateDaemon( bucketName string ) error {
+func saveStateDaemon( bucketName string, onceOnly bool ) error {
 	for ;; {
 		log.Debug(fmt.Sprintf("Saving state to writeableDb"))
 		if currentstate.SampleTimestampS == "" {
@@ -159,8 +159,12 @@ func saveStateDaemon( bucketName string ) error {
 			log.Debug(fmt.Sprintf("Saving state %s to writeableDb", string(stringState)))
 			_ = addRecord(bucketName, string(stringState))
 		}
+		if onceOnly {
+			break
+		}
 		time.Sleep(time.Minute)
 	}
+	return nil
 }
 
 func forwardMessages(bucketName string, oneOnly bool) (err error) {
@@ -223,7 +227,7 @@ func main() {
 		_ = forwardMessages(messageBucketName, false)
 	}()
 	go func() {
-		_ = saveStateDaemon(stateBucketName)
+		_ = saveStateDaemon(stateBucketName, false)
 	}()
 
 //	go StartApiServer()

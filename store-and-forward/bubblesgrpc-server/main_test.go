@@ -4,14 +4,30 @@ import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"context"
+	"encoding/json"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 )
 
 const badTestMessage = "dkdlkdkdkdk"
-const goodTestMessage = "{}"
 const emptyTestMessage = "{}"
+
+var goodState = state{
+	SampleTimestamp:  1609808763,
+	SampleTimestampS: "Tue Jan 05 01:06:03 2021 UTC",
+	TempF:            82.0,
+	Humidity:         67.7,
+	Light:            10053,
+	DistanceIn:       12,
+	Pressure:         1015,
+	Ph:               5.9,
+	Humidifier:       true,
+	Heater:           true,
+	HeaterPad:        true,
+	GrowLightVeg:     true,
+}
 
 func initTests(t *testing.T) {
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
@@ -56,6 +72,9 @@ func Test_forwardMessages(t *testing.T) {
 
 
 func Test_parseMessage(t *testing.T) {
+	bytearray, _ := json.Marshal(goodState)
+	goodTestMessage := string(bytearray)
+
 	type args struct {
 		message string
 	}
@@ -81,6 +100,7 @@ func Test_parseMessage(t *testing.T) {
 func Test_saveState(t *testing.T) {
 	type args struct {
 		bucketName string
+		onceOnly bool
 	}
 	tests := []struct {
 		name    string
@@ -88,10 +108,11 @@ func Test_saveState(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		 {name: "good", args: args{bucketName: "StateBucket", onceOnly: true},  wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := saveStateDaemon(tt.args.bucketName); (err != nil) != tt.wantErr {
+			if err := saveStateDaemon(tt.args.bucketName, tt.args.onceOnly); (err != nil) != tt.wantErr {
 				t.Errorf("saveStateDaemon() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -106,6 +127,15 @@ func Test_server_GetRecordList(t *testing.T) {
 		ctx context.Context
 		in  *pb.GetRecordListRequest
 	}
+
+	reply := pb.GetRecordListReply{}
+	reply.Result = "OK"
+	bytearray, _ := json.Marshal(goodState)
+	reply.Data = string(bytearray)
+
+	ffields := fields{
+		UnimplementedSensorStoreAndForwardServer: pb.UnimplementedSensorStoreAndForwardServer{},
+	}
 	tests := []struct {
 		name    string
 		fields  fields
@@ -114,6 +144,7 @@ func Test_server_GetRecordList(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{name: "good", fields: ffields, args: args{}, want: &reply, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -125,6 +156,7 @@ func Test_server_GetRecordList(t *testing.T) {
 				t.Errorf("GetRecordList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			got.Data = strings.ReplaceAll(got.Data, "\n","")
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetRecordList() got = %v, want %v", got, tt.want)
 			}
