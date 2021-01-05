@@ -143,7 +143,6 @@ func Test_server_GetRecordList(t *testing.T) {
 		want    *pb.GetRecordListReply
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{name: "good", fields: ffields, args: args{}, want: &reply, wantErr: false},
 	}
 	for _, tt := range tests {

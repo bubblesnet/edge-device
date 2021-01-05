@@ -184,7 +184,7 @@ func deletePriorTo( bucketName string, unixtime int64 ) {
 }
 */
 
-func getStatesAsJson(tx *bolt.Tx) error {
+func getStatesAsJson(tx *bolt.Tx) (err error) {
 
 	log.Debug(fmt.Sprintf("pid %d getRecordList getStates", os.Getpid()))
 	b := tx.Bucket([]byte(stateBucketName))
@@ -233,9 +233,9 @@ func getStateAsCsv( bucketName string, year int, month int, day int) (string, er
 
 func getStateAsJson( _ string, _ int, _ int, _ int) (string, error) {
 	csv := ""
-	log.Debug(fmt.Sprintf("pid %d getRecordList getStateAsCsv", os.Getpid()))
+	log.Debug(fmt.Sprintf("pid %d getRecordList getStateAsJson", os.Getpid()))
 	csvx = ""
 	err := writeableDb.View(getStatesAsJson)
-	log.Debug(fmt.Sprintf("getStateAsCsv Returning nothing %v", err))
+	log.Debug(fmt.Sprintf("getStateAsJson Returning nothing %v", err))
 	return csv, nil
 }

@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/go-playground/errors v3.3.0+incompatible // indirect
 	github.com/go-playground/log v6.3.0+incompatible
+	github.com/golang/mock v1.1.1
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.1 // indirect
 	go.etcd.io/bbolt v1.3.5

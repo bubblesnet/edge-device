@@ -24,12 +24,15 @@ package main
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"runtime"
 	"strings"
 	"time"
@@ -69,7 +72,7 @@ var currentstate = state {}
 
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
-//	log.Printf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData())
 	}()
@@ -79,7 +82,7 @@ func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.S
 
 // StoreAndForward implements bubblesgrpc.GetState
 func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
-//	log.Printf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	if in.GetSequence() %5 == 0 {
 		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
 	} else {
@@ -87,11 +90,11 @@ func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetSta
 	}
 }
 
-// StoreAndForward implements bubblesgrpc.GetState
+//
 func (s *server) GetRecordList(_ context.Context, in *pb.GetRecordListRequest) (*pb.GetRecordListReply, error) {
 	log.Debug( fmt.Sprintf("GetRecordList Received: sequence %v - %s", in.GetSequence(), in.GetData()))
-	_,_ = getStateAsJson(stateBucketName,2020,2,15)
-	return &pb.GetRecordListReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Data: csvx}, nil
+	jsn,_ := getStateAsJson(stateBucketName,2020,2,15)
+	return &pb.GetRecordListReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Data: jsn}, nil
 }
 
 func parseMessage(message string) (err error) {
@@ -162,6 +165,7 @@ func saveStateDaemon( bucketName string, onceOnly bool ) error {
 		if onceOnly {
 			break
 		}
+		currentstate.SampleTimestampS = "" // TODO this should be here as state is changed asynchronously
 		time.Sleep(time.Minute)
 	}
 	return nil
@@ -174,14 +178,15 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 		_ = writeableDb.View(func(tx *bolt.Tx) error {
 			// Assume bucket exists and has keys
-			log.Debugf("getting b")
+//			log.Debugf("getting b")
 			b := tx.Bucket([]byte(bucketName))
-			log.Debugf("b = %v", b)
+//			log.Debugf("b = %v", b)
 			c := b.Cursor()
 
-			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			for k, v := c.First(); k != nil; k, _ = c.Next() {
 				// for k, v := c.First(); k != nil; k, v = c.Next() {
-				//				log.Debug(fmt.Sprintf("forwarding key=%s, value=%s\n", k, v)
+				log.Debugf("forwarding key=%s, value=%s from %s\n", k, string(v), bucketName)
+				postIt(v)
 				forwarded = append(forwarded, string(k))
 				time.Sleep(250 * time.Millisecond)
 			}
@@ -202,6 +207,25 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 		time.Sleep(3*time.Second)
 	}
 	return err
+}
+
+func postIt(message []byte) (err error){
+	url := "http://localhost:3003/api/measurement/999999/111111"
+
+	resp, err := http.Post(url,
+		"application/json", bytes.NewBuffer(message))
+	if err != nil {
+		log.Errorf("post error %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("readall error %v", err)
+		return err
+	}
+	log.Debugf("response %s", string(body))
+	return nil
 }
 
 var config Config
@@ -225,6 +249,9 @@ func main() {
 
 	go func() {
 		_ = forwardMessages(messageBucketName, false)
+	}()
+	go func() {
+		_ = forwardMessages(stateBucketName, false)
 	}()
 	go func() {
 		_ = saveStateDaemon(stateBucketName, false)

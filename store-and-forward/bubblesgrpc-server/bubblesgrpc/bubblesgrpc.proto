@@ -22,7 +22,7 @@ package bubblesgrpc;
 
 // The service definition.
 service SensorStoreAndForward {
-  // Sends a greeting
+  //
   rpc StoreAndForward (SensorRequest) returns (SensorReply) {}
   rpc GetState (GetStateRequest) returns (GetStateReply) {}
   rpc GetRecordList (GetRecordListRequest) returns (GetRecordListReply) {}
