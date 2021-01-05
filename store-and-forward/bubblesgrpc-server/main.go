@@ -33,10 +33,21 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
+//	"strconv"
 	"strings"
 	"time"
 )
+
+
+var BubblesnetVersionMajorString string
+var BubblesnetVersionMinorString=""
+var BubblesnetVersionPatchString=""
+var BubblesnetBuildNumberString=""
+// var IcebreakerVersionID=-1
+var BubblesnetBuildTimestamp=""
+var BubblesnetGitHash=""
 
 const (
 	port              = ":50051"
@@ -210,7 +221,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 }
 
 func postIt(message []byte) (err error){
-	url := "http://localhost:3003/api/measurement/999999/111111"
+	url := "http://192.168.237.21:3003/api/measurement/999999/111111"
 
 	resp, err := http.Post(url,
 		"application/json", bytes.NewBuffer(message))
@@ -230,9 +241,23 @@ func postIt(message []byte) (err error){
 
 var config Config
 var stageSchedule StageSchedule
+func handleVersioningFromLoader() (err error ) {
+	BubblesnetBuildTimestamp = strings.ReplaceAll(BubblesnetBuildTimestamp, "'", "")
+	BubblesnetBuildTimestamp = strings.ReplaceAll(BubblesnetBuildTimestamp, "_", " ")
+	return nil
+}
 
 func main() {
 	log.ConfigureLogging("fatal,error,warn,info,debug,", ".")
+
+	if err := handleVersioningFromLoader(); err != nil {
+		log.Errorf("handleVersioningFromLoader %+v", err )
+		os.Exit(222)
+	}
+	log.Infof("Bubblesnet %s.%s.%s build %s timestamp %s githash %s", BubblesnetVersionMajorString,
+		BubblesnetVersionMinorString, BubblesnetVersionPatchString, BubblesnetBuildNumberString,
+		BubblesnetBuildTimestamp, BubblesnetGitHash)
+
 	storeMountPoint := "/config"
 	if  runtime.GOOS == "windows"{
 		storeMountPoint = "."

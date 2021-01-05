@@ -25,7 +25,7 @@ import (
 	"time"
 
 	bubblesgrpc "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
-	hwmock "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/mock_bubblesgrpc"
+	hwmock "bubblesnet/edge-device/store-and-forward/mock_bubblesgrpc"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/proto"
 )

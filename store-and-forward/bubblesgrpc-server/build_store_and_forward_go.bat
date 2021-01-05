@@ -16,4 +16,4 @@ for /f "tokens=*" %%a in ('time /t') do (
     set TIMESTAMP=%TIMESTAMP% %%a'
 )
 set TIMESTAMP=%TIMESTAMP: =_%
-go build -ldflags="-X 'main.BubblesnetBuildNumberString=201' -X 'main.BubblesnetVersionMajorString=2' -X 'main.BubblesnetVersionMinorString=1' -X 'main.BubblesnetVersionPatchString=1'  -X 'main.BubblesnetGitHash=%GITHASH%' -X main.BubblesnetBuildTimestamp=%TIMESTAMP%" -o bubblesnet3 ./main.go
+go build -ldflags="-X 'main.BubblesnetBuildNumberString=201' -X 'main.BubblesnetVersionMajorString=2' -X 'main.BubblesnetVersionMinorString=1' -X 'main.BubblesnetVersionPatchString=1'  -X 'main.BubblesnetGitHash=%GITHASH%' -X main.BubblesnetBuildTimestamp=%TIMESTAMP%" -o build ./...
