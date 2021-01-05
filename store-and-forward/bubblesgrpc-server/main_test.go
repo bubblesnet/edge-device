@@ -8,10 +8,18 @@ import (
 	"runtime"
 	"testing"
 )
+
+const badTestMessage = "dkdlkdkdkdk"
+const goodTestMessage = "{}"
+const emptyTestMessage = "{}"
+
 func initTests(t *testing.T) {
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
 	storeMountPoint := "/config"
 	if  runtime.GOOS == "windows"{
+		storeMountPoint = "."
+		databaseFilename = "./testmessages.db"
+	} else if runtime.GOOS == "darwin" {
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
 	}
@@ -20,6 +28,7 @@ func initTests(t *testing.T) {
 	t.Logf("config = %v", config)
 	t.Logf("stageSchedule = %v", stageSchedule)
 	initDb(databaseFilename)
+	t.Logf("returned from initDb")
 }
 
 func Test_forwardMessages(t *testing.T) {
@@ -33,17 +42,18 @@ func Test_forwardMessages(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{name: "forwardMessages", args: args{bucketName: "testbucket"}, wantErr: true},
+		{name: "forwardMessages", args: args{bucketName: "StateBucket"}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := forwardMessages(tt.args.bucketName); (err != nil) != tt.wantErr {
+			if err := forwardMessages(tt.args.bucketName, true); (err != nil) != tt.wantErr {
 				t.Errorf("forwardMessages() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 	t.Logf("done")
 }
+
 
 func Test_parseMessage(t *testing.T) {
 	type args struct {
@@ -55,6 +65,9 @@ func Test_parseMessage(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{name: "good parseMessage", args: args{message: goodTestMessage}, wantErr: false},
+		{name: "no data, empty json parseMessage", args: args{message: emptyTestMessage}, wantErr: false},
+		{name: "not json parseMessage", args: args{message: badTestMessage}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

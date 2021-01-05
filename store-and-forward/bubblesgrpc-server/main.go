@@ -23,11 +23,10 @@ package main
 
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
-	log2 "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
+	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/log"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"net"
@@ -95,9 +94,13 @@ func (s *server) GetRecordList(_ context.Context, in *pb.GetRecordListRequest) (
 	return &pb.GetRecordListReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Data: csvx}, nil
 }
 
-func parseMessage(message string) error {
+func parseMessage(message string) (err error) {
 	var partialstate = state{ SampleTimestamp: 0, TempF: -77.7, Light: -77.7, Humidity: -77.7, DistanceIn: -77.7, Ph: -77.7, Pressure: -77.7 }
-	_ = json.Unmarshal([]byte(message), &partialstate)
+	err = json.Unmarshal([]byte(message), &partialstate)
+	if err != nil {
+		log.Errorf("unmarshal message error %v", err)
+		return err
+	}
 	log.Debug(fmt.Sprintf("message %s", message))
 	if strings.Contains(message, "tempF") && partialstate.TempF != -77.7 {
 			currentstate.TempF = partialstate.TempF
@@ -160,14 +163,16 @@ func saveStateDaemon( bucketName string ) error {
 	}
 }
 
-func forwardMessages(bucketName string) error {
+func forwardMessages(bucketName string, oneOnly bool) (err error) {
+	log.Debugf("forwardMessages %s", bucketName)
 	for ;;  {
 		var forwarded []string
 
 		_ = writeableDb.View(func(tx *bolt.Tx) error {
 			// Assume bucket exists and has keys
+			log.Debugf("getting b")
 			b := tx.Bucket([]byte(bucketName))
-
+			log.Debugf("b = %v", b)
 			c := b.Cursor()
 
 			for k, _ := c.First(); k != nil; k, _ = c.Next() {
@@ -182,21 +187,24 @@ func forwardMessages(bucketName string) error {
 		for i := 0; i < len(forwarded); i++ {
 			err := deleteFromBucket(bucketName, []byte(forwarded[i]))
 			if err != nil {
-				log.Error( fmt.Sprintf("delete from bucket failed %v", err))
+				log.Errorf( "delete from bucket failed %v", err)
 			}
 		}
 		// delete the forwarded messages
 		forwarded = forwarded[:0]
-
+		if oneOnly {
+			break
+		}
 		time.Sleep(3*time.Second)
 	}
+	return err
 }
 
 var config Config
 var stageSchedule StageSchedule
 
 func main() {
-	log2.ConfigureLogging("fatal,error,warn,info,debug,", ".")
+	log.ConfigureLogging("fatal,error,warn,info,debug,", ".")
 	storeMountPoint := "/config"
 	if  runtime.GOOS == "windows"{
 		storeMountPoint = "."
@@ -212,7 +220,7 @@ func main() {
 //	deletePriorTo(stateBucketName, 1581483579497)
 
 	go func() {
-		_ = forwardMessages(messageBucketName)
+		_ = forwardMessages(messageBucketName, false)
 	}()
 	go func() {
 		_ = saveStateDaemon(stateBucketName)

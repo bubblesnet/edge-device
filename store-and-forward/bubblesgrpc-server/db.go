@@ -21,17 +21,20 @@ func openWriteable(dbFilename string) {
 		log.Warnf("writeable open timed out - sleeping 1 second")
 		time.Sleep(time.Second)
 		xdb, err = bolt.Open(dbFilename, modeReadwrite, &bolt.Options{Timeout: 1 * time.Second})
-
 	}
 	if err != nil {
 		log.Errorf(fmt.Sprintf("writeable open timed out after 5 attempts in 10 seconds"))
 		log.Fatalf("%v",err)
+	} else {
+		log.Infof("Succeeded opening database %s", databaseFilename)
 	}
-	defer func() {
-		_ = xdb.Close()
-	}()
+//	defer func() {
+//		_ = xdb.Close()
+//	}()
 
 	writeableDb = xdb
+	log.Debugf(" writeabledb is %v", writeableDb)
+
 	//	defer writeableDb.Close()
 }
 
@@ -60,7 +63,7 @@ func makeBuckets( buckets []string) {
 }
 
 func initDb(databaseFilename string) {
-	fmt.Printf("initdb\n")
+	fmt.Printf("initdb %s\n",databaseFilename)
 	openWriteable(databaseFilename)
 	makeBuckets([]string{messageBucketName,stateBucketName})
 }
@@ -68,10 +71,13 @@ func initDb(databaseFilename string) {
 func makeBucketIfNotExist(bucketName string) (bool, error) {
 	log.Debugf("makeBucketIfNotExist %s\n", bucketName)
 	// Start a writable transaction.
+	log.Debugf(" begin writeabledb is %v", writeableDb)
 	tx, err := writeableDb.Begin(true)
 	if err != nil {
 		log.Errorf("begin transaction error %v", err)
 		return false, err
+	} else {
+		log.Debugf("succeeded transaction start")
 	}
 	defer func() {
 		_= tx.Rollback()
