@@ -22,7 +22,11 @@ type StageSchedule struct {
 type ControlState struct {
 }
 
-type Config struct {
+type Configuration struct {
+	ControllerHostName	string		`json:"controller_hostname"`
+	ControllerAPIPort	int			`json:"controller_api_port"`
+	UserID			int			`json:"userid"`
+	DeviceID		int			`json:"deviceid"`
 	Stage          string           `json:"stage,omitempty"`
 	LightOnHour    int              `json:"light_on_hour,omitempty"`
 	StageSchedules [] StageSchedule `json:"stage_schedules,omitempty"`
@@ -45,7 +49,7 @@ type ACOutlet struct {
 	BCMPinNumber int `json:"bcm_pin_number,omitempty"`
 }
 
-func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Config, currentStageSchedule *StageSchedule) error {
+func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Configuration, currentStageSchedule *StageSchedule) error {
 	log.Debugf("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	file, _ := ioutil.ReadFile(fullpath)

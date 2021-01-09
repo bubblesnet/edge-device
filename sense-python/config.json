@@ -52,14 +52,14 @@
     }
   ],
   "ac_outlets": [
-    { "name":  "Inlet fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
-    { "name":  "Water pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
-    { "name":  "Grow light - bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
-    { "name":  "Grow light - veg",   "index": 3, "bcm_pin_number":  5, "power_on": false },
-    { "name":  "Heat lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
-    { "name":  "Air pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
-    { "name":  "Outlet fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
-    { "name":  "Humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
+    { "name":  "intake_fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
+    { "name":  "water_pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
+    { "name":  "light_bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
+    { "name":  "light_vegetative",   "index": 3, "bcm_pin_number":  5, "power_on": false },
+    { "name":  "heat_lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
+    { "name":  "air_pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
+    { "name":  "outlet_fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
+    { "name":  "humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
   ],
 
   "time_between_pictures_in_seconds": 30,

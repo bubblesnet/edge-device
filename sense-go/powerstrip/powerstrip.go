@@ -13,7 +13,7 @@ var pins [8] rpio.Pin
 
 func InitRpioPins() {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		log.Info(fmt.Sprintf("initing BCM%d", globals.Config.ACOutlets[i].BCMPinNumber))
+		log.Infof("initing BCM%d controlling the device named %s", globals.Config.ACOutlets[i].BCMPinNumber, globals.Config.ACOutlets[i].Name )
 		pins[i] = rpio.Pin(globals.Config.ACOutlets[i].BCMPinNumber)
 		pins[i].Output()
 	}

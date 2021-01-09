@@ -221,8 +221,8 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 }
 
 func postIt(message []byte) (err error){
-	url := "http://192.168.237.21:3003/api/measurement/999999/111111"
-
+	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", config.ControllerHostName, config.ControllerAPIPort, config.UserID, config.DeviceID)
+	log.Debugf("Sending to %s", url)
 	resp, err := http.Post(url,
 		"application/json", bytes.NewBuffer(message))
 	if err != nil {
@@ -239,7 +239,7 @@ func postIt(message []byte) (err error){
 	return nil
 }
 
-var config Config
+var config Configuration
 var stageSchedule StageSchedule
 func handleVersioningFromLoader() (err error ) {
 	BubblesnetBuildTimestamp = strings.ReplaceAll(BubblesnetBuildTimestamp, "'", "")

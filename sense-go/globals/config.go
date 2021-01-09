@@ -24,19 +24,47 @@ type StageSchedule struct {
 type ControlState struct {
 }
 
+type DeviceSettings struct {
+	HeightSensor bool `json:"height_sensor"`
+	Humidifier bool `json:"humidifier"`
+	HumiditySensor bool `json:"humidity_sensor"`
+	ExternalHumiditySensor bool `json:"external_humidity_sensor"`
+	Heater bool `json:"heater"`
+	ThermometerTop bool `json:"thermometer_top"`
+	ThermometerMiddle bool `json:"thermometer_middle"`
+	ThermometerBottom bool `json:"thermometer_bottom"`
+	ThermometerExternal bool `json:"external_thermometer"`
+	ThermometerWater bool `json:"thermometer_water"`
+	WaterPump bool `json:"water_pump"`
+	AirPump bool `json:"air_pump"`
+	LightSensor bool `json:"light_sensor"`
+	CabinetDoorSensor bool `json:"cabinet_door_sensor"`
+	OuterDoorSensor bool `json:"outer_door_sensor"`
+	MovementSensor bool `json:"movement_sensor"`
+	PressureSensor bool `json:"pressure_sensors"`
+	RootPhSensor bool `json:"root_ph_sensor"`
+	EnclosureType string `json:"enclosure_type"`
+	WaterLevelSensor bool `json:"water_level_sensor"`
+	IntakeFan bool `json:"intake_fan"`
+	ExhaustFan bool `json:"exhaust_fan"`
+	HeatLamp bool `json:"heat_lamp"`
+	HeatingPad bool `json:"heating_pad"`
+	LightBloom bool `json:"light_bloom"`
+	LightVegetative bool `json:"light_vegetative"`
+	LightGerminate bool `json:"light_germinate"`
+	Relay          bool `json:"relay,omitempty"`
+}
+
 type Configuration struct {
+	ControllerHostName	string		`json:"controller_hostname"`
+	ControllerAPIPort	int			`json:"controller_api_port"`
+	UserID			int			`json:"userid"`
+	DeviceID		int			`json:"deviceid"`
 	Stage          string          `json:"stage,omitempty"`
 	LightOnHour    int             `json:"light_on_hour,omitempty"`
 	StageSchedules []StageSchedule `json:"stage_schedules,omitempty"`
 	ACOutlets      [8]ACOutlet     `json:"ac_outlets,omitempty"`
-	BME280         bool            `json:"bme280,omitempty"`
-	BH1750         bool            `json:"bh1750,omitempty"`
-	ADS1115_1      bool            `json:"ads1115_1,omitempty"`
-	ADS1115_2      bool            `json:"ads1115_2,omitempty"`
-	ADXL345        bool            `json:"adxl345,omitempty"`
-	EZOPH          bool            `json:"ezoph,omitempty"`
-	HCSR04         bool            `json:"hcsr04,omitempty"`
-	Relay          bool            `json:"relay,omitempty"`
+	DeviceSettings	DeviceSettings	`json:"device_settings"`
 	LogLevel       string          `json:"log_level,omitempty"`
 }
 

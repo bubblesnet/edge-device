@@ -19,6 +19,7 @@ import (
 )
 
 func runTamperDetector() {
+	log.Info("runTamperDetector")
 	adxl345Adaptor := raspi.NewAdaptor()
 	adxl345 := i2c.NewADXL345Driver(adxl345Adaptor)
 	lastx := 0.0
@@ -80,6 +81,7 @@ func runTamperDetector() {
 }
 
 func runDistanceWatcher() {
+	log.Info("runDistanceWatcher")
 	// Use BCM pin numbering
 	// Echo pin
 	// Trigger pin
@@ -112,6 +114,7 @@ func runDistanceWatcher() {
 }
 
 func runLocalStateWatcher() {
+	log.Info("runLocalStateWatcher")
 	for true {
 		bytearray, err := json.Marshal(globals.LocalCurrentState)
 		if err == nil {
@@ -153,6 +156,7 @@ func readConfig() error {
  */
 
 func makeControlDecisions() {
+	log.Info("makeControlDecisions")
 	i := 0
 
 	for {
@@ -210,7 +214,8 @@ func main() {
 	powerstrip.InitRpioPins()
 	powerstrip.TurnAllOff(1)
 
-	if globals.Config.EZOPH {
+	if globals.Config.DeviceSettings.RootPhSensor {
+		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 		err = ezoDriver.Start()
 		if err != nil {
@@ -219,30 +224,32 @@ func main() {
 	}
 
 	numGoroutines := 6
-	if !globals.Config.ADXL345 {
+	if !globals.Config.DeviceSettings.MovementSensor {
 		numGoroutines--
 	}
-	if !globals.Config.ADS1115_1 && !globals.Config.ADS1115_2 {
+	if !globals.Config.DeviceSettings.WaterLevelSensor {
 		numGoroutines--
 	}
-	if !globals.Config.EZOPH {
+	if !globals.Config.DeviceSettings.RootPhSensor {
 		numGoroutines--
 	}
-	if !globals.Config.HCSR04 {
+	if !globals.Config.DeviceSettings.HeightSensor {
 		numGoroutines--
 	}
-	if !globals.Config.Relay {
+	if !globals.Config.DeviceSettings.Relay {
 		numGoroutines--
 	}
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)
 
-	if globals.Config.ADXL345 {
+	if globals.Config.DeviceSettings.MovementSensor {
+		log.Info("MovementSensor configured, starting")
 		go runTamperDetector()
 	} else {
 		log.Warn(fmt.Sprint("No adxl345 Configured - skipping tamper detection"))
 	}
-	if globals.Config.ADS1115_1 || globals.Config.ADS1115_2 {
+	if globals.Config.DeviceSettings.WaterLevelSensor {
+		log.Info("WaterlevelSensor configured, starting ADC")
 		go func() {
 			err :=  adc.RunADCPoller()
 			if err != nil {
@@ -252,7 +259,8 @@ func main() {
 	} else {
 		log.Warn(fmt.Sprint("No ads1115s configured - skipping A to D conversion"))
 	}
-	if globals.Config.EZOPH {
+	if globals.Config.DeviceSettings.RootPhSensor {
+		log.Info("RootPhSensor configured, starting EZO reader")
 		go func() {
 			err = readPh()
 			if err != nil {
@@ -262,12 +270,14 @@ func main() {
 	} else {
 		log.Warn(fmt.Sprint("No ezoph configured - skipping pH monitoring"))
 	}
-	if globals.Config.HCSR04 {
+	if globals.Config.DeviceSettings.HeightSensor {
+		log.Info("HeightSensor configured, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
 		log.Warn(fmt.Sprint("No hcsr04 Configured - skipping A to D conversion"))
 	}
-	if globals.Config.Relay {
+	if globals.Config.DeviceSettings.Relay {
+		log.Info("Relay configured")
 //		go runPinToggler()
 	} else {
 		log.Warn(fmt.Sprint("No relay Ccnfigured - skipping GPIO relay control"))
@@ -276,7 +286,7 @@ func main() {
 	go runLocalStateWatcher()
 	go makeControlDecisions()
 
-	log.Info(fmt.Sprintf("waiting for waitgroup to finish" ))
+	log.Info(fmt.Sprintf("all go routines started, waiting for waitgroup to finish" ))
 	wg.Wait()
 	log.Info(fmt.Sprintf("exiting main - because waitgroup finished" ))
 

@@ -1,4 +1,9 @@
 {
+  "log_level": "fatal,error,warn,info,debug",
+  "controller_hostname": "192.168.21.237",
+  "controller_api_port": 3003,
+  "userid": 999999,
+  "deviceid": 70000007,
   "stage": "germination",
   "light_on_hour": 5,
   "stage_schedules": [
@@ -52,14 +57,14 @@
     }
   ],
   "ac_outlets": [
-    { "name":  "Inlet fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
-    { "name":  "Water pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
-    { "name":  "Grow light - bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
-    { "name":  "Grow light - veg",   "index": 3, "bcm_pin_number":  5, "power_on": false },
-    { "name":  "Heat lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
-    { "name":  "Air pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
-    { "name":  "Outlet fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
-    { "name":  "Humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
+    { "name":  "intake_fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
+    { "name":  "water_pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
+    { "name":  "light_bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
+    { "name":  "light_vegetative",   "index": 3, "bcm_pin_number":  5, "power_on": false },
+    { "name":  "heat_lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
+    { "name":  "air_pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
+    { "name":  "exhaust_fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
+    { "name":  "humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
   ],
 
   "time_between_pictures_in_seconds": 30,
@@ -71,12 +76,53 @@
 
   "time_between_sensor_polling_in_seconds": 15,
 
-  "bme280":    true,
-  "bh1750":    true,
-  "ads1115_1": true,
-  "ads1115_2": true,
-  "adxl345":   true,
-  "ezoph":     true,
-  "hcsr04":    true,
-  "relay":     true
+  "device_settings": {
+    "humidifier": true,
+    "humidity_sensor": true,
+    "external_humidity_sensor": true,
+    "heater": true,
+    "thermometer_top": true,
+    "thermometer_middle": true,
+    "thermometer_bottom": true,
+    "external_thermometer": true,
+    "thermometer_water": true,
+    "water_pump": true,
+    "air_pump": true,
+    "light_sensor": true,
+    "cabinet_door_sensor": true,
+    "outer_door_sensor": true,
+    "movement_sensor": true,
+    "pressure_sensors": true,
+    "root_ph_sensor": true,
+    "enclosure_type": "Cabinet",
+    "water_level_sensor": true,
+    "tub_depth": 18.0,
+    "tub_volume": 20.0,
+    "intake_fan": true,
+    "exhaust_fan": true,
+    "heat_lamp": true,
+    "heating_pad": true,
+    "enclosure_options": [
+      "Cabinet",
+      "Tent"
+    ],
+    "light_bloom": true,
+    "light_vegetative": true,
+    "light_germinate": true
+  },
+
+  "attached_devices" : [
+    {"deviceid": 70000007,"device_type": "bme280", "protocol": "i2c", "address": "0x76","included_sensors": [{"sensor_name": "humidity_sensor"}
+    ,{"sensor_name": "internal_pressure_sensor", "address": "44"},{"sensor_name": "thermometer_middle", "address": "55"}]},
+    {"deviceid": 70000008,"device_type": "bme280", "protocol": "i2c", "address": "0x76","included_sensors": [{"sensor_name": "external_humidity_sensor", "address": "55"},
+      {"sensor_name": "external_pressure_sensor", "address": "55"},{"sensor_name": "thermometer_external", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "bh1750",  "protocol": "i2c", "address": "0x23","included_sensors": [{"sensor_name": "light_sensor", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "ads1115", "protocol": "i2c", "address": "0x49","included_sensors": [{"sensor_name": "water_level", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "ads1115", "protocol": "i2c", "address": "0x48","included_sensors": [{"sensor_name": "", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "adxl345","protocol": "i2c", "address": "0x53","included_sensors": [{"sensor_name": "movement_sensor", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "ezoph","protocol": "i2c", "address": "0x63","included_sensors": [{"sensor_name": "root_ph_sensor", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "hcsr04","protocol": "i2c", "address": "0x47","included_sensors": [{"sensor_name": "distance_sensor", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "cabinet_door_sensor", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "external_door_sensor", "address": "55"}]}
+  ]
 }
