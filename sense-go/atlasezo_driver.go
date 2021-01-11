@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bubblesnet/edge-device/sense-go/globals"
 	"fmt"
 	"github.com/go-playground/log"
 	"gobot.io/x/gobot"
@@ -89,11 +90,13 @@ func (d *AtlasEZODriver) Start() (err error) {
 	address := d.GetAddressOrDefault(atlasEZOAddress)
 
 	if d.connection, err = d.connector.GetConnection(address, bus); err != nil {
+		globals.ReportDeviceFailed("ezoph")
 		log.Error(fmt.Sprintf("atlasezo getconnection error %v", err))
 		return err
 	}
 
 	if err := d.initialization(); err != nil {
+		globals.ReportDeviceFailed("ezoph")
 		log.Error(fmt.Sprintf("atlasezo initialization error %v", err))
 		return err
 	}

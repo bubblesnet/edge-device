@@ -13,6 +13,7 @@ import bh1750
 from bubblesgrpc_pb2 import SensorRequest
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 
+
 config = {}
 
 
@@ -22,7 +23,7 @@ def read_config():
         config = json.load(f)
 
 
-def appendBME280Data(bus, msg):
+def append_bme280_data(bus, msg):
     try:
         calibration_params = bme280.load_calibration_params(bus, 0x76)
         data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
@@ -37,44 +38,66 @@ def appendBME280Data(bus, msg):
         logging.debug(traceback.format_exc())
 
 
-def appendBH1750Data(msg):
+# new config functions
+def get_address(device_type):
+    for attached_device in config['attached_devices']:
+        if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == device_type:
+            x = int(attached_device['address'])
+            return True
+    return 0
+
+
+def is_our_device(device_type):
+    ret = False
+    for attached_device in config['attached_devices']:
+        if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == device_type:
+            return True
+
+    return ret
+
+
+LightAddress = get_address('bh1750')
+# end new config functions
+
+
+def append_bh1750_data(msg):
     try:
-        msg['light'] = bh1750.readLight(deviceAddressList['light'])
+        msg['light'] = bh1750.readLight(LightAddress)
     #        logging.debug("Read bh1750 light at 0x%x as %f" % (deviceAddressList['light'], msg['light']))
     except Exception as e:
-        logging.debug('BH1750 at 0x%2x failed to read %s' % (deviceAddressList['light'], e))
+        logging.debug('BH1750 at 0x%2x failed to read %s' % (LightAddress, e))
         logging.debug(traceback.format_exc())
 
 
-def appendADCData(msg):
+def append_adc_data(msg):
     msg['water_temperature'] = 0.0
 
 
-def appendGPIOData(msg):
+def append_gpio_data(msg):
     msg['door_open'] = False
     msg['leak_detector'] = False
 
 
-def appendAXL345Data(msg):
+def append_axl345_data(msg):
     msg['tamper_detector'] = False
 
 
-def reportPolledSensorParameters(bus, sequence):
+def report_polled_sensor_parameters(bus, sequence):
     global config
     #    logging.debug("reportPolledSensorParameters")
 
     msg = {}
     msg['sample_timestamp'] = int(time.time() * 1000)
-    if (config['bme280']):
-        appendBME280Data(bus, msg)
-    if (config['bh1750']):
-        appendBH1750Data(msg)
-    if (config['ads1115_1'] or config['ads1115_2']):
-        appendADCData(msg)
-    if (config['adxl345']):
-        appendAXL345Data(msg)
-    if (config['relay']):
-        appendGPIOData(msg)
+    if is_our_device('bme280'):
+        append_bme280_data(bus, msg)
+    if is_our_device('bh1750'):
+        append_bh1750_data(msg)
+    if is_our_device('ads1115'):
+        append_adc_data(msg)
+    if is_our_device('adxl345'):
+        append_axl345_data(msg)
+    if is_our_device('relay'):
+        append_gpio_data(msg)
 
     json_bytes = str.encode(json.dumps(msg))
     #    logging.debug(json_bytes)
@@ -83,15 +106,6 @@ def reportPolledSensorParameters(bus, sequence):
     #    logging.debug(response)
     return
 
-
-deviceAddressList = {
-    "light": 0x23,
-    'adc1': 0x48,
-    'adc2': 0x49,
-    'accelerometer': 0x53,
-    'pH': 0x63,
-    "temperature": 0x76
-}
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
@@ -113,13 +127,13 @@ if __name__ == "__main__":
             logging.debug("Entering sensor polling loop")
             while True:
                 #                        toggleRelays(relay,sequence)
-                reportPolledSensorParameters(bus, sequence)
+                report_polled_sensor_parameters(bus, sequence)
                 if sequence > 100000:
                     sequence = 1
                 else:
                     sequence = sequence + 1
 
-                #                    logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],time.strftime("%T")))
+# logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],time.strftime("%T")))
                 time.sleep(config['time_between_sensor_polling_in_seconds'])
 
             logging.debug("broke out of temp/hum/distance polling loop")

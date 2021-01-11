@@ -1,12 +1,13 @@
 package adc
 
 import (
+	"bubblesnet/edge-device/sense-go/globals"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/log"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"time"
 )
 
@@ -81,6 +82,7 @@ func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessag
 			(*adcMessage).ChannelValues[channel].Rate = config.channelConfig[channel].rate
 		} else {
 			log.Error(fmt.Sprintf( "readAllChannels Read failed %v", err ))
+			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			break
 		}

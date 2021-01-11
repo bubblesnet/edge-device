@@ -10,6 +10,19 @@ import (
 	"strings"
 )
 
+type IncludedSensor struct {
+	SensorName	string `json:"sensor_name"`
+	InternalAddress	string `json:"internal_address"`
+}
+type AttachedDevice struct {
+	ContainerName	string `json:"container_name"`
+	DeviceID		int			`json:"deviceid"`
+	DeviceType	string	`json:"device_type"`
+	Protocol	string `json:"protocol"`
+	Address	string `json:"address"`
+	IncludedSensors []IncludedSensor `json:"included_sensors"`
+}
+
 type EnvironmentalTarget struct {
 	Temperature float32 `json:"temperature,omitempty"`
 	Humidity float32 `json:"humidity,omitempty"`
@@ -66,9 +79,11 @@ type Configuration struct {
 	ACOutlets      [8]ACOutlet     `json:"ac_outlets,omitempty"`
 	DeviceSettings	DeviceSettings	`json:"device_settings"`
 	LogLevel       string          `json:"log_level,omitempty"`
+	AttachedDevices []AttachedDevice	`json:"attached_devices"`
 }
 
 type ACOutlet struct {
+	DeviceID int `json:"deviceid"`
 	Name string `json:"name,omitempty"`
 	Index int `json:"index,omitempty"`
 	PowerOn bool `json:"power_on,omitempty"`

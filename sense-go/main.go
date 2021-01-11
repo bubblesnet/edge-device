@@ -2,6 +2,8 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/adc"
+	"os"
+
 	//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/powerstrip"
@@ -17,6 +19,8 @@ import (
 	"sync"
 	"time"
 )
+
+
 
 func runTamperDetector() {
 	log.Info("runTamperDetector")
@@ -76,6 +80,7 @@ func runTamperDetector() {
 
 	err := robot.Start()
 	if err != nil {
+		globals.ReportDeviceFailed("adxl345")
 		log.Error(fmt.Sprintf("adxl345 robot start error %v", err))
 	}
 }
@@ -105,6 +110,7 @@ func runDistanceWatcher() {
 //				log.Error(fmt.Sprintf("runDistanceWatcher ERROR %v", err))
 //			}
 		} else {
+			globals.ReportDeviceFailed("hcsr04")
 			log.Error(fmt.Sprintf("rundistancewatcher error = %v", err ))
 			break
 		}
@@ -210,15 +216,21 @@ func main() {
 			log.Errorf("rpio.close %+v", err)
 		}
 	}()
+	deviceid := 70000007
+	if isRelayAttached( deviceid ) {
+		log.Infof("Relay is attached to device %d", deviceid)
+		powerstrip.InitRpioPins()
+		powerstrip.TurnAllOff(1)
+	} else {
+		log.Infof("There is no relay attached to device %d", deviceid)
+	}
 
-	powerstrip.InitRpioPins()
-	powerstrip.TurnAllOff(1)
-
-	if globals.Config.DeviceSettings.RootPhSensor {
+	if deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.RootPhSensor,"ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 		err = ezoDriver.Start()
 		if err != nil {
+			globals.ReportDeviceFailed("ezoph")
 			log.Error(fmt.Sprintf("ezo start error %v", err))
 		}
 	}
@@ -242,14 +254,14 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)
 
-	if globals.Config.DeviceSettings.MovementSensor {
-		log.Info("MovementSensor configured, starting")
+	if deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.MovementSensor, "adxl345") {
+		log.Info("MovementSensor should be connected to this device, starting")
 		go runTamperDetector()
 	} else {
 		log.Warn(fmt.Sprint("No adxl345 Configured - skipping tamper detection"))
 	}
-	if globals.Config.DeviceSettings.WaterLevelSensor {
-		log.Info("WaterlevelSensor configured, starting ADC")
+	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115" ) {
+		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
 			err :=  adc.RunADCPoller()
 			if err != nil {
@@ -259,8 +271,8 @@ func main() {
 	} else {
 		log.Warn(fmt.Sprint("No ads1115s configured - skipping A to D conversion"))
 	}
-	if globals.Config.DeviceSettings.RootPhSensor {
-		log.Info("RootPhSensor configured, starting EZO reader")
+	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.RootPhSensor, "ezoph" ) {
+		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
 			err = readPh()
 			if err != nil {
@@ -270,26 +282,51 @@ func main() {
 	} else {
 		log.Warn(fmt.Sprint("No ezoph configured - skipping pH monitoring"))
 	}
-	if globals.Config.DeviceSettings.HeightSensor {
-		log.Info("HeightSensor configured, starting HSCR04")
+	if deviceShouldBeHere(globals.ContainerName, deviceid, globals.Config.DeviceSettings.HeightSensor, "hcsr04" ) {
+		log.Info("HeightSensor should be connected to this device, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
 		log.Warn(fmt.Sprint("No hcsr04 Configured - skipping A to D conversion"))
 	}
-	if globals.Config.DeviceSettings.Relay {
+	if isRelayAttached( deviceid ) {
 		log.Info("Relay configured")
 //		go runPinToggler()
 	} else {
 		log.Warn(fmt.Sprint("No relay Ccnfigured - skipping GPIO relay control"))
 	}
 
+	if len(globals.DevicesFailed) > 0 {
+		log.Errorf("Exiting because of device failure %v", globals.DevicesFailed)
+		os.Exit(1)
+	}
 	go runLocalStateWatcher()
 	go makeControlDecisions()
 
 	log.Info(fmt.Sprintf("all go routines started, waiting for waitgroup to finish" ))
 	wg.Wait()
 	log.Info(fmt.Sprintf("exiting main - because waitgroup finished" ))
+}
 
+func isRelayAttached( deviceid int ) (relayIsAttached bool){
+	for i := 0; i < len(globals.Config.ACOutlets); i++ {
+		if globals.Config.ACOutlets[i].DeviceID == deviceid  {
+			return true
+		}
+	}
+	return false
+}
+
+func deviceShouldBeHere( containerName string, mydeviceid int, deviceInCabinet bool, deviceType string ) ( shouldBePresent bool ) {
+	if !deviceInCabinet {
+		return false
+	}
+	for i := 0; i < len(globals.Config.AttachedDevices); i++ {
+		if globals.Config.AttachedDevices[i].ContainerName == containerName && globals.Config.AttachedDevices[i].DeviceID == mydeviceid && globals.Config.AttachedDevices[i].DeviceType == deviceType{
+			log.Infof("Device %s should be present at %s", globals.Config.AttachedDevices[i].DeviceType, globals.Config.AttachedDevices[i].Address)
+			return true
+		}
+	}
+	return false
 }
 
 func readPh() error {

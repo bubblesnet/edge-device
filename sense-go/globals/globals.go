@@ -1,5 +1,11 @@
 package globals
 
+import "github.com/go-playground/log"
+
+var ContainerName = "sense-go"
+
+var DevicesFailed []string
+
 var Config = Configuration{}
 
 type LocalState struct {
@@ -34,4 +40,12 @@ var Lasttemp float32
 var Lasthumidity float32
 
 
-
+func ReportDeviceFailed(devicename string) {
+	for i := 0; i < len(DevicesFailed); i++ {
+		if DevicesFailed[i] == devicename {
+			return
+		}
+	}
+	log.Errorf("Adding device %s to failed list", devicename)
+	DevicesFailed = append(DevicesFailed,devicename)
+}
