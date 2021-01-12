@@ -26,7 +26,6 @@ import (
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
@@ -63,7 +62,7 @@ var writeableDb *bolt.DB
 type server struct {
 	pb.UnimplementedSensorStoreAndForwardServer
 }
-
+/*
 type state struct {
 	SampleTimestamp int64 `json:"sample_timestamp"`
 	SampleTimestampS string `json:"sample_timestamp_s"`
@@ -81,24 +80,26 @@ type state struct {
 
 var currentstate = state {}
 
+ */
+
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
 	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	go func() {
-		_ = addRecord(messageBucketName, in.GetData())
+		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
 	}()
-	_ = parseMessage(in.GetData())
+//	_ = parseMessage(in.GetData())
 	return &pb.SensorReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Message: ""}, nil
 }
 
 // StoreAndForward implements bubblesgrpc.GetState
 func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
 	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
-	if in.GetSequence() %5 == 0 {
+//	if in.GetSequence() %5 == 0 {
 		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
-	} else {
-		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: currentstate.TempF, Humidity: currentstate.Humidity}, nil
-	}
+//	} else {
+//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: currentstate.TempF, Humidity: currentstate.Humidity}, nil
+//	}
 }
 
 //
@@ -106,80 +107,6 @@ func (s *server) GetRecordList(_ context.Context, in *pb.GetRecordListRequest) (
 	log.Debug( fmt.Sprintf("GetRecordList Received: sequence %v - %s", in.GetSequence(), in.GetData()))
 	jsn,_ := getStateAsJson(stateBucketName,2020,2,15)
 	return &pb.GetRecordListReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Data: jsn}, nil
-}
-
-func parseMessage(message string) (err error) {
-	var partialstate = state{ SampleTimestamp: 0, TempF: -77.7, Light: -77.7, Humidity: -77.7, DistanceIn: -77.7, Ph: -77.7, Pressure: -77.7 }
-	err = json.Unmarshal([]byte(message), &partialstate)
-	if err != nil {
-		log.Errorf("unmarshal message error %v", err)
-		return err
-	}
-	log.Debug(fmt.Sprintf("message %s", message))
-	if strings.Contains(message, "tempF") && partialstate.TempF != -77.7 {
-			currentstate.TempF = partialstate.TempF
-	}
-	if strings.Contains(message, "humidity") && partialstate.Humidity != -77.7 {
-			currentstate.Humidity = partialstate.Humidity
-	}
-	if strings.Contains(message, "light")  && partialstate.Light != -77.7{
-		currentstate.Light = partialstate.Light
-	}
-	if strings.Contains(message, "distance_in")  && partialstate.DistanceIn != -77.7 {
-		currentstate.DistanceIn = partialstate.DistanceIn
-	}
-	if strings.Contains(message, "ph")  && partialstate.Ph != -77.7 {
-		currentstate.Ph = partialstate.Ph
-	}
-	if strings.Contains(message, "pressure")  && partialstate.Pressure != -77.7 {
-		currentstate.Pressure = partialstate.Pressure
-	}
-	if strings.Contains(message, "sample_timestamp")  && partialstate.SampleTimestamp != 0 {
-		currentstate.SampleTimestamp = partialstate.SampleTimestamp
-		nsec := (partialstate.SampleTimestamp%1000) * 1000000
-		t := time.Unix(partialstate.SampleTimestamp/1000,nsec)
-		currentstate.SampleTimestampS = t.String()
-		log.Debug(fmt.Sprintf("Setting sampletimestamps to %s", currentstate.SampleTimestampS))
-	}
-	if strings.Contains(message, "humidifier") {
-		currentstate.Humidifier = partialstate.Humidifier
-	}
-	if strings.Contains(message, "heater") {
-		currentstate.Heater = partialstate.Heater
-	}
-	if strings.Contains(message, "heater_pad") {
-		currentstate.HeaterPad = partialstate.HeaterPad
-	}
-	if strings.Contains(message, "sample_timestamp") {
-		currentstate.GrowLightVeg = partialstate.GrowLightVeg
-	}
-
-	log.Debug(fmt.Sprintf("currentstate %v", currentstate))
-
-	return nil
-}
-
-func saveStateDaemon( bucketName string, onceOnly bool ) error {
-	for ;; {
-		log.Debug(fmt.Sprintf("Saving state to writeableDb"))
-		if currentstate.SampleTimestampS == "" {
-			currentstate.SampleTimestamp = time.Now().UnixNano()
-			currentstate.SampleTimestampS = time.Now().Format(time.ANSIC)
-		}
-		stringState, err := json.Marshal(currentstate)
-		if err != nil {
-			log.Error(err)
-		} else {
-			log.Debug(fmt.Sprintf("Saving state %s to writeableDb", string(stringState)))
-			_ = addRecord(bucketName, string(stringState))
-		}
-		if onceOnly {
-			break
-		}
-		currentstate.SampleTimestampS = "" // TODO this should be here as state is changed asynchronously
-		time.Sleep(time.Minute)
-	}
-	return nil
 }
 
 func forwardMessages(bucketName string, oneOnly bool) (err error) {
@@ -194,10 +121,10 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 //			log.Debugf("b = %v", b)
 			c := b.Cursor()
 
-			for k, v := c.First(); k != nil; k, _ = c.Next() {
+			for k, v := c.First(); k != nil; k, v = c.Next() {
 				// for k, v := c.First(); k != nil; k, v = c.Next() {
 				log.Debugf("forwarding key=%s, value=%s from %s\n", k, string(v), bucketName)
-				postIt(v)
+				_ = postIt(v)
 				forwarded = append(forwarded, string(k))
 				time.Sleep(250 * time.Millisecond)
 			}
@@ -275,12 +202,14 @@ func main() {
 	go func() {
 		_ = forwardMessages(messageBucketName, false)
 	}()
-	go func() {
+/*	go func() {
 		_ = forwardMessages(stateBucketName, false)
 	}()
 	go func() {
 		_ = saveStateDaemon(stateBucketName, false)
 	}()
+
+ */
 
 //	go StartApiServer()
 

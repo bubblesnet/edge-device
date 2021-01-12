@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"google.golang.org/grpc"
-	"io"
-	"net/http"
 	"time"
 )
 var SequenceNumber int32 = 0
@@ -25,7 +23,7 @@ func GetSequenceNumber() int32 {
 	}
 	return SequenceNumber
 }
-
+/*
 func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
 	ret := "SampleTimestamp,SampleTimestampS,DistanceIn,Ph,TempF,Humidity,Pressure,Light,GrowLightVeg,Heater,HeaterPad,Humidifier\n"
 	for i := 0; i < len(states); i++ {
@@ -45,6 +43,7 @@ func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
 	}
 	return ret, nil
 }
+*/
 
 func getContentDisposition( format string ) string {
 	t := time.Now()
@@ -52,7 +51,7 @@ func getContentDisposition( format string ) string {
 	content_dispostion := fmt.Sprintf("attachment; filename=%s", filename)
 	return content_dispostion
 }
-
+/*
 func StartApiServer() {
 	log.Info(fmt.Sprintf("StartApiServer"))
 	csvHandler := func(w http.ResponseWriter, req *http.Request) {
@@ -84,6 +83,7 @@ func StartApiServer() {
 	http.HandleFunc("/api/state/json", jsonHandler)
 	log.Fatalf("%v", http.ListenAndServe(":8080", nil))
 }
+*/
 
 type getRecordsRequest struct {
 	BucketName string `json:"bucket_name"`
