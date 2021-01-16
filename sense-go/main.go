@@ -2,6 +2,8 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/adc"
+	"io/ioutil"
+	"net/http"
 	"os"
 
 	//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -191,6 +193,7 @@ func main() {
 
 	err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule)
 	globals.ConfigureLogging(globals.Config,"sense-go")
+	err = getConfigFromServer()
 
 	log.Debug("debug")
 	log.Info("info")
@@ -372,4 +375,24 @@ func getNowMillis() int64 {
 	nanos := now.UnixNano()
 	millis := nanos / 1000000
 	return millis
+}
+
+func getConfigFromServer() (err error) {
+	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", globals.Config.ControllerHostName, globals.Config.ControllerAPIPort, globals.Config.UserID, globals.Config.DeviceID)
+	log.Debugf("Sending to %s", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Errorf("post error %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("readall error %v", err)
+		return err
+	}
+	log.Debugf("response %s", string(body))
+	config, err := json.Marshal(body)
+	log.Debugf("received config %v", config)
+	return nil
 }
