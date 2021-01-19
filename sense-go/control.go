@@ -74,7 +74,7 @@ func ControlHeat() {
 	low_limit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
 
 	if globals.ExternalCurrentState.TempF == globals.TEMPNOTSET {
-		log.Debug(fmt.Sprintf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF))
+//		log.Debug(fmt.Sprintf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF))
 		return
 	}
 	if globals.ExternalCurrentState.TempF > high_limit { // TOO HOT
@@ -116,7 +116,7 @@ func ControlHumidity() {
 	low_limit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
 
 	if globals.ExternalCurrentState.Humidity == globals.HUMIDITYNOTSET {
-		log.Debug(fmt.Sprintf("HUMIDITYNOTSET ExternalCurrentState.Humidity %f - ignoring", globals.ExternalCurrentState.Humidity))
+//		log.Debug(fmt.Sprintf("HUMIDITYNOTSET ExternalCurrentState.Humidity %f - ignoring", globals.ExternalCurrentState.Humidity))
 		return
 	}
 	if globals.ExternalCurrentState.Humidity > high_limit { // TOO HUMID

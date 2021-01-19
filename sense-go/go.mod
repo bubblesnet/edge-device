@@ -15,7 +15,7 @@ require (
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	go.etcd.io/bbolt v1.3.5 // indirect
 	gobot.io/x/gobot v1.14.0
-	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
+	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	golang.org/x/sys v0.0.0-20200821140526-fda516888d29 // indirect
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

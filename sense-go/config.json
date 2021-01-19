@@ -88,6 +88,7 @@
     "thermometer_water": true,
     "water_pump": true,
     "air_pump": true,
+    "height_sensor": true,
     "light_sensor": true,
     "cabinet_door_sensor": true,
     "outer_door_sensor": true,
@@ -121,7 +122,7 @@
     {"container_name": "sense-go","deviceid": 70000008,"device_type": "ads1115", "protocol": "i2c", "address": "0x48","included_sensors": [{"sensor_name": "", "address": "55"}]},
     {"container_name": "sense-go","deviceid": 70000008,"device_type": "adxl345","protocol": "i2c", "address": "0x53","included_sensors": [{"sensor_name": "movement_sensor", "address": "55"}]},
     {"container_name": "sense-go","deviceid": 70000008,"device_type": "ezoph","protocol": "i2c", "address": "0x63","included_sensors": [{"sensor_name": "root_ph_sensor", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000008,"device_type": "hcsr04","protocol": "i2c", "address": "0x47","included_sensors": [{"sensor_name": "distance_sensor", "address": "55"}]},
+    {"container_name": "sense-go","deviceid": 70000007,"device_type": "hcsr04","protocol": "i2c", "address": "0x47","included_sensors": [{"sensor_name": "distance_sensor", "address": "55"}]},
     {"container_name": "sense-go","deviceid": 70000008,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "cabinet_door_sensor", "address": "55"}]},
     {"container_name": "sense-go","deviceid": 70000008,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "external_door_sensor", "address": "55"}]}
   ]

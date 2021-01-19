@@ -2,11 +2,12 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/adc"
+	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	"google.golang.org/grpc"
 	"io/ioutil"
 	"net/http"
 	"os"
 
-	//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	"encoding/json"
@@ -20,9 +21,15 @@ import (
 	"math"
 	"sync"
 	"time"
+	"golang.org/x/net/context"
 )
 
+const (
+	address     = "store-and-forward:50051"
+)
 
+var Sequence int32
+var Client pb.SensorStoreAndForwardClient
 
 func runTamperDetector() {
 	log.Info("runTamperDetector")
@@ -87,7 +94,13 @@ func runTamperDetector() {
 	}
 }
 
+
 func runDistanceWatcher() {
+	if Sequence > 200000 {
+		Sequence = 100001
+	} else {
+		Sequence = Sequence + 1
+	}
 	log.Info("runDistanceWatcher")
 	// Use BCM pin numbering
 	// Echo pin
@@ -102,15 +115,22 @@ func runDistanceWatcher() {
 //		log.Debug(fmt.Sprintf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
 		dm := globals.DistanceMessage{
 			SampleTimestamp: getNowMillis(),
+			SensorName: "height_sensor",
+			MessageType: "measurement",
+			Units: "cm",
+			Value: mydistance,
 			DistanceCm: mydistance,
 			DistanceIn: mydistance/2.54}
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
-//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-//			if err != nil {
-//				log.Error(fmt.Sprintf("runDistanceWatcher ERROR %v", err))
-//			}
+			message := pb.SensorRequest{Sequence: Sequence, TypeId: "sensor", Data:string(bytearray)}
+			sensor_reply, err := Client.StoreAndForward(context.Background(), &message )
+			if err != nil {
+				log.Error(fmt.Sprintf("runDistanceWatcher ERROR %v", err))
+			} else {
+				log.Debugf("%v", sensor_reply)
+			}
 		} else {
 			globals.ReportDeviceFailed("hcsr04")
 			log.Error(fmt.Sprintf("rundistancewatcher error = %v", err ))
@@ -192,8 +212,17 @@ func main() {
 	log.Info(fmt.Sprintf("sense-go"))
 
 	err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule)
+	//	err := readglobals.Configuration()
+	if err != nil {
+		return
+	}
 	globals.ConfigureLogging(globals.Config,"sense-go")
 	err = getConfigFromServer()
+	globals.Config.DeviceSettings.HeightSensor = true
+	//	err := readglobals.Configuration()
+	if err != nil {
+		return
+	}
 
 	log.Debug("debug")
 	log.Info("info")
@@ -203,15 +232,23 @@ func main() {
 	// log.Panic("panic") // this will panic
 	log.Alert("alert")
 
-
 	log.Info(fmt.Sprintf("globals.Configuration = %v", globals.Config))
 	log.Info(fmt.Sprintf("stageSchedule = %v", globals.CurrentStageSchedule))
 
-//	err := readglobals.Configuration()
-	if err != nil {
-		return
-	}
+		// Set up a connection to the server.
+		log.Infof("Dialing GRPC server at %s",address)
+		conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+		if err != nil {
+			log.Fatalf("did not connect: %v", err)
+		}
+		defer conn.Close()
+	Client = pb.NewSensorStoreAndForwardClient(conn)
 
+		_, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+
+		log.Info("Calling rpio.open")
 	_ = rpio.Open()
 	defer func(){
 		err := rpio.Close()
@@ -227,7 +264,7 @@ func main() {
 	} else {
 		log.Infof("There is no relay attached to device %d", deviceid)
 	}
-
+log.Info("ezo")
 	if deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.RootPhSensor,"ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
@@ -236,7 +273,10 @@ func main() {
 			globals.ReportDeviceFailed("ezoph")
 			log.Error(fmt.Sprintf("ezo start error %v", err))
 		}
+	} else {
+		log.Infof("No root ph sensor configured")
 	}
+	log.Info("after ezo")
 
 	numGoroutines := 6
 	if !globals.Config.DeviceSettings.MovementSensor {
@@ -254,15 +294,18 @@ func main() {
 	if !globals.Config.DeviceSettings.Relay {
 		numGoroutines--
 	}
+	log.Infof("Waiting for %d goroutines", numGoroutines)
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)
 
+	log.Info("movement")
 	if deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.MovementSensor, "adxl345") {
 		log.Info("MovementSensor should be connected to this device, starting")
 		go runTamperDetector()
 	} else {
 		log.Warn(fmt.Sprint("No adxl345 Configured - skipping tamper detection"))
 	}
+	log.Info("adc")
 	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115" ) {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
@@ -274,6 +317,7 @@ func main() {
 	} else {
 		log.Warn(fmt.Sprint("No ads1115s configured - skipping A to D conversion"))
 	}
+	log.Info("root ph")
 	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.RootPhSensor, "ezoph" ) {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
@@ -285,11 +329,12 @@ func main() {
 	} else {
 		log.Warn(fmt.Sprint("No ezoph configured - skipping pH monitoring"))
 	}
+	log.Infof("deviceShouldBeHere %s %d %v hcsr04",globals.ContainerName,deviceid,globals.Config.DeviceSettings.HeightSensor)
 	if deviceShouldBeHere(globals.ContainerName, deviceid, globals.Config.DeviceSettings.HeightSensor, "hcsr04" ) {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
-		log.Warn(fmt.Sprint("No hcsr04 Configured - skipping A to D conversion"))
+		log.Warn(fmt.Sprint("No hcsr04 Configured - skipping distance monitoring"))
 	}
 	if isRelayAttached( deviceid ) {
 		log.Info("Relay configured")
