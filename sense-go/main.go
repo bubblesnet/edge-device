@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	"encoding/json"
@@ -28,8 +27,6 @@ const (
 	address     = "store-and-forward:50051"
 )
 
-var Sequence int32
-var Client pb.SensorStoreAndForwardClient
 
 func runTamperDetector() {
 	log.Info("runTamperDetector")
@@ -96,11 +93,6 @@ func runTamperDetector() {
 
 
 func runDistanceWatcher() {
-	if Sequence > 200000 {
-		Sequence = 100001
-	} else {
-		Sequence = Sequence + 1
-	}
 	log.Info("runDistanceWatcher")
 	// Use BCM pin numbering
 	// Echo pin
@@ -124,8 +116,8 @@ func runDistanceWatcher() {
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
-			message := pb.SensorRequest{Sequence: Sequence, TypeId: "sensor", Data:string(bytearray)}
-			sensor_reply, err := Client.StoreAndForward(context.Background(), &message )
+			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data:string(bytearray)}
+			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message )
 			if err != nil {
 				log.Error(fmt.Sprintf("runDistanceWatcher ERROR %v", err))
 			} else {
@@ -242,7 +234,7 @@ func main() {
 			log.Fatalf("did not connect: %v", err)
 		}
 		defer conn.Close()
-	Client = pb.NewSensorStoreAndForwardClient(conn)
+	globals.Client = pb.NewSensorStoreAndForwardClient(conn)
 
 		_, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
@@ -305,7 +297,7 @@ log.Info("ezo")
 	} else {
 		log.Warn(fmt.Sprint("No adxl345 Configured - skipping tamper detection"))
 	}
-	log.Info("adc")
+	log.Infof("adc %s %d %v ads1115",globals.ContainerName,deviceid, globals.Config.DeviceSettings.WaterLevelSensor )
 	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115" ) {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
@@ -369,6 +361,7 @@ func deviceShouldBeHere( containerName string, mydeviceid int, deviceInCabinet b
 		return false
 	}
 	for i := 0; i < len(globals.Config.AttachedDevices); i++ {
+//		log.Infof("%v", globals.Config.AttachedDevices[i])
 		if globals.Config.AttachedDevices[i].ContainerName == containerName && globals.Config.AttachedDevices[i].DeviceID == mydeviceid && globals.Config.AttachedDevices[i].DeviceType == deviceType{
 			log.Infof("Device %s should be present at %s", globals.Config.AttachedDevices[i].DeviceType, globals.Config.AttachedDevices[i].Address)
 			return true

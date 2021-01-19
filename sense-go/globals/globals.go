@@ -1,6 +1,9 @@
 package globals
 
-import "github.com/go-playground/log"
+import (
+	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	"github.com/go-playground/log"
+)
 
 var ContainerName = "sense-go"
 
@@ -39,6 +42,8 @@ var CurrentStageSchedule StageSchedule
 var Lasttemp float32
 var Lasthumidity float32
 
+var Sequence int32
+var Client pb.SensorStoreAndForwardClient
 
 func ReportDeviceFailed(devicename string) {
 	for i := 0; i < len(DevicesFailed); i++ {
@@ -48,4 +53,13 @@ func ReportDeviceFailed(devicename string) {
 	}
 	log.Errorf("Adding device %s to failed list", devicename)
 	DevicesFailed = append(DevicesFailed,devicename)
+}
+
+func GetSequence() (int32){
+	if Sequence > 200000 {
+		Sequence = 100001
+	} else {
+		Sequence = Sequence + 1
+	}
+	return Sequence
 }

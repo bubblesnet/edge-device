@@ -7,8 +7,11 @@ import (
 	"github.com/go-playground/log"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-	//	grpc "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	//	"google.golang.org/grpc"
 	"time"
+	"golang.org/x/net/context"
+
 )
 
 type ChannelConfig struct {
@@ -25,6 +28,16 @@ type AdapterConfig struct {
 type ChannelValue struct {
 	ChannelNumber int `json:"channel_number,omitempty"`
 	Voltage float64 `json:"voltage,omitempty"`
+	Gain    int	`json:"gain,omitempty"`
+	Rate    int	`json:"rate,omitempty"`
+}
+
+type ADCSensorMessage struct {
+	MessageType string `json:"message_type"`
+	SensorName string `json:"sensor_name"`
+	ChannelNumber int `json:"channel_number,omitempty"`
+	Voltage float64 `json:"value,omitempty"`
+	Units string	`json:"units"`
 	Gain    int	`json:"gain,omitempty"`
 	Rate    int	`json:"rate,omitempty"`
 }
@@ -120,16 +133,25 @@ func RunADCPoller() (error) {
 			log.Error(fmt.Sprintf("loopforever error %v", err))
 			break
 		} else {
-//			bytearray, err := json.Marshal(adcMessage)
-			_, err := json.Marshal(adcMessage)
-			if err != nil {
-				fmt.Println("loopforever error %v", err)
-				break
+			for i := 0; i < len(adcMessage.ChannelValues); i++ {
+				ads := ADCSensorMessage{}
+				ads.SensorName = fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+				ads.MessageType = "measurement"
+				ads.Voltage = adcMessage.ChannelValues[i].Voltage
+				ads.Units = "Volts"
+				bytearray, err := json.Marshal(ads)
+				if err != nil {
+					fmt.Println("loopforever error %v", err)
+					break
+				}
+				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+				sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
+				} else {
+					log.Infof("sensor_reply %v", sensor_reply)
+				}
 			}
-//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]),3)
-//			if err != nil {
-//				log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
-//			}
 		}
 
 		adcMessage = new(ADCMessage)
@@ -138,16 +160,26 @@ func RunADCPoller() (error) {
 			log.Error(fmt.Sprintf("loopforever error %v", err))
 			break
 		} else {
-//			bytearray, err := json.Marshal(adcMessage)
-			_, err := json.Marshal(adcMessage)
-			if err != nil {
-				fmt.Println("loopforever error %v", err)
-				break
+			//			bytearray, err := json.Marshal(adcMessage)
+			for i := 0; i < len(adcMessage.ChannelValues); i++ {
+				ads := ADCSensorMessage{}
+				ads.SensorName = fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+				ads.MessageType = "measurement"
+				ads.Voltage = adcMessage.ChannelValues[i].Voltage
+				ads.Units = "Volts"
+				bytearray, err := json.Marshal(ads)
+				if err != nil {
+					fmt.Println("loopforever error %v", err)
+					break
+				}
+				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+				sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
+				} else {
+					log.Infof("sensor_reply %v", sensor_reply)
+				}
 			}
-//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-//			if err != nil {
-//				log.Error(fmt.Sprintf("runADCPoller2 ERROR %v", err))
-//			}
 		}
 		//		readAllChannels(ads1115s[1],a1)
 		time.Sleep(time.Second * 15)

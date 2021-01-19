@@ -19,7 +19,7 @@ from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 lastTemp = 0.0
 config = {}
 LightAddress = 0
-sequence = 0
+
 
 lastHumidity = 0.0
 lastPressure = 0.0
@@ -196,12 +196,7 @@ def report_polled_sensor_parameters(bus, sequence):
 
 
 def send_message(msg):
-    global sequence
-    if sequence > 100000:
-        sequence = 1
-    else:
-        sequence = sequence + 1
-
+    sequence = globals.GetSequence()
     millis = int(time.time()*1000)
     msg['sample_timestamp'] = int(millis)
     json_bytes = str.encode(json.dumps(msg))
@@ -232,7 +227,8 @@ if __name__ == "__main__":
             logging.debug("Entering sensor polling loop")
             while True:
                 #                        toggleRelays(relay,sequence)
-                report_polled_sensor_parameters(bus, sequence)
+
+                report_polled_sensor_parameters(bus, globals.GetSequence())
 
                 logging.debug("sleeping %d xx seconds at %s" % (
                 config['time_between_sensor_polling_in_seconds'], time.strftime("%T")))
