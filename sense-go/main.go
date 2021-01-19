@@ -388,18 +388,18 @@ func readPh() error {
 		} else {
 			phm := globals.PhMessage{
 				SampleTimestamp: getNowMillis(),
-				Ph: ph}
-//			bytearray, err := json.Marshal(phm)
-			_, err := json.Marshal(phm)
-			if err == nil {
-//				err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
-//				if err != nil {
-//					log.Error(fmt.Sprintf("readPh ERROR %v", err))
-//				}
+				MessageType: "measurement",
+				SensorName: "root_ph",
+				Value: ph,
+				Units: "",
+				}
+			bytearray, err := json.Marshal(phm)
+			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+			if err != nil {
+				log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
 			} else {
-				log.Error(fmt.Sprintf("readph error = %v", err ))
-				e = err
-				break
+				log.Infof("sensor_reply %v", sensor_reply)
 			}
 		}
 		time.Sleep(15*time.Second)

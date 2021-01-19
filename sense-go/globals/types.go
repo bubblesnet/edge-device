@@ -15,7 +15,10 @@ type DistanceMessage struct {
 
 type PhMessage struct {
 	SampleTimestamp int64 `json:"sample_timestamp,omitempty"`
-	Ph float64 `json:"ph,omitempty"`
+	MessageType string `json:"message_type"`
+	SensorName string `json:"sensor_name"`
+	Value float64 `json:"value"`
+	Units string `json:"units"`
 }
 
 type TamperMessage struct {
