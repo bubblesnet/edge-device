@@ -36,5 +36,5 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # ENV INITSYSTEM on
 
 CMD ["modprobe i2c-dev; export I2C_BUS=1"]
-CMD ["bash"]
-# CMD ["python", "src/main.py"]
+# CMD ["bash"]
+CMD ["python", "src/main.py"]

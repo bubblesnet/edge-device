@@ -155,7 +155,7 @@ def append_axl345_data(msg):
     msg['tamper_detector'] = False
 
 
-def report_polled_sensor_parameters(bus, sequence):
+def report_polled_sensor_parameters(bus):
     global config
     #    logging.debug("reportPolledSensorParameters")
 
@@ -194,14 +194,23 @@ def report_polled_sensor_parameters(bus, sequence):
         send_message(msg)
     return
 
+sequence = 200000
+
+def getSequence():
+    global sequence
+    if sequence >= 3000000:
+        sequence = 200000
+    else:
+        sequence = sequence + 1
+    return sequence
 
 def send_message(msg):
-    sequence = globals.GetSequence()
+    seq = getSequence()
     millis = int(time.time()*1000)
     msg['sample_timestamp'] = int(millis)
     json_bytes = str.encode(json.dumps(msg))
     logging.debug(json_bytes)
-    message = SensorRequest(sequence=sequence, type_id="sensor", data=json_bytes)
+    message = SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
     response = stub.StoreAndForward(message)
     logging.debug(response)
     return
@@ -228,7 +237,7 @@ if __name__ == "__main__":
             while True:
                 #                        toggleRelays(relay,sequence)
 
-                report_polled_sensor_parameters(bus, globals.GetSequence())
+                report_polled_sensor_parameters(bus)
 
                 logging.debug("sleeping %d xx seconds at %s" % (
                 config['time_between_sensor_polling_in_seconds'], time.strftime("%T")))
