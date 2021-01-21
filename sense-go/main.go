@@ -195,7 +195,7 @@ func makeControlDecisions() {
 }
 
 func reportVersion() {
-	log.Infof("Version %s.%s.%s timestamp %s githash %s", BubblesnetVersionMajorString, BubblesnetVersionMinorString, BubblesnetVersionPatchString,
+	log.Infof("Version %s.%s.%s-%s timestamp %s githash %s", BubblesnetVersionMajorString, BubblesnetVersionMinorString, BubblesnetVersionPatchString,
 	BubblesnetBuildNumberString,BubblesnetBuildTimestamp, BubblesnetGitHash)
 }
 

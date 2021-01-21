@@ -144,7 +144,7 @@ func RunADCPoller() (error) {
 					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
-					fmt.Println("loopforever error %v", err)
+					log.Errorf("loopforever error %v", err)
 					break
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
@@ -171,7 +171,7 @@ func RunADCPoller() (error) {
 					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
-					fmt.Println("loopforever error %v", err)
+					log.Errorf("loopforever error %v", err)
 					break
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}

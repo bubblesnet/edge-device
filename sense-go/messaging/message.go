@@ -78,6 +78,7 @@ func NewGenericSensorMessage( sensor_name string, value float64, units string ) 
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+			SensorName: sensor_name,
 		SampleTimestamp: getNowMillis(),
 		MessageType:       "measurement",
 		Value:             value,
