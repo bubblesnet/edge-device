@@ -18,14 +18,18 @@ import (
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
 	"math"
+	"bubblesnet/edge-device/sense-go/messaging"
 	"sync"
 	"time"
 	"golang.org/x/net/context"
 )
 
-const (
-	address     = "store-and-forward:50051"
-)
+var BubblesnetVersionMajorString string
+var BubblesnetVersionMinorString=""
+var BubblesnetVersionPatchString=""
+var BubblesnetBuildNumberString=""
+var BubblesnetBuildTimestamp=""
+var BubblesnetGitHash=""
 
 
 func runTamperDetector() {
@@ -51,22 +55,20 @@ func runTamperDetector() {
 				zmove = math.Abs(lastz - z)
 				if xmove > .03 || ymove > .03 || zmove > .035 {
 					log.Info(fmt.Sprintf("TAMPER!! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove))
-					var tamperMessage globals.TamperMessage
-					tamperMessage.SampleTimestamp = getNowMillis()
-					tamperMessage.XMove = xmove
-					tamperMessage.YMove = ymove
-					tamperMessage.ZMove = zmove
-//					bytearray, err := json.Marshal(tamperMessage)
-//					if err != nil {
-//						fmt.Println(err)
-//						return
-//					}
-
-//					msg := bubblesgrpc.SensorRequest{}
-//					_, err = bubblesgrpc.SensorStoreAndForwardClient.StoreAndForward(ctx,msg)
-//					if err != nil {
-//						log.Error(fmt.Sprintf("runTamperDetector ERROR %v", err))
-//					}
+					var tamperMessage = messaging.NewTamperSensorMessage("tamper_sensor",
+						0.0, "",xmove, ymove, zmove )
+					bytearray, err := json.Marshal(tamperMessage)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data:string(bytearray)}
+					sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message )
+					if err != nil {
+						log.Error(fmt.Sprintf("runTamperDetector ERROR %v", err))
+					} else {
+						log.Debugf("%v", sensor_reply)
+					}
 
 				} else {
 //					log.Debug(fmt.Sprintf("x: %.3f | y: %.3f | z: %.3f \n", xmove, ymove, zmove))
@@ -105,14 +107,7 @@ func runDistanceWatcher() {
 		seconds := nanos/1000000000.0
 		mydistance := (float64)(17150.00*seconds)
 //		log.Debug(fmt.Sprintf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := globals.DistanceMessage{
-			SampleTimestamp: getNowMillis(),
-			SensorName: "height_sensor",
-			MessageType: "measurement",
-			Units: "cm",
-			Value: mydistance,
-			DistanceCm: mydistance,
-			DistanceIn: mydistance/2.54}
+		dm := messaging.NewDistanceSensorMessage("height_sensor", mydistance, "cm", mydistance, mydistance/2.54)
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
@@ -144,7 +139,7 @@ func runLocalStateWatcher() {
 //				log.Error(fmt.Sprintf("runLocalStateWatcher ERROR %v", err))
 //			}
 		} else {
-			log.Debug(fmt.Sprintf("runLocalStateWatcher error = %v", err ))
+//			log.Debug(fmt.Sprintf("runLocalStateWatcher error = %v", err ))
 			break
 		}
 
@@ -199,9 +194,21 @@ func makeControlDecisions() {
 	}
 }
 
+func reportVersion() {
+	log.Infof("Version %s.%s.%s timestamp %s githash %s", BubblesnetVersionMajorString, BubblesnetVersionMinorString, BubblesnetVersionPatchString,
+	BubblesnetBuildNumberString,BubblesnetBuildTimestamp, BubblesnetGitHash)
+}
+
 func main() {
-	fmt.Printf("sense-go")
-	log.Info(fmt.Sprintf("sense-go"))
+	fmt.Printf(globals.ContainerName)
+	log.Info(fmt.Sprintf(globals.ContainerName))
+
+	globals.BubblesnetVersionMajorString = BubblesnetVersionMajorString
+	globals.BubblesnetVersionMinorString = BubblesnetVersionMinorString
+	globals.BubblesnetVersionPatchString = BubblesnetVersionPatchString
+	globals.BubblesnetBuildNumberString = BubblesnetBuildNumberString
+	globals.BubblesnetBuildTimestamp = BubblesnetBuildTimestamp
+	globals.BubblesnetGitHash = BubblesnetGitHash
 
 	err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule)
 	//	err := readglobals.Configuration()
@@ -211,6 +218,7 @@ func main() {
 	globals.ConfigureLogging(globals.Config,"sense-go")
 	err = getConfigFromServer()
 	globals.Config.DeviceSettings.HeightSensor = true
+	reportVersion()
 	//	err := readglobals.Configuration()
 	if err != nil {
 		return
@@ -228,8 +236,8 @@ func main() {
 	log.Info(fmt.Sprintf("stageSchedule = %v", globals.CurrentStageSchedule))
 
 		// Set up a connection to the server.
-		log.Infof("Dialing GRPC server at %s",address)
-		conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+		log.Infof("Dialing GRPC server at %s",globals.ForwrdingAddress)
+		conn, err := grpc.Dial(globals.ForwrdingAddress, grpc.WithInsecure(), grpc.WithBlock())
 		if err != nil {
 			log.Fatalf("did not connect: %v", err)
 		}
@@ -386,13 +394,7 @@ func readPh() error {
 			e = err
 			break
 		} else {
-			phm := globals.PhMessage{
-				SampleTimestamp: getNowMillis(),
-				MessageType: "measurement",
-				SensorName: "root_ph",
-				Value: ph,
-				Units: "",
-				}
+			phm := messaging.NewGenericSensorMessage("root_ph",ph,"")
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
@@ -406,13 +408,6 @@ func readPh() error {
 	}
 	log.Debug(fmt.Sprintf("returning %v from readph", e ))
 	return e
-}
-
-func getNowMillis() int64 {
-	now := time.Now()
-	nanos := now.UnixNano()
-	millis := nanos / 1000000
-	return millis
 }
 
 func getConfigFromServer() (err error) {

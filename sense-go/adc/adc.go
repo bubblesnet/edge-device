@@ -11,7 +11,7 @@ import (
 	//	"google.golang.org/grpc"
 	"time"
 	"golang.org/x/net/context"
-
+	"bubblesnet/edge-device/sense-go/messaging"
 )
 
 type ChannelConfig struct {
@@ -32,7 +32,10 @@ type ChannelValue struct {
 	Rate    int	`json:"rate,omitempty"`
 }
 
+/*
 type ADCSensorMessage struct {
+	ContainerName string `json:"container_name"`
+	ExecutableVersion string `json:"executable_version"`
 	MessageType string `json:"message_type"`
 	SensorName string `json:"sensor_name"`
 	ChannelNumber int `json:"channel_number,omitempty"`
@@ -41,6 +44,7 @@ type ADCSensorMessage struct {
 	Gain    int	`json:"gain,omitempty"`
 	Rate    int	`json:"rate,omitempty"`
 }
+*/
 
 type Channels [4]ChannelValue
 
@@ -134,11 +138,10 @@ func RunADCPoller() (error) {
 			break
 		} else {
 			for i := 0; i < len(adcMessage.ChannelValues); i++ {
-				ads := ADCSensorMessage{}
-				ads.SensorName = fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				ads.MessageType = "measurement"
-				ads.Voltage = adcMessage.ChannelValues[i].Voltage
-				ads.Units = "Volts"
+				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+				ads := messaging.NewADCSensorMessage(sensor_name,
+					adcMessage.ChannelValues[i].Voltage,"Volts",
+					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
 					fmt.Println("loopforever error %v", err)
@@ -162,11 +165,10 @@ func RunADCPoller() (error) {
 		} else {
 			//			bytearray, err := json.Marshal(adcMessage)
 			for i := 0; i < len(adcMessage.ChannelValues); i++ {
-				ads := ADCSensorMessage{}
-				ads.SensorName = fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				ads.MessageType = "measurement"
-				ads.Voltage = adcMessage.ChannelValues[i].Voltage
-				ads.Units = "Volts"
+				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+				ads := messaging.NewADCSensorMessage(sensor_name,
+					adcMessage.ChannelValues[i].Voltage,"Volts",
+					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
 					fmt.Println("loopforever error %v", err)

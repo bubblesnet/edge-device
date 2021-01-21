@@ -5,11 +5,23 @@ import (
 	"github.com/go-playground/log"
 )
 
+// These are shadows of vars in main
+var BubblesnetVersionMajorString string
+var BubblesnetVersionMinorString=""
+var BubblesnetVersionPatchString=""
+var BubblesnetBuildNumberString=""
+var BubblesnetBuildTimestamp=""
+var BubblesnetGitHash=""
+
 var ContainerName = "sense-go"
 
 var DevicesFailed []string
 
 var Config = Configuration{}
+
+const (
+	ForwrdingAddress     = "store-and-forward:50051"
+)
 
 type LocalState struct {
 	EnvironmentalControl string  `json:"environmental_control,omitempty"`
