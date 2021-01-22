@@ -56,7 +56,7 @@ func runTamperDetector() {
 				if xmove > .03 || ymove > .03 || zmove > .035 {
 					log.Info(fmt.Sprintf("TAMPER!! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove))
 					var tamperMessage = messaging.NewTamperSensorMessage("tamper_sensor",
-						0.0, "",xmove, ymove, zmove )
+						0.0, "","", xmove, ymove, zmove )
 					bytearray, err := json.Marshal(tamperMessage)
 					if err != nil {
 						fmt.Println(err)
@@ -93,6 +93,7 @@ func runTamperDetector() {
 	}
 }
 
+var lastDistance = float64(0.0)
 
 func runDistanceWatcher() {
 	log.Info("runDistanceWatcher")
@@ -106,8 +107,15 @@ func runDistanceWatcher() {
 		nanos := distance * 58000.00
 		seconds := nanos/1000000000.0
 		mydistance := (float64)(17150.00*seconds)
+		direction := ""
+		if mydistance > lastDistance {
+			direction = "up"
+		} else if mydistance < lastDistance {
+			direction = "down"
+		}
+		lastDistance = mydistance
 //		log.Debug(fmt.Sprintf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := messaging.NewDistanceSensorMessage("height_sensor", mydistance, "cm", mydistance, mydistance/2.54)
+		dm := messaging.NewDistanceSensorMessage("height_sensor", mydistance, "cm", direction, mydistance, mydistance/2.54)
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
@@ -256,16 +264,15 @@ func main() {
 			log.Errorf("rpio.close %+v", err)
 		}
 	}()
-	deviceid := 70000007
-	if isRelayAttached( deviceid ) {
-		log.Infof("Relay is attached to device %d", deviceid)
+	if isRelayAttached( globals.DeviceId ) {
+		log.Infof("Relay is attached to device %d", globals.DeviceId)
 		powerstrip.InitRpioPins()
 		powerstrip.TurnAllOff(1)
 	} else {
-		log.Infof("There is no relay attached to device %d", deviceid)
+		log.Infof("There is no relay attached to device %d", globals.DeviceId)
 	}
 log.Info("ezo")
-	if deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.RootPhSensor,"ezoph") {
+	if deviceShouldBeHere(globals.ContainerName,globals.DeviceId, globals.Config.DeviceSettings.RootPhSensor,"ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 		err = ezoDriver.Start()
@@ -299,14 +306,14 @@ log.Info("ezo")
 	wg.Add(numGoroutines)
 
 	log.Info("movement")
-	if deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.MovementSensor, "adxl345") {
+	if deviceShouldBeHere(globals.ContainerName,globals.DeviceId, globals.Config.DeviceSettings.MovementSensor, "adxl345") {
 		log.Info("MovementSensor should be connected to this device, starting")
 		go runTamperDetector()
 	} else {
 		log.Warn(fmt.Sprint("No adxl345 Configured - skipping tamper detection"))
 	}
-	log.Infof("adc %s %d %v ads1115",globals.ContainerName,deviceid, globals.Config.DeviceSettings.WaterLevelSensor )
-	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115" ) {
+	log.Infof("adc %s %d %v ads1115",globals.ContainerName,globals.DeviceId, globals.Config.DeviceSettings.WaterLevelSensor )
+	if  deviceShouldBeHere(globals.ContainerName,globals.DeviceId, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115" ) {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
 			err :=  adc.RunADCPoller()
@@ -318,7 +325,7 @@ log.Info("ezo")
 		log.Warn(fmt.Sprint("No ads1115s configured - skipping A to D conversion"))
 	}
 	log.Info("root ph")
-	if  deviceShouldBeHere(globals.ContainerName,deviceid, globals.Config.DeviceSettings.RootPhSensor, "ezoph" ) {
+	if  deviceShouldBeHere(globals.ContainerName,globals.DeviceId, globals.Config.DeviceSettings.RootPhSensor, "ezoph" ) {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
 			err = readPh()
@@ -329,14 +336,14 @@ log.Info("ezo")
 	} else {
 		log.Warn(fmt.Sprint("No ezoph configured - skipping pH monitoring"))
 	}
-	log.Infof("deviceShouldBeHere %s %d %v hcsr04",globals.ContainerName,deviceid,globals.Config.DeviceSettings.HeightSensor)
-	if deviceShouldBeHere(globals.ContainerName, deviceid, globals.Config.DeviceSettings.HeightSensor, "hcsr04" ) {
+	log.Infof("deviceShouldBeHere %s %d %v hcsr04",globals.ContainerName,globals.DeviceId,globals.Config.DeviceSettings.HeightSensor)
+	if deviceShouldBeHere(globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.HeightSensor, "hcsr04" ) {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
 		log.Warn(fmt.Sprint("No hcsr04 Configured - skipping distance monitoring"))
 	}
-	if isRelayAttached( deviceid ) {
+	if isRelayAttached( globals.DeviceId ) {
 		log.Info("Relay configured")
 //		go runPinToggler()
 	} else {
@@ -355,7 +362,7 @@ log.Info("ezo")
 	log.Info(fmt.Sprintf("exiting main - because waitgroup finished" ))
 }
 
-func isRelayAttached( deviceid int ) (relayIsAttached bool){
+func isRelayAttached( deviceid int64 ) (relayIsAttached bool){
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].DeviceID == deviceid  {
 			return true
@@ -364,7 +371,7 @@ func isRelayAttached( deviceid int ) (relayIsAttached bool){
 	return false
 }
 
-func deviceShouldBeHere( containerName string, mydeviceid int, deviceInCabinet bool, deviceType string ) ( shouldBePresent bool ) {
+func deviceShouldBeHere( containerName string, mydeviceid int64, deviceInCabinet bool, deviceType string ) ( shouldBePresent bool ) {
 	if !deviceInCabinet {
 		return false
 	}
@@ -377,6 +384,8 @@ func deviceShouldBeHere( containerName string, mydeviceid int, deviceInCabinet b
 	}
 	return false
 }
+
+var lastPh = float64(0.0)
 
 func readPh() error {
 	ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
@@ -394,7 +403,14 @@ func readPh() error {
 			e = err
 			break
 		} else {
-			phm := messaging.NewGenericSensorMessage("root_ph",ph,"")
+			direction := ""
+			if ph > lastPh {
+				direction = "up"
+			} else if ph < lastPh {
+				direction = "down"
+			}
+			lastPh = ph
+			phm := messaging.NewGenericSensorMessage("root_ph",ph,"", direction)
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)

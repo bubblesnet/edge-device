@@ -106,7 +106,12 @@ func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessag
 	}
 	return err1
 }
-
+var last0 = []float64 {
+	0.0,0.0,0.0,0.0,
+}
+var last1 = []float64 {
+	0.0,0.0,0.0,0.0,
+}
 func RunADCPoller() (error) {
 	var ads1115s [2]*i2c.ADS1x15Driver
 
@@ -138,9 +143,18 @@ func RunADCPoller() (error) {
 			break
 		} else {
 			for i := 0; i < len(adcMessage.ChannelValues); i++ {
+				direction := ""
+				if adcMessage.ChannelValues[i].Voltage > last0[i] {
+					direction = "up"
+				} else if adcMessage.ChannelValues[i].Voltage < last0[i] {
+					direction = "down"
+				}
+				last0[i] = adcMessage.ChannelValues[i].Voltage
+
 				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				ads := messaging.NewADCSensorMessage(sensor_name,
 					adcMessage.ChannelValues[i].Voltage,"Volts",
+					direction,
 					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
@@ -165,9 +179,16 @@ func RunADCPoller() (error) {
 		} else {
 			//			bytearray, err := json.Marshal(adcMessage)
 			for i := 0; i < len(adcMessage.ChannelValues); i++ {
+				direction := ""
+				if adcMessage.ChannelValues[i].Voltage > last0[i] {
+					direction = "up"
+				} else if adcMessage.ChannelValues[i].Voltage < last0[i] {
+					direction = "down"
+				}
+				last0[i] = adcMessage.ChannelValues[i].Voltage
 				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				ads := messaging.NewADCSensorMessage(sensor_name,
-					adcMessage.ChannelValues[i].Voltage,"Volts",
+					adcMessage.ChannelValues[i].Voltage,"Volts", direction,
 					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {

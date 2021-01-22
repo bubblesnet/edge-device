@@ -48,9 +48,6 @@ def append_bme280_temp(bus, msg, value_name):
         lastTemp = data.temperature
         msg['tempC'] = data.temperature
         msg['tempF'] = (data.temperature * 1.8) + 32.0
-#        msg['humidity'] = data.humidity
-#        msg['pressure'] = data.pressure
-    #        logging.debug( "bme280 read temp at 0x76 as %f" % data.temperature )
     except Exception as e:
         logging.debug("bme280 error %s" % e)
         logging.debug(traceback.format_exc())
@@ -71,8 +68,6 @@ def append_bme280_humidity(bus, msg, value_name):
                 direction = "down"
         msg['direction'] = direction
         lastHumidity = data.humidity
-
-    #        logging.debug( "bme280 read temp at 0x76 as %f" % data.temperature )
     except Exception as e:
         logging.debug("bme280 error %s" % e)
         logging.debug(traceback.format_exc())
@@ -94,7 +89,6 @@ def append_bme280_pressure(bus, msg, value_name):
         lastPressure = data.pressure
         msg['direction'] = direction
         lastPressure = data.humidity
-#        logging.debug( "bme280 read temp at 0x76 as %f" % data.temperature )
     except Exception as e:
         logging.debug("bme280 error %s" % e)
         logging.debug(traceback.format_exc())
@@ -164,34 +158,41 @@ def report_polled_sensor_parameters(bus):
         msg['message_type'] = 'measurement'
         append_bh1750_data(msg)
         send_message(msg)
+
     if is_our_device('bme280'):
         msg = {}
         msg['message_type'] = 'measurement'
         append_bme280_temp(bus, msg, 'temp_air_middle')
         send_message(msg)
+
         msg = {}
         msg['message_type'] = 'measurement'
         append_bme280_humidity(bus, msg, 'humidity_internal')
         send_message(msg)
+
         msg = {}
         msg['message_type'] = 'measurement'
         append_bme280_pressure(bus, msg, 'pressure_internal')
         send_message(msg)
+
     if is_our_device('ads1115'):
-        append_adc_data(msg)
         msg = {}
         msg['message_type'] = 'measurement'
+        append_adc_data(msg)
         send_message(msg)
+
     if is_our_device('adxl345'):
         msg = {}
         msg['message_type'] = 'measurement'
         append_axl345_data(msg)
         send_message(msg)
+
     if is_our_device('relay'):
         msg = {}
         msg['message_type'] = 'measurement'
         append_gpio_data(msg)
         send_message(msg)
+
     return
 
 sequence = 200000
@@ -205,9 +206,13 @@ def getSequence():
     return sequence
 
 def send_message(msg):
+    global config
     seq = getSequence()
     millis = int(time.time()*1000)
     msg['sample_timestamp'] = int(millis)
+    msg['deviceid'] = config['deviceid']
+    msg['container_name'] = "sense-python"
+    msg['executable_version'] = "9.9.9 "
     json_bytes = str.encode(json.dumps(msg))
     logging.debug(json_bytes)
     message = SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)

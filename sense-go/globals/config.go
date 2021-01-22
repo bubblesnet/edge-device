@@ -16,7 +16,7 @@ type IncludedSensor struct {
 }
 type AttachedDevice struct {
 	ContainerName	string `json:"container_name"`
-	DeviceID		int			`json:"deviceid"`
+	DeviceID		int64			`json:"deviceid"`
 	DeviceType	string	`json:"device_type"`
 	Protocol	string `json:"protocol"`
 	Address	string `json:"address"`
@@ -71,8 +71,8 @@ type DeviceSettings struct {
 type Configuration struct {
 	ControllerHostName	string		`json:"controller_hostname"`
 	ControllerAPIPort	int			`json:"controller_api_port"`
-	UserID			int			`json:"userid"`
-	DeviceID		int			`json:"deviceid"`
+	UserID			int64			`json:"userid"`
+	DeviceID		int64			`json:"deviceid"`
 	Stage          string          `json:"stage,omitempty"`
 	LightOnHour    int             `json:"light_on_hour,omitempty"`
 	StageSchedules []StageSchedule `json:"stage_schedules,omitempty"`
@@ -83,7 +83,7 @@ type Configuration struct {
 }
 
 type ACOutlet struct {
-	DeviceID int `json:"deviceid"`
+	DeviceID int64 `json:"deviceid"`
 	Name string `json:"name,omitempty"`
 	Index int `json:"index,omitempty"`
 	PowerOn bool `json:"power_on,omitempty"`

@@ -24,7 +24,7 @@ import (
 	"log"
 	"time"
 
-	pb "../bubblesgrpc"
+	pb "../bubblesgrpc-server/bubblesgrpc"
 	"google.golang.org/grpc"
 )
 

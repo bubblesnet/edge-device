@@ -19,6 +19,10 @@ var DevicesFailed []string
 
 var Config = Configuration{}
 
+var DeviceId = int64(70000007)
+var UserId = int64(90000009)
+
+
 const (
 	ForwrdingAddress     = "store-and-forward:50051"
 )

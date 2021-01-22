@@ -101,7 +101,7 @@ func makeBucketIfNotExist(bucketName string) (bool, error) {
 
 func addRecord(bucketName string, message string, sequence int32 ) error {
 	currentTime := time.Now()
-	key := fmt.Sprintf( "%s (%s)", currentTime.Format(time.RFC3339), sequence )
+	key := fmt.Sprintf( "%s (%6.6d)", currentTime.Format(time.RFC3339), sequence )
 
 //	key := fmt.Sprintf("%20.20d", currentTime.Unix())
 	log.Debug(fmt.Sprintf("adding record key %s value %s", key, message))

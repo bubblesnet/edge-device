@@ -57,25 +57,70 @@
     }
   ],
   "ac_outlets": [
-    { "deviceid": 70000007, "name":  "intake_fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
-    { "deviceid": 70000007,"name":  "water_pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
-    { "deviceid": 70000007,"name":  "light_bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
-    { "deviceid": 70000007,"name":  "light_vegetative",   "index": 3, "bcm_pin_number":  5, "power_on": false },
-    { "deviceid": 70000007,"name":  "heat_lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
-    { "deviceid": 70000007,"name":  "air_pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
-    { "deviceid": 70000007,"name":  "exhaust_fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
-    { "deviceid": 70000007,"name":  "humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
+    {
+      "deviceid": 70000007,
+      "name": "intake_fan",
+      "index": 0,
+      "bcm_pin_number": 17,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "water_pump",
+      "index": 1,
+      "bcm_pin_number": 27,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "light_bloom",
+      "index": 2,
+      "bcm_pin_number": 22,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "light_vegetative",
+      "index": 3,
+      "bcm_pin_number": 5,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "heat_lamp",
+      "index": 4,
+      "bcm_pin_number": 6,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "air_pump",
+      "index": 5,
+      "bcm_pin_number": 13,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "exhaust_fan",
+      "index": 6,
+      "bcm_pin_number": 19,
+      "power_on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "humidifier",
+      "index": 7,
+      "bcm_pin_number": 26,
+      "power_on": false
+    }
   ],
-
   "time_between_pictures_in_seconds": 30,
   "camera": {
     "picamera": true,
     "resolutionX": 2592,
     "resolutionY": 1944
   },
-
   "time_between_sensor_polling_in_seconds": 15,
-
   "device_settings": {
     "humidifier": true,
     "humidity_sensor": true,
@@ -111,19 +156,195 @@
     "light_vegetative": true,
     "light_germinate": true
   },
-
-  "attached_devices" : [
-    {"container_name": "sense-python", "deviceid": 70000007,"device_type": "bme280", "protocol": "i2c", "address": "0x76","included_sensors": [{"sensor_name": "humidity_sensor"}
-    ,{"sensor_name": "internal_pressure_sensor", "address": "44"},{"sensor_name": "thermometer_middle", "address": "55"}]},
-    {"container_name": "sense-python","deviceid": 70000008,"device_type": "bme280", "protocol": "i2c", "address": "0x76","included_sensors": [{"sensor_name": "external_humidity_sensor", "address": "55"},
-      {"sensor_name": "external_pressure_sensor", "address": "55"},{"sensor_name": "thermometer_external", "address": "55"}]},
-    {"container_name": "sense-python","deviceid": 70000007,"device_type": "bh1750",  "protocol": "i2c", "address": "0x23","included_sensors": [{"sensor_name": "light_sensor", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000007,"device_type": "ads1115", "protocol": "i2c", "address": "0x49","included_sensors": [{"sensor_name": "water_level", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000007,"device_type": "ads1115", "protocol": "i2c", "address": "0x48","included_sensors": [{"sensor_name": "", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000008,"device_type": "adxl345","protocol": "i2c", "address": "0x53","included_sensors": [{"sensor_name": "movement_sensor", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000007,"device_type": "ezoph","protocol": "i2c", "address": "0x63","included_sensors": [{"sensor_name": "root_ph_sensor", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000007,"device_type": "hcsr04","protocol": "i2c", "address": "0x47","included_sensors": [{"sensor_name": "distance_sensor", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000008,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "cabinet_door_sensor", "address": "55"}]},
-    {"container_name": "sense-go","deviceid": 70000008,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "external_door_sensor", "address": "55"}]}
+  "attached_devices": [
+    {
+      "container_name": "sense-python",
+      "deviceid": 70000007,
+      "device_type": "bme280",
+      "protocol": "i2c",
+      "address": "0x76",
+      "included_sensors": [
+        {
+          "sensor_name": "humidity_sensor",
+          "measurement_name": "internal_humidity"
+        },
+        {
+          "sensor_name": "internal_pressure_sensor",
+          "measurement_name": "internal_pressure",
+          "address": "44"
+        },
+        {
+          "sensor_name": "thermometer_middle",
+          "measurement_name": "temp_air_middle",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-python",
+      "deviceid": 70000008,
+      "device_type": "bme280",
+      "protocol": "i2c",
+      "address": "0x76",
+      "included_sensors": [
+        {
+          "sensor_name": "external_humidity_sensor",
+          "measurement_name": "external_humidity",
+          "address": "55"
+        },
+        {
+          "sensor_name": "external_pressure_sensor",
+          "measurement_name": "external_pressure",
+          "address": "55"
+        },
+        {
+          "sensor_name": "thermometer_external",
+          "measurement_name": "temp_air_external",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-python",
+      "deviceid": 70000007,
+      "device_type": "bh1750",
+      "protocol": "i2c",
+      "address": "0x23",
+      "included_sensors": [
+        {
+          "sensor_name": "light_sensor",
+          "measurement_name": "light_internal",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000007,
+      "device_type": "ads1115",
+      "protocol": "i2c",
+      "address": "0x49",
+      "included_sensors": [
+        {
+          "sensor_name": "water_level",
+          "measurement_name": "water_level",
+          "address": "55"
+        },
+        {
+          "sensor_name": "",
+          "measurement_name": "adc49_1_volts",
+          "address": "55"
+        },
+        {
+          "sensor_name": "",
+          "measurement_name": "adc49_2_volts",
+          "address": "55"
+        },
+        {
+          "sensor_name": "",
+          "measurement_name": "adc49_3_volts",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000007,
+      "device_type": "ads1115",
+      "protocol": "i2c",
+      "address": "0x48",
+      "included_sensors": [
+        {
+          "sensor_name": "",
+          "measurement_name": "adc48_0",
+          "address": "55"
+        },
+        {
+          "sensor_name": "",
+          "measurement_name": "adc48_1",
+          "address": "55"
+        },
+        {
+          "sensor_name": "",
+          "measurement_name": "adc48_2",
+          "address": "55"
+        },
+        {
+          "sensor_name": "",
+          "measurement_name": "adc48_3",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000008,
+      "device_type": "adxl345",
+      "protocol": "i2c",
+      "address": "0x53",
+      "included_sensors": [
+        {
+          "sensor_name": "movement_sensor",
+          "measurement_name": "movement",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000007,
+      "device_type": "ezoph",
+      "protocol": "i2c",
+      "address": "0x63",
+      "included_sensors": [
+        {
+          "sensor_name": "root_ph_sensor",
+          "measurement_name": "root_ph",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000007,
+      "device_type": "hcsr04",
+      "protocol": "i2c",
+      "address": "0x47",
+      "included_sensors": [
+        {
+          "sensor_name": "distance_sensor",
+          "measurement_name": "plant_height",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000008,
+      "device_type": "GPIO",
+      "protocol": "gpio",
+      "address": "0x47",
+      "included_sensors": [
+        {
+          "sensor_name": "cabinet_door_sensor",
+          "measurement_name": "cabinet_door_open",
+          "address": "55"
+        }
+      ]
+    },
+    {
+      "container_name": "sense-go",
+      "deviceid": 70000008,
+      "device_type": "GPIO",
+      "protocol": "gpio",
+      "address": "0x47",
+      "included_sensors": [
+        {
+          "sensor_name": "external_door_sensor",
+          "measurement_name": "external_door_open",
+          "address": "55"
+        }
+      ]
+    }
   ]
 }
