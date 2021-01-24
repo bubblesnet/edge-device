@@ -106,8 +106,9 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 			return nil
 		}
 	}
-	log.Error(fmt.Sprintf("ERROR: No schedule for stage %s", config.Stage))
-	return errors.New("No sc:hedule for stage")
+	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", config.Stage)
+	log.Error(errstr)
+	return errors.New(errstr)
 }
 
 // CustomHandler is your custom handler

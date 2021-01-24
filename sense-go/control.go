@@ -53,14 +53,18 @@ func ControlLight() {
 }
 
 func inRange( starthour int, numhours int, currenthours int ) bool {
-	if( starthour + numhours >= 24 ) {
-		if currenthours >= globals.Config.LightOnHour && currenthours < (starthour+numhours) {
+	if( starthour + numhours >= 24 ) { // cross days
+		if currenthours >= starthour {
 			return true
 		} else {
-			return false
+			if currenthours < (starthour+numhours-24) {
+				return true
+			} else {
+				return false
+			}
 		}
-	} else {
-		if currenthours >= globals.Config.LightOnHour || currenthours < ((starthour + numhours)-24) {
+	} else { // within day
+		if currenthours >= starthour && currenthours < (starthour+numhours) {
 			return true
 		} else {
 			return false

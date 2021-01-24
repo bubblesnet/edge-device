@@ -9,6 +9,7 @@ import (
 func TestNewADCSensorMessage(t *testing.T) {
 	type args struct {
 		sensor_name string
+		measurement_name string
 		value       float64
 		units       string
 		direction 	string
@@ -27,6 +28,7 @@ func TestNewADCSensorMessage(t *testing.T) {
 				DeviceId: globals.DeviceId,
 				SampleTimestamp: getNowMillis(),
 				ContainerName:     "sense-go",
+				MeasurementName:	"",
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
@@ -40,8 +42,9 @@ func TestNewADCSensorMessage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt.wantPmsg.SampleTimestamp = getNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
-			if gotPmsg := NewADCSensorMessage(tt.args.sensor_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.channel, tt.args.gain, tt.args.rate); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+			if gotPmsg := NewADCSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.channel, tt.args.gain, tt.args.rate); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				t.Errorf("NewADCSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
 			}
 		})
@@ -51,6 +54,7 @@ func TestNewADCSensorMessage(t *testing.T) {
 func TestNewDistanceSensorMessage(t *testing.T) {
 	type args struct {
 		sensor_name string
+		measurement_name string
 		value       float64
 		units       string
 		direction 	string
@@ -62,7 +66,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 		args     args
 		wantPmsg *DistanceSensorMessage
 	}{
-		{args: args{sensor_name: "test", value: 99.99, units: "Volts", distanceIn: 2.2, distanceCm: 2.1},
+		{args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts", direction: "up", distanceIn: 2.2, distanceCm: 2.1},
 			wantPmsg: &DistanceSensorMessage{
 				DeviceId: globals.DeviceId,
 				SampleTimestamp:   getNowMillis(),
@@ -70,6 +74,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
+				MeasurementName:	"test_measurement",
 				Value:             99.99,
 				Units:             "Volts",
 				Direction: "up",
@@ -80,7 +85,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotPmsg := NewDistanceSensorMessage(tt.args.sensor_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.distanceCm, tt.args.distanceIn); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+			if gotPmsg := NewDistanceSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.distanceCm, tt.args.distanceIn); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				t.Errorf("NewDistanceSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
 			}
 		})
@@ -90,6 +95,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 func TestNewGenericSensorMessage(t *testing.T) {
 	type args struct {
 		sensor_name string
+		measurement_name string
 		value       float64
 		units       string
 		direction 	string
@@ -99,7 +105,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 		args     args
 		wantPmsg *GenericSensorMessage
 	}{
-		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts",direction: "up",},
+		{name: "happy", args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts",direction: "up",},
 			wantPmsg: &GenericSensorMessage {
 				DeviceId: globals.DeviceId,
 				SampleTimestamp:   getNowMillis(),
@@ -107,6 +113,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
+				MeasurementName: 	"test_measurement",
 				Value:             99.99,
 				Units:             "Volts",
 				Direction: "up",
@@ -116,7 +123,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.wantPmsg.SampleTimestamp = getNowMillis()
-			if gotPmsg := NewGenericSensorMessage(tt.args.sensor_name, tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+			if gotPmsg := NewGenericSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				t.Errorf("NewGenericSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
 			}
 		})
@@ -126,6 +133,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 func TestNewTamperSensorMessage(t *testing.T) {
 	type args struct {
 		sensor_name string
+		measurement_name string
 		value       float64
 		units       string
 		direction 	string
@@ -138,7 +146,7 @@ func TestNewTamperSensorMessage(t *testing.T) {
 		args     args
 		wantPmsg *TamperSensorMessage
 	}{
-		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "up", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
+		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "", measurement_name: "movement", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
 			wantPmsg: &TamperSensorMessage{
 				DeviceId: globals.DeviceId,
 				SampleTimestamp:   getNowMillis(),
@@ -146,9 +154,10 @@ func TestNewTamperSensorMessage(t *testing.T) {
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
+				MeasurementName: "movement",
 				Value:             99.99,
 				Units:             "Volts",
-				Direction: "up",
+				Direction: "",
 				XMove: 1.1,
 				YMove: 2.2,
 				ZMove: 3.3,

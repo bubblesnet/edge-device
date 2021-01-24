@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/log"
 	"github.com/stianeikeland/go-rpio"
 	"bubblesnet/edge-device/sense-go/globals"
+	"runtime"
 	"time"
 )
 
@@ -15,6 +16,10 @@ func InitRpioPins() {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		log.Infof("initing BCM%d controlling the device named %s", globals.Config.ACOutlets[i].BCMPinNumber, globals.Config.ACOutlets[i].Name )
 		pins[i] = rpio.Pin(globals.Config.ACOutlets[i].BCMPinNumber)
+		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+			log.Infof("Skipping pin output because we're running on windows")
+			continue
+		}
 		pins[i].Output()
 	}
 }
@@ -78,6 +83,10 @@ func TurnOnOutlet( index int ) {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Index == index {
 			globals.Config.ACOutlets[i].PowerOn = true
+			if runtime.GOOS == "windows" || runtime.GOOS == "darwin"  {
+				log.Infof("Skipping pin LOW because we're running on windows")
+				continue
+			}
 			pins[index].Low()
 			break
 		}
@@ -88,16 +97,24 @@ func TurnOffOutlet( index int ) {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Index == index {
 			globals.Config.ACOutlets[i].PowerOn = false
+			if runtime.GOOS == "windows" || runtime.GOOS == "darwin"  {
+				log.Infof("Skipping pin HIGH because we're running on windows")
+				continue
+			}
 			pins[index].High()
 			break
 		}
 	}
 }
 
-func runPinToggler() {
+///
+func runPinToggler(isTest bool) {
 	log.Info(fmt.Sprintf("pins %v", pins))
 	for i := 0; i < 8; i++ {
 		log.Debug(fmt.Sprintf("setting up pin[%d] %v", i, pins[i]))
+		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+			continue
+		}
 		pins[i].Output() // Output mode
 		pins[i].High()   // Output mode 
 	}
@@ -109,6 +126,9 @@ func runPinToggler() {
 		} else {
 			TurnAllOn(1)
 			PinsOn = true
+		}
+		if isTest {
+			return
 		}
 		time.Sleep(15 * time.Second)
 	}

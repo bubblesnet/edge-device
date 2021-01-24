@@ -152,7 +152,7 @@ func RunADCPoller() (error) {
 				last0[i] = adcMessage.ChannelValues[i].Voltage
 
 				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				ads := messaging.NewADCSensorMessage(sensor_name,
+				ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
 					adcMessage.ChannelValues[i].Voltage,"Volts",
 					direction,
 					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
@@ -187,7 +187,7 @@ func RunADCPoller() (error) {
 				}
 				last0[i] = adcMessage.ChannelValues[i].Voltage
 				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", adcMessage.BusId, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				ads := messaging.NewADCSensorMessage(sensor_name,
+				ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
 					adcMessage.ChannelValues[i].Voltage,"Volts", direction,
 					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)

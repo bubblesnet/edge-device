@@ -19,6 +19,7 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 	"math"
 	"bubblesnet/edge-device/sense-go/messaging"
+	"runtime"
 	"sync"
 	"time"
 	"golang.org/x/net/context"
@@ -97,6 +98,9 @@ var lastDistance = float64(0.0)
 
 func runDistanceWatcher() {
 	log.Info("runDistanceWatcher")
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		return
+	}
 	// Use BCM pin numbering
 	// Echo pin
 	// Trigger pin
@@ -115,7 +119,7 @@ func runDistanceWatcher() {
 		}
 		lastDistance = mydistance
 //		log.Debug(fmt.Sprintf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := messaging.NewDistanceSensorMessage("height_sensor", mydistance, "cm", direction, mydistance, mydistance/2.54)
+		dm := messaging.NewDistanceSensorMessage("height_sensor", "plant_height", mydistance, "cm", direction, mydistance, mydistance/2.54)
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debug(fmt.Sprintf("sending distance msg %s?", string(bytearray)))
@@ -131,7 +135,9 @@ func runDistanceWatcher() {
 			log.Error(fmt.Sprintf("rundistancewatcher error = %v", err ))
 			break
 		}
-
+		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+			return
+		}
 		time.Sleep(15 * time.Second)
 	}
 }
@@ -150,7 +156,9 @@ func runLocalStateWatcher() {
 //			log.Debug(fmt.Sprintf("runLocalStateWatcher error = %v", err ))
 			break
 		}
-
+		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+			break
+		}
 		time.Sleep(15 * time.Second)
 	}
 }
@@ -172,7 +180,7 @@ func readConfig() error {
 		}
 	}
 	log.Error(fmt.Sprintf("ERROR: No schedule for stage %s", globals.Config.Stage))
-	return errors.New("No sc:hedule for stage")
+	return errors.New("No schedule for stage")
 }
 
 
@@ -194,6 +202,9 @@ func makeControlDecisions() {
 		ControlHeat()
 		ControlHumidity()
 //		turnOnOutletByName("Heat lamp")
+		if runtime.GOOS =="windows" || runtime.GOOS == "darwin" {
+			return
+		}
 		time.Sleep(time.Second)
 		i++
 		if i == 60 {
@@ -271,7 +282,7 @@ func main() {
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.DeviceId)
 	}
-log.Info("ezo")
+	log.Info("ezo")
 	if deviceShouldBeHere(globals.ContainerName,globals.DeviceId, globals.Config.DeviceSettings.RootPhSensor,"ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
@@ -410,7 +421,7 @@ func readPh() error {
 				direction = "down"
 			}
 			lastPh = ph
-			phm := messaging.NewGenericSensorMessage("root_ph",ph,"", direction)
+			phm := messaging.NewGenericSensorMessage("root_ph_sensor","root_ph",ph,"", direction)
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)

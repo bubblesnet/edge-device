@@ -32,19 +32,23 @@ def read_config():
         config = json.load(f)
 
 
-def append_bme280_temp(bus, msg, value_name):
+def append_bme280_temp(bus, msg, sensor_name, measurement_name):
     global lastTemp
     try:
         calibration_params = bme280.load_calibration_params(bus, 0x76)
         data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
-        msg['sensor_name'] = value_name
+        msg['sensor_name'] = sensor_name
+        msg['measurement_name'] = measurement_name
         msg['value'] = (data.temperature * 1.8) + 32.0
+        msg[measurement_name] = msg['value']
         msg['direction'] = ''
         if data.temperature > lastTemp:
             msg['direction'] = "up"
         else:
             if data.temperature < lastTemp:
                 msg['direction'] = "down"
+        direction_name = measurement_name +"_direction"
+        msg[direction_name] = msg['direction']
         lastTemp = data.temperature
         msg['tempC'] = data.temperature
         msg['tempF'] = (data.temperature * 1.8) + 32.0
@@ -53,13 +57,15 @@ def append_bme280_temp(bus, msg, value_name):
         logging.debug(traceback.format_exc())
 
 
-def append_bme280_humidity(bus, msg, value_name):
+def append_bme280_humidity(bus, msg, sensor_name, measurement_name):
     global lastHumidity
     try:
         calibration_params = bme280.load_calibration_params(bus, 0x76)
         data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
-        msg['sensor_name'] = value_name
+        msg['sensor_name'] = sensor_name
+        msg['measurement_name'] = measurement_name
         msg['value'] = data.humidity
+        msg[measurement_name] = data.humidity
         direction = ""
         if data.humidity > lastHumidity:
             direction = "up"
@@ -67,19 +73,23 @@ def append_bme280_humidity(bus, msg, value_name):
             if data.humidity < lastHumidity:
                 direction = "down"
         msg['direction'] = direction
+        direction_name = measurement_name +"_direction"
+        msg[direction_name] = direction
         lastHumidity = data.humidity
     except Exception as e:
         logging.debug("bme280 error %s" % e)
         logging.debug(traceback.format_exc())
 
 
-def append_bme280_pressure(bus, msg, value_name):
+def append_bme280_pressure(bus, msg, sensor_name, measurement_name):
     global lastPressure
     try:
         calibration_params = bme280.load_calibration_params(bus, 0x76)
         data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
-        msg['sensor_name'] = value_name
+        msg['sensor_name'] = sensor_name
+        msg['measurement_name'] = measurement_name
         msg['value'] = data.pressure
+        msg[measurement_name] = data.pressure
         direction = ""
         if data.pressure > lastPressure:
             direction = "up"
@@ -88,6 +98,8 @@ def append_bme280_pressure(bus, msg, value_name):
                 direction = "down"
         lastPressure = data.pressure
         msg['direction'] = direction
+        direction_name = measurement_name +"_direction"
+        msg[direction_name] = direction
         lastPressure = data.humidity
     except Exception as e:
         logging.debug("bme280 error %s" % e)
@@ -115,12 +127,14 @@ def is_our_device(device_type):
 # end new config functions
 
 
-def append_bh1750_data(msg):
+def append_bh1750_data(msg, sensor_name, measurement_name):
     global LightAddress
     global lastLight
     try:
-        msg['sensor_name'] = 'light_internal'
+        msg['sensor_name'] = sensor_name
+        msg['measurement_name'] = measurement_name
         msg['value'] = bh1750.readLight(LightAddress)
+        msg[measurement_name] = msg['value']
         direction = ""
         if msg['value'] > lastLight:
             direction = "up"
@@ -128,6 +142,8 @@ def append_bh1750_data(msg):
             if msg['value'] < lastLight:
                 direction = "down"
         msg['direction'] = direction
+        direction_name = measurement_name +"_direction"
+        msg[direction_name] = direction
         lastLight = msg['value']
 
         #        logging.debug("Read bh1750 light at 0x%x as %f" % (deviceAddressList['light'], msg['light']))
@@ -156,23 +172,23 @@ def report_polled_sensor_parameters(bus):
     if is_our_device('bh1750'):
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bh1750_data(msg)
+        append_bh1750_data(msg, 'light_internal_sensor', 'light_internal')
         send_message(msg)
 
     if is_our_device('bme280'):
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bme280_temp(bus, msg, 'temp_air_middle')
+        append_bme280_temp(bus, msg, 'thermometer_middle', 'temp_air_middle')
         send_message(msg)
 
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bme280_humidity(bus, msg, 'humidity_internal')
+        append_bme280_humidity(bus, msg, 'humidity_internal_sensor', 'humidity_internal')
         send_message(msg)
 
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bme280_pressure(bus, msg, 'pressure_internal')
+        append_bme280_pressure(bus, msg, 'pressure_internal_sensor', 'pressure_internal')
         send_message(msg)
 
     if is_our_device('ads1115'):
