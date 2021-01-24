@@ -1,0 +1,27 @@
+name: Go
+
+on:
+  push:
+    branches: [ 1-feature-setup, develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Build
+      working-directory: sense-go
+      run: go build -v ./...
+
+    - name: Test
+      working-directory: sense-go
+      run: go test -v ./...
