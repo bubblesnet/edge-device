@@ -14,8 +14,8 @@ func TestConfigureLogging(t *testing.T) {
 		name string
 		args args
 	}{
-		{name: "happy", args: args{Configuration{LogLevel: "error,warn,info,debug,notice,panic"}, "sense-go"}},
-		// TODO: Add test cases.
+		{name: "happy1", args: args{Configuration{LogLevel: "error,warn,info,debug,notice,panic"}, "sense-go"}},
+
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
