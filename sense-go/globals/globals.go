@@ -3,6 +3,7 @@ package globals
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"github.com/go-playground/log"
+	"runtime"
 )
 
 // These are shadows of vars in main
@@ -60,6 +61,13 @@ var Lasthumidity float32
 
 var Sequence int32
 var Client pb.SensorStoreAndForwardClient
+
+func RunningOnUnsupportedHardware() (notSupported bool) {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm"  && runtime.GOARCH != "arm64") {
+		return true
+	}
+	return false
+}
 
 func ReportDeviceFailed(devicename string) {
 	for i := 0; i < len(DevicesFailed); i++ {

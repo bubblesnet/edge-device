@@ -3,11 +3,8 @@ package main
 import (
 	"bubblesnet/edge-device/sense-go/adc"
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
-	"google.golang.org/grpc"
-	"io/ioutil"
-	"net/http"
-	"os"
 	"bubblesnet/edge-device/sense-go/globals"
+	"bubblesnet/edge-device/sense-go/messaging"
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	"encoding/json"
 	"fmt"
@@ -17,12 +14,14 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"io/ioutil"
 	"math"
-	"bubblesnet/edge-device/sense-go/messaging"
-	"runtime"
+	"net/http"
+	"os"
 	"sync"
 	"time"
-	"golang.org/x/net/context"
 )
 
 var BubblesnetVersionMajorString string
@@ -98,7 +97,7 @@ var lastDistance = float64(0.0)
 
 func runDistanceWatcher() {
 	log.Info("runDistanceWatcher")
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+	if globals.RunningOnUnsupportedHardware() {
 		return
 	}
 	// Use BCM pin numbering
@@ -135,7 +134,7 @@ func runDistanceWatcher() {
 			log.Error(fmt.Sprintf("rundistancewatcher error = %v", err ))
 			break
 		}
-		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		if globals.RunningOnUnsupportedHardware() {
 			return
 		}
 		time.Sleep(15 * time.Second)
@@ -156,7 +155,7 @@ func runLocalStateWatcher() {
 //			log.Debug(fmt.Sprintf("runLocalStateWatcher error = %v", err ))
 			break
 		}
-		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		if globals.RunningOnUnsupportedHardware() {
 			break
 		}
 		time.Sleep(15 * time.Second)
@@ -202,7 +201,7 @@ func makeControlDecisions() {
 		ControlHeat()
 		ControlHumidity()
 //		turnOnOutletByName("Heat lamp")
-		if runtime.GOOS =="windows" || runtime.GOOS == "darwin" {
+		if globals.RunningOnUnsupportedHardware() {
 			return
 		}
 		time.Sleep(time.Second)
