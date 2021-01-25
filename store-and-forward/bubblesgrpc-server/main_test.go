@@ -18,7 +18,7 @@ func initTests(t *testing.T) {
 	if  runtime.GOOS == "windows"{
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
-	} else if runtime.GOOS == "darwin" {
+	} else if runtime.GOOS == "darwin" || (runtime.GOARCH != "amd" && runtime.GOARCH != "amd64") {
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
 	}
