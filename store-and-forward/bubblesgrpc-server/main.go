@@ -186,7 +186,8 @@ func main() {
 		BubblesnetBuildTimestamp, BubblesnetGitHash)
 
 	storeMountPoint := "/config"
-	if  runtime.GOOS == "windows"{
+
+	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
 		storeMountPoint = "."
 		databaseFilename = "./messages.db"
 	}
