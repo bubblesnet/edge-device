@@ -22,10 +22,14 @@ jobs:
       working-directory: sense-go
       run: go build -v ./...
 
+    - name: Test Sense Go
+      working-directory: sense-go
+      run: go test -v ./...
+
     - name: Build BubbleGPRC
       working-directory: store-and-forward/bubblesgrpc-server
       run: go build -v ./...
 
-    - name: Test Sense Go
-      working-directory: sense-go
+    - name: Test BubblesGRPC
+      working-directory: store-and-forward/bubblesgrpc-server
       run: go test -v ./...
