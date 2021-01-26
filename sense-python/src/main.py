@@ -5,7 +5,11 @@ import logging
 import time
 import traceback
 
-import bme280
+try:
+    import bme280
+except ImportError:
+    bme280 = ""
+    
 try:
     import board
 except ImportError:
