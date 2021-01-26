@@ -1,18 +1,31 @@
 #!/usr/bin/env python3
 
 import json
+import logging
 import time
 import traceback
-import logging
-import datetime
 
 import bme280
-import board
+try:
+    import board
+except ImportError:
+    board = ""
+except AttributeError:
+    board = ""
+
 import busio
 import grpc as grpcio
-import smbus2
+try:
+    import smbus2
+except ImportError:
+    smbus2 = ""
 
-import bh1750
+
+try:
+    import bh1750
+except ImportError:
+    bh1750 = ""
+
 from bubblesgrpc_pb2 import SensorRequest
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 
@@ -34,22 +47,22 @@ global pressure_measurement_name
 temperature_sensor_name = "UNKNOWN"
 humidity_sensor_name = "UNKNOWN"
 pressure_sensor_name = "UNKNOWN"
-temperature_measurement_name = "UNKNOWN"
+temperature_measurement_name = 'UNKNOWN'
 humidity_measurement_name = "UNKNOWN"
 pressure_measurement_name = "UNKNOWN"
 
 
-def read_config():
+def read_config(fullpath):
     global config
-    with open('/config/config.json') as f:
+    with open(fullpath) as f:
         config = json.load(f)
 
 
-def append_bme280_temp(bus, msg, sensor_name, measurement_name):
+def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
     global lastTemp
     try:
-        calibration_params = bme280.load_calibration_params(bus, 0x76)
-        data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
+        calibration_params = bme280.load_calibration_params(i2cbus, 0x76)
+        data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
         msg['value'] = (data.temperature * 1.8) + 32.0
@@ -60,21 +73,21 @@ def append_bme280_temp(bus, msg, sensor_name, measurement_name):
         else:
             if data.temperature < lastTemp:
                 msg['direction'] = "down"
-        direction_name = measurement_name +"_direction"
+        direction_name = measurement_name + "_direction"
         msg[direction_name] = msg['direction']
         lastTemp = data.temperature
         msg['tempC'] = data.temperature
         msg['tempF'] = (data.temperature * 1.8) + 32.0
-    except Exception as e:
+    except Exception as ee:
         logging.debug("bme280 error %s" % e)
         logging.debug(traceback.format_exc())
 
 
-def append_bme280_humidity(bus, msg, sensor_name, measurement_name):
+def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name):
     global lastHumidity
     try:
-        calibration_params = bme280.load_calibration_params(bus, 0x76)
-        data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
+        calibration_params = bme280.load_calibration_params(i2cbus, 0x76)
+        data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
         msg['value'] = data.humidity
@@ -86,19 +99,19 @@ def append_bme280_humidity(bus, msg, sensor_name, measurement_name):
             if data.humidity < lastHumidity:
                 direction = "down"
         msg['direction'] = direction
-        direction_name = measurement_name +"_direction"
+        direction_name = measurement_name + "_direction"
         msg[direction_name] = direction
         lastHumidity = data.humidity
-    except Exception as e:
-        logging.debug("bme280 error %s" % e)
+    except Exception as ee:
+        logging.debug("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
-def append_bme280_pressure(bus, msg, sensor_name, measurement_name):
+def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name):
     global lastPressure
     try:
-        calibration_params = bme280.load_calibration_params(bus, 0x76)
-        data = bme280.sample(bus, 0x76, compensation_params=calibration_params)
+        calibration_params = bme280.load_calibration_params(i2cbus, 0x76)
+        data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
         msg['value'] = data.pressure
@@ -111,11 +124,11 @@ def append_bme280_pressure(bus, msg, sensor_name, measurement_name):
                 direction = "down"
         lastPressure = data.pressure
         msg['direction'] = direction
-        direction_name = measurement_name +"_direction"
+        direction_name = measurement_name + "_direction"
         msg[direction_name] = direction
         lastPressure = data.humidity
-    except Exception as e:
-        logging.debug("bme280 error %s" % e)
+    except Exception as ee:
+        logging.debug("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
@@ -177,13 +190,13 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
             if msg['value'] < lastLight:
                 direction = "down"
         msg['direction'] = direction
-        direction_name = measurement_name +"_direction"
+        direction_name = measurement_name + "_direction"
         msg[direction_name] = direction
         lastLight = msg['value']
 
         #        logging.debug("Read bh1750 light at 0x%x as %f" % (deviceAddressList['light'], msg['light']))
-    except Exception as e:
-        logging.debug('BH1750 at 0x%2x failed to read %s' % (LightAddress, e))
+    except Exception as ee:
+        logging.debug('BH1750 at 0x%2x failed to read %s' % (LightAddress, ee))
         logging.debug(traceback.format_exc())
 
 
@@ -200,47 +213,40 @@ def append_axl345_data(msg):
     msg['tamper_detector'] = False
 
 
-def report_polled_sensor_parameters(bus):
+def report_polled_sensor_parameters(i2cbus):
     global config
     #    logging.debug("reportPolledSensorParameters")
 
     if is_our_device('bh1750'):
-        msg = {}
-        msg['message_type'] = 'measurement'
+        msg = {'message_type': 'measurement'}
         append_bh1750_data(msg, 'light_internal_sensor', 'light_internal')
         send_message(msg)
 
     if is_our_device('bme280'):
-        msg = {}
-        msg['message_type'] = 'measurement'
-        append_bme280_temp(bus, msg, temperature_sensor_name, temperature_measurement_name)
+        msg = {'message_type': 'measurement'}
+        append_bme280_temp(i2cbus, msg, temperature_sensor_name, temperature_measurement_name)
         send_message(msg)
 
-        msg = {}
-        msg['message_type'] = 'measurement'
-        append_bme280_humidity(bus, msg, humidity_sensor_name, humidity_measurement_name)
+        msg = {'message_type': 'measurement'}
+        append_bme280_humidity(i2cbus, msg, humidity_sensor_name, humidity_measurement_name)
         send_message(msg)
 
-        msg = {}
-        msg['message_type'] = 'measurement'
-        append_bme280_pressure(bus, msg, pressure_sensor_name, pressure_measurement_name)
+        msg = {'message_type': 'measurement'}
+        append_bme280_pressure(i2cbus, msg, pressure_sensor_name, pressure_measurement_name)
         send_message(msg)
 
     if is_our_device('ads1115'):
-        msg = {}
-        msg['message_type'] = 'measurement'
+        msg = {'message_type': 'measurement'}
         append_adc_data(msg)
         send_message(msg)
 
     if is_our_device('adxl345'):
-        msg = {}
-        msg['message_type'] = 'measurement'
+        msg = {'message_type': 'measurement'}
         append_axl345_data(msg)
         send_message(msg)
 
     if is_our_device('relay'):
-        msg = {}
-        msg['message_type'] = 'measurement'
+        msg = {'message_type': 'measurement'}
         append_gpio_data(msg)
         send_message(msg)
 
@@ -262,7 +268,7 @@ def get_sequence():
 def send_message(msg):
     global config
     seq = get_sequence()
-    millis = int(time.time()*1000)
+    millis = int(time.time() * 1000)
     msg['sample_timestamp'] = int(millis)
     msg['deviceid'] = config['deviceid']
     msg['container_name'] = "sense-python"
@@ -280,7 +286,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     logging.debug("Starting sense-python")
-    read_config()
+    read_config('/config/config.json')
     bme280_names()
     LightAddress = get_address('bh1750')
 
@@ -300,14 +306,14 @@ if __name__ == "__main__":
 
                 report_polled_sensor_parameters(bus)
 
-                logging.debug("sleeping %d xx seconds at %s" % (
-                config['time_between_sensor_polling_in_seconds'], time.strftime("%T")))
+                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
+                                                                time.strftime("%T")))
                 time.sleep(config['time_between_sensor_polling_in_seconds'])
 
             logging.debug("broke out of temp/hum/distance polling loop")
         except Exception as e:
             logging.debug('bubbles2 main loop failed')
             logging.debug(traceback.format_exc())
-    except:
+    except Exception as eee:
         logging.debug('GRPC failed to initialize')
     logging.debug("end of main")
