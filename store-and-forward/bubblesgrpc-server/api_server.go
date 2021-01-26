@@ -93,7 +93,7 @@ type getRecordsRequest struct {
 }
 
 func requestStateList() (string, error) {
-	log.Infof("requestStateList"))
+	log.Infof("requestStateList")
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
@@ -118,13 +118,13 @@ func requestStateList() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	pbr := pb.GetRecordListRequest{Sequence: GetSequenceNumber(), TypeId: "database", Data: string(bytearray)}
-	log.Debugf("c.GetRecordList"))
+	log.Debugf("c.GetRecordList")
 	r, err1 := c.GetRecordList(ctx, &pbr)
 	if err1 != nil {
 		log.Errorf("GetRecordListRequest failed: %v", err1)
 		return "", err1
 	} else {
-		log.Debugf("GetRecordListRequest Received ack for sequence: %d message: TOO LONG YOU DOPE!", r.GetSequence()))
+		log.Debugf("GetRecordListRequest Received ack for sequence: %d message: TOO LONG YOU DOPE!", r.GetSequence())
 	}
 	return r.GetData(), nil
 
