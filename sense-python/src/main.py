@@ -26,7 +26,7 @@ try:
     import grpc as grpcio
 except ImportError:
     grpc = ""
-    
+
 try:
     import smbus2
 except ImportError:
@@ -38,7 +38,7 @@ try:
 except ImportError:
     bh1750 = ""
 
-from bubblesgrpc_pb2 import SensorRequest
+from . import bubblesgrpc_pb2
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 
 lastTemp = 0.0
