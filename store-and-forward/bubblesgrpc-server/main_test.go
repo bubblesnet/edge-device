@@ -17,10 +17,7 @@ func initTests(t *testing.T) {
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
 	storeMountPoint := "/config"
 	fmt.Printf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
-	if  runtime.GOOS == "windows"{
-		storeMountPoint = "."
-		databaseFilename = "./testmessages.db"
-	} else if runtime.GOOS == "darwin" || (runtime.GOARCH != "amd" && runtime.GOARCH != "amd64") {
+	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
 	} else {
