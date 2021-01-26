@@ -1,5 +1,5 @@
 from unittest import TestCase
-import main
+from . import main
 import grpc as grpcio
 from bubblesgrpc_pb2 import SensorRequest
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
