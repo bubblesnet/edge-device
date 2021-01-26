@@ -21,8 +21,12 @@ try:
     import busio
 except ImportError:
     busio = ""
+
+try:
+    import grpc as grpcio
+except ImportError:
+    grpc = ""
     
-import grpc as grpcio
 try:
     import smbus2
 except ImportError:
