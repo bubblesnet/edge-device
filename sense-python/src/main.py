@@ -9,7 +9,7 @@ try:
     import bme280
 except ImportError:
     bme280 = ""
-    
+
 try:
     import board
 except ImportError:
@@ -17,7 +17,11 @@ except ImportError:
 except AttributeError:
     board = ""
 
-import busio
+try:
+    import busio
+except ImportError:
+    busio = ""
+    
 import grpc as grpcio
 try:
     import smbus2
