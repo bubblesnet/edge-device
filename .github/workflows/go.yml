@@ -39,14 +39,11 @@ jobs:
       with:
         python-version: 3.7
 
-    - name: Install dependencies
+    - name: Test sense-python
       working-directory: sense-python/src
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
         pip install pytest
         pipenv install --dev
-
-    - name: Test Sense-Python
-      working-directory: sense-python/src
-      run: pytest
+        pytest
