@@ -44,6 +44,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
-        pip install pytest
+        pipenv install pytest
         pipenv install --dev
-        pytest
+        pipenv run pytest
