@@ -34,9 +34,11 @@ jobs:
       working-directory: store-and-forward/bubblesgrpc-server
       run: go test -v ./...
 
-    - name: Test Sense-Python
+    - name: Setup Sense-Python
       uses: actions/setup-python@v2
       with:
         python-version: 3.7
+
+    - name: Test Sense-Python
       working-directory: sense-python/src
       run: pytest
