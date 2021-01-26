@@ -41,7 +41,8 @@ except ImportError:
     bh1750 = ""
 
 from . import bubblesgrpc_pb2
-from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
+from . import bubblesgrpc_pb2_grpc
+# import SensorStoreAndForwardStub as grpcStub
 
 lastTemp = 0.0
 config = {}
@@ -289,7 +290,7 @@ def send_message(msg):
     msg['executable_version'] = "9.9.9 "
     json_bytes = str.encode(json.dumps(msg))
     logging.debug(json_bytes)
-    message = SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
+    message = bubblesgrpc_pb2_grpc.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
     response = stub.StoreAndForward(message)
     logging.debug(response)
     return
@@ -312,7 +313,7 @@ if __name__ == "__main__":
     try:
         logging.debug("Connecting to grpc at store-and-forward:50051")
         channel = grpcio.insecure_channel('store-and-forward:50051')
-        stub = grpcStub(channel)
+        stub = bubblesgrpc_pb2_grpc(channel)
         try:
             logging.debug("Entering sensor polling loop")
             while True:
