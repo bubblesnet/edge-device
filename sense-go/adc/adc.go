@@ -1,17 +1,17 @@
 package adc
 
 import (
+	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
+	"bubblesnet/edge-device/sense-go/messaging"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/log"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
+	"golang.org/x/net/context"
 	//	"google.golang.org/grpc"
 	"time"
-	"golang.org/x/net/context"
-	"bubblesnet/edge-device/sense-go/messaging"
 )
 
 type ChannelConfig struct {
@@ -85,20 +85,20 @@ type ADCMessage struct {
 }
 
 func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( error ) {
-	log.Debug(fmt.Sprintf("readAllChannels on address 0x%x", config.address))
+	log.Debugf("readAllChannels on address 0x%x", config.address)
 	var err1 error
 	adcMessage.Address = config.address
 	adcMessage.BusId = config.bus_id
 	for channel := 0; channel < 4; channel++ {
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 		if err == nil {
-			//			log.Debug(fmt.Sprintf("Read  value %.2fV channel %d, gain %d, rate %d\n", value, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate))
+			//			log.Debugf("Read  value %.2fV channel %d, gain %d, rate %d\n", value, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate))
 			(*adcMessage).ChannelValues[channel].ChannelNumber = channel
 			(*adcMessage).ChannelValues[channel].Voltage = value
 			(*adcMessage).ChannelValues[channel].Gain = config.channelConfig[channel].gain
 			(*adcMessage).ChannelValues[channel].Rate = config.channelConfig[channel].rate
 		} else {
-			log.Error(fmt.Sprintf( "readAllChannels Read failed %v", err ))
+			log.Errorf("readAllChannels Read failed %v", err )
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			break
@@ -122,7 +122,7 @@ func RunADCPoller() (error) {
 		i2c.WithAddress(a0.address))
 	err := ads1115s[0].Start()
 	if err != nil {
-		log.Error(fmt.Sprintf("error starting interface %v", err ))
+		log.Errorf("error starting interface %v", err )
 		return err
 	}
 
@@ -131,7 +131,7 @@ func RunADCPoller() (error) {
 		i2c.WithAddress(a1.address))
 	err = ads1115s[1].Start()
 	if err != nil {
-		log.Error(fmt.Sprintf("error starting interface %v", err ))
+		log.Errorf("error starting interface %v", err )
 		return err
 	}
 
@@ -139,7 +139,7 @@ func RunADCPoller() (error) {
 		adcMessage := new(ADCMessage)
 		err := readAllChannels(ads1115s[0], a0, adcMessage)
 		if err != nil {
-			log.Error(fmt.Sprintf("loopforever error %v", err))
+			log.Errorf("loopforever error %v", err)
 			break
 		} else {
 			for i := 0; i < len(adcMessage.ChannelValues); i++ {
@@ -164,7 +164,7 @@ func RunADCPoller() (error) {
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 				sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
+					log.Errorf("RunADCPoller ERROR %v", err)
 				} else {
 					log.Infof("sensor_reply %v", sensor_reply)
 				}
@@ -174,7 +174,7 @@ func RunADCPoller() (error) {
 		adcMessage = new(ADCMessage)
 		err = readAllChannels(ads1115s[1], a1, adcMessage)
 		if err != nil {
-			log.Error(fmt.Sprintf("loopforever error %v", err))
+			log.Errorf("loopforever error %v", err)
 			break
 		} else {
 			//			bytearray, err := json.Marshal(adcMessage)
@@ -198,7 +198,7 @@ func RunADCPoller() (error) {
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 				sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Error(fmt.Sprintf("RunADCPoller ERROR %v", err))
+					log.Errorf("RunADCPoller ERROR %v", err)
 				} else {
 					log.Infof("sensor_reply %v", sensor_reply)
 				}
@@ -207,7 +207,7 @@ func RunADCPoller() (error) {
 		//		readAllChannels(ads1115s[1],a1)
 		time.Sleep(time.Second * 15)
 	}
-	log.Error(fmt.Sprintf("loopforever returning err = %v", err))
+	log.Errorf("loopforever returning err = %v", err)
 	return nil
 }
 

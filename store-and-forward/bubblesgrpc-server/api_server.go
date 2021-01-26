@@ -53,9 +53,9 @@ func getContentDisposition( format string ) string {
 }
 /*
 func StartApiServer() {
-	log.Info(fmt.Sprintf("StartApiServer"))
+	log.Infof("StartApiServer"))
 	csvHandler := func(w http.ResponseWriter, req *http.Request) {
-		log.Debug(fmt.Sprintf("Received API request %v", req ))
+		log.Debugf("Received API request %v", req ))
 		ret, err := requestStateList()
 		if err == nil {
 			w.Header().Set("Content-Type", "text/csv; charset=utf-8")
@@ -93,7 +93,7 @@ type getRecordsRequest struct {
 }
 
 func requestStateList() (string, error) {
-	log.Info(fmt.Sprintf("requestStateList"))
+	log.Infof("requestStateList"))
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
@@ -118,13 +118,13 @@ func requestStateList() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	pbr := pb.GetRecordListRequest{Sequence: GetSequenceNumber(), TypeId: "database", Data: string(bytearray)}
-	log.Debug(fmt.Sprintf("c.GetRecordList"))
+	log.Debugf("c.GetRecordList"))
 	r, err1 := c.GetRecordList(ctx, &pbr)
 	if err1 != nil {
 		log.Errorf("GetRecordListRequest failed: %v", err1)
 		return "", err1
 	} else {
-		log.Debug(fmt.Sprintf("GetRecordListRequest Received ack for sequence: %d message: TOO LONG YOU DOPE!", r.GetSequence()))
+		log.Debugf("GetRecordListRequest Received ack for sequence: %d message: TOO LONG YOU DOPE!", r.GetSequence()))
 	}
 	return r.GetData(), nil
 

@@ -44,7 +44,6 @@ var BubblesnetVersionMajorString string
 var BubblesnetVersionMinorString=""
 var BubblesnetVersionPatchString=""
 var BubblesnetBuildNumberString=""
-// var IcebreakerVersionID=-1
 var BubblesnetBuildTimestamp=""
 var BubblesnetGitHash=""
 
@@ -62,25 +61,6 @@ var writeableDb *bolt.DB
 type server struct {
 	pb.UnimplementedSensorStoreAndForwardServer
 }
-/*
-type state struct {
-	SampleTimestamp int64 `json:"sample_timestamp"`
-	SampleTimestampS string `json:"sample_timestamp_s"`
-	TempF float32 `json:"tempF,omitempty"`
-	Humidity float32 `json:"humidity,omitempty"`
-	Light float32 `json:"light,omitempty"`
-	DistanceIn float32 `json:"distance_in,omitempty"`
-	Pressure float32 `json:"pressure,omitempty"`
-	Ph float32 `json:"ph,omitempty"`
-	Humidifier bool `json:"humidifier"`
-	Heater bool `json:"heater"`
-	HeaterPad bool `json:"heater_pad"`
-	GrowLightVeg bool `json:"grow_light_veg"`
-}
-
-var currentstate = state {}
-
- */
 
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {

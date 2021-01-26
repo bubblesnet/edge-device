@@ -2,7 +2,6 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
-	"fmt"
 	"github.com/go-playground/log"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
@@ -91,13 +90,13 @@ func (d *AtlasEZODriver) Start() (err error) {
 
 	if d.connection, err = d.connector.GetConnection(address, bus); err != nil {
 		globals.ReportDeviceFailed("ezoph")
-		log.Error(fmt.Sprintf("atlasezo getconnection error %v", err))
+		log.Errorf("atlasezo getconnection error %v", err)
 		return err
 	}
 
 	if err := d.initialization(); err != nil {
 		globals.ReportDeviceFailed("ezoph")
-		log.Error(fmt.Sprintf("atlasezo initialization error %v", err))
+		log.Errorf("atlasezo initialization error %v", err)
 		return err
 	}
 
@@ -113,8 +112,8 @@ func (d *AtlasEZODriver) Halt() (err error) {
 func (d *AtlasEZODriver) Ph() (pH float64, err error) {
 	var rawP float64
 	if rawP, err = d.rawPh(); err != nil {
-		log.Error(fmt.Sprintf("Ph read error %v", err ))
-		log.Error(fmt.Sprintf("atlasezo rawPh %v", err))
+		log.Errorf("Ph read error %v", err )
+		log.Errorf("atlasezo rawPh %v", err)
 		return 0.0, err
 	}
 	pH = rawP
@@ -139,7 +138,7 @@ func (d *AtlasEZODriver) rawPh() (pH float64, err error) {
 	var data []byte
 
 	if data, err = d.read(0x52, 256); err != nil {
-		log.Error(fmt.Sprintf("atlasezo rawPh err %v", err))
+		log.Errorf("atlasezo rawPh err %v", err)
 		return 0, err
 	}
 	d1 := data[:clen(data)]
@@ -151,7 +150,7 @@ func (d *AtlasEZODriver) rawPh() (pH float64, err error) {
 
 func (d *AtlasEZODriver) read(address byte, n int) ([]byte, error) {
 	if _, err := d.connection.Write([]byte{address}); err != nil {
-		log.Error(fmt.Sprintf("atlasezo write err %v", err))
+		log.Errorf("atlasezo write err %v", err)
 		return nil, err
 	}
 	// Documentation says wait 900ms between write and read, but 1000ms doesn't work while 2000ms does
@@ -159,7 +158,7 @@ func (d *AtlasEZODriver) read(address byte, n int) ([]byte, error) {
 	buf := make([]byte, n)
 	bytesRead, err := d.connection.Read(buf)
 	if bytesRead != n || err != nil {
-		log.Error(fmt.Sprintf("read %d bytes err = %v", bytesRead, err ))
+		log.Errorf("read %d bytes err = %v", bytesRead, err )
 		return nil, err
 	}
 	buflen  := 0

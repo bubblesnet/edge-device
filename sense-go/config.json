@@ -123,18 +123,18 @@
   "time_between_sensor_polling_in_seconds": 15,
   "device_settings": {
     "humidifier": true,
-    "humidity_sensor": true,
-    "external_humidity_sensor": true,
+    "humidity_sensor_internal": true,
+    "humidity_sensor_external": true,
     "heater": true,
     "thermometer_top": true,
     "thermometer_middle": true,
     "thermometer_bottom": true,
-    "external_thermometer": true,
+    "thermometer_external": true,
     "thermometer_water": true,
     "water_pump": true,
     "air_pump": true,
     "height_sensor": true,
-    "light_sensor": true,
+    "light_sensor_internal": true,
     "cabinet_door_sensor": true,
     "outer_door_sensor": true,
     "movement_sensor": true,
@@ -165,12 +165,12 @@
       "address": "0x76",
       "included_sensors": [
         {
-          "sensor_name": "humidity_sensor",
-          "measurement_name": "internal_humidity"
+          "sensor_name": "humidity_sensor_internal",
+          "measurement_name": "humidity_internal"
         },
         {
-          "sensor_name": "internal_pressure_sensor",
-          "measurement_name": "internal_pressure",
+          "sensor_name": "pressure_sensor_internal",
+          "measurement_name": "pressure_internal",
           "address": "44"
         },
         {
@@ -188,13 +188,13 @@
       "address": "0x76",
       "included_sensors": [
         {
-          "sensor_name": "external_humidity_sensor",
-          "measurement_name": "external_humidity",
+          "sensor_name": "humidity_sensor_external",
+          "measurement_name": "humidity_external",
           "address": "55"
         },
         {
-          "sensor_name": "external_pressure_sensor",
-          "measurement_name": "external_pressure",
+          "sensor_name": "pressure_sensor_external",
+          "measurement_name": "pressure_external",
           "address": "55"
         },
         {
@@ -212,7 +212,7 @@
       "address": "0x23",
       "included_sensors": [
         {
-          "sensor_name": "light_sensor",
+          "sensor_name": "light_sensor_internal",
           "measurement_name": "light_internal",
           "address": "55"
         }

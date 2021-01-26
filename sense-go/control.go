@@ -2,8 +2,7 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
-	powerstrip "bubblesnet/edge-device/sense-go/powerstrip"
-	"fmt"
+	"bubblesnet/edge-device/sense-go/powerstrip"
 	"github.com/go-playground/log"
 	"time"
 )
@@ -45,15 +44,15 @@ func ControlLight() {
 	} else {
 	}
 	if veglight && !globals.LocalCurrentState.GrowLightVeg {
-		log.Info(fmt.Sprintf("Turned veg light ON"))
+		log.Infof("Turned veg light ON")
 	} else if !veglight && globals.LocalCurrentState.GrowLightVeg {
-		log.Info(fmt.Sprintf("Turned veg light OFF"))
+		log.Infof("Turned veg light OFF")
 	}
 	globals.LocalCurrentState.GrowLightVeg = veglight
 }
 
 func inRange( starthour int, numhours int, currenthours int ) bool {
-	if( starthour + numhours >= 24 ) { // cross days
+	if starthour + numhours >= 24  { // cross days
 		if currenthours >= starthour {
 			return true
 		} else {
@@ -74,37 +73,37 @@ func inRange( starthour int, numhours int, currenthours int ) bool {
 
 func ControlHeat() {
 
-	high_limit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
-	low_limit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
+	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
+	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
 
 	if globals.ExternalCurrentState.TempF == globals.TEMPNOTSET {
-//		log.Debug(fmt.Sprintf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF))
+//		log.Debugf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF))
 		return
 	}
-	if globals.ExternalCurrentState.TempF > high_limit { // TOO HOT
-		if globals.Lasttemp < high_limit { // JUST BECAME TOO HOT
-			log.Info(fmt.Sprintf("Temp just rolled over %f on way up %f", high_limit, globals.ExternalCurrentState.TempF))
+	if globals.ExternalCurrentState.TempF > highLimit { // TOO HOT
+		if globals.Lasttemp < highLimit { // JUST BECAME TOO HO
+			log.Infof("Temp just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.TempF)
 		}
 		powerstrip.TurnOffOutletByName(globals.HEATLAMP) // MAKE SURE HEAT IS OFF
 		powerstrip.TurnOffOutletByName(globals.HEATPAD)  // MAKE SURE HEAT IS OFF
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
 		setEnvironmentalControlString()
-	} else {                                                    // NOT TOO HOT
-		if globals.ExternalCurrentState.TempF < low_limit { // TOO COLD
-			if globals.Lasttemp > low_limit { // JUST BECAME TOO COLD
-				log.Info(fmt.Sprintf("Temp just fell below %f on way down - %f", low_limit, globals.ExternalCurrentState.TempF))
+	} else {                                               // NOT TOO HOT
+		if globals.ExternalCurrentState.TempF < lowLimit { // TOO COLD
+			if globals.Lasttemp > lowLimit { // JUST BECAME TOO COLD
+				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
 			}
 			powerstrip.TurnOnOutletByName(globals.HEATLAMP) // MAKE SURE HEAT IS ON
 			powerstrip.TurnOnOutletByName(globals.HEATPAD)  // MAKE SURE HEAT IS ON
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
 		} else { // JUST RIGHT
-			if globals.Lasttemp < low_limit  {
-				log.Info(fmt.Sprintf("Temp just entered sweet spot on way up - %f", globals.ExternalCurrentState.TempF))
+			if globals.Lasttemp < lowLimit {
+				log.Infof("Temp just entered sweet spot on way up - %f", globals.ExternalCurrentState.TempF)
 			} else {
-				if globals.Lasttemp > high_limit {
-					log.Info(fmt.Sprintf("Temp just entered sweet spot on way down - %f", globals.ExternalCurrentState.TempF))
+				if globals.Lasttemp > highLimit {
+					log.Infof("Temp just entered sweet spot on way down - %f", globals.ExternalCurrentState.TempF)
 				} else {
 				}
 			}
@@ -116,32 +115,32 @@ func ControlHeat() {
 
 func ControlHumidity() {
 
-	high_limit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity + 5.0
-	low_limit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
+	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity + 5.0
+	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
 
 	if globals.ExternalCurrentState.Humidity == globals.HUMIDITYNOTSET {
-//		log.Debug(fmt.Sprintf("HUMIDITYNOTSET ExternalCurrentState.Humidity %f - ignoring", globals.ExternalCurrentState.Humidity))
+//		log.Debugf("HUMIDITYNOTSET ExternalCurrentState.Humidity %f - ignoring", globals.ExternalCurrentState.Humidity))
 		return
 	}
-	if globals.ExternalCurrentState.Humidity > high_limit { // TOO HUMID
-		if globals.Lasthumidity < high_limit { // JUST BECAME TOO HUMID
-			log.Info(fmt.Sprintf("Humidity just rolled over %f on way up %f", high_limit, globals.ExternalCurrentState.Humidity))
+	if globals.ExternalCurrentState.Humidity > highLimit { // TOO HUMID
+		if globals.Lasthumidity < highLimit { // JUST BECAME TOO HUMID
+			log.Infof("Humidity just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.Humidity)
 		}
 		powerstrip.TurnOffOutletByName(globals.WATERPUMP) // MAKE SURE HUMIDIFIER IS OFF
 		globals.LocalCurrentState.Humidifier = false
-	} else {                                                       // NOT TOO HOT
-		if globals.ExternalCurrentState.Humidity < low_limit { // TOO COLD
-			if globals.Lasthumidity > low_limit { // JUST BECAME TOO COLD
-				log.Info(fmt.Sprintf("Humidity just fell below %f on way down - %f", low_limit, globals.ExternalCurrentState.Humidity))
+	} else {                                                  // NOT TOO HOT
+		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
+			if globals.Lasthumidity > lowLimit { // JUST BECAME TOO COLD
+				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
 			}
 			powerstrip.TurnOnOutletByName(globals.WATERPUMP) // MAKE SURE HUMIDIFIER IS ON
 			globals.LocalCurrentState.Humidifier = true
 		} else { // JUST RIGHT
-			if globals.Lasthumidity < low_limit  {
-				log.Info(fmt.Sprintf("Humidity just entered sweet spot on way up - %f", globals.ExternalCurrentState.Humidity))
+			if globals.Lasthumidity < lowLimit {
+				log.Infof("Humidity just entered sweet spot on way up - %f", globals.ExternalCurrentState.Humidity)
 			} else {
-				if globals.Lasthumidity > high_limit {
-					log.Info(fmt.Sprintf("Humidity just entered sweet spot on way down - %f", globals.ExternalCurrentState.Humidity))
+				if globals.Lasthumidity > highLimit {
+					log.Infof("Humidity just entered sweet spot on way down - %f", globals.ExternalCurrentState.Humidity)
 				} else {
 				}
 			}

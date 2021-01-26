@@ -60,7 +60,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	for i := 0; i < len(config.StageSchedules); i++ {
 		if config.StageSchedules[i].Name == config.Stage {
 			*currentStageSchedule = config.StageSchedules[i]
-			log.Info(fmt.Sprintf("Current stage is %s - schedule is %v", config.Stage, currentStageSchedule))
+			log.Infof("Current stage is %s - schedule is %v", config.Stage, currentStageSchedule))
 			return nil
 		}
 	}

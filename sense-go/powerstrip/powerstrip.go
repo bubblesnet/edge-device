@@ -2,7 +2,6 @@ package powerstrip
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
-	"fmt"
 	"github.com/go-playground/log"
 	"github.com/stianeikeland/go-rpio"
 	"time"
@@ -35,7 +34,7 @@ func TurnAllOn(timeout time.Duration) {
 
 func TurnOffOutletByName( name string ) {
 	if isOutletOn(name) {
-		log.Info(fmt.Sprintf("TurnOffOutletByName %s", name))
+		log.Infof("TurnOffOutletByName %s", name)
 	}
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
@@ -43,7 +42,7 @@ func TurnOffOutletByName( name string ) {
 			return
 		}
 	}
-	log.Error(fmt.Sprintf("error: couldn't find outlet named %s", name ))
+	log.Errorf("error: couldn't find outlet named %s", name )
 }
 
 func isOutletOn( name string ) bool {
@@ -57,7 +56,7 @@ func isOutletOn( name string ) bool {
 
 func TurnOnOutletByName( name string ) {
 	if !isOutletOn(name) {
-		log.Info(fmt.Sprintf("turnOnOutletByName %s", name))
+		log.Infof("turnOnOutletByName %s", name)
 	}
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
@@ -65,7 +64,7 @@ func TurnOnOutletByName( name string ) {
 			return
 		}
 	}
-	log.Error(fmt.Sprintf("error: couldn't find outlet named %s", name ))
+	log.Errorf("error: couldn't find outlet named %s", name )
 }
 
 func TurnAllOff(timeout time.Duration) {
@@ -108,9 +107,9 @@ func TurnOffOutlet( index int ) {
 
 ///
 func runPinToggler(isTest bool) {
-	log.Info(fmt.Sprintf("pins %v", pins))
+	log.Infof("pins %v", pins)
 	for i := 0; i < 8; i++ {
-		log.Debug(fmt.Sprintf("setting up pin[%d] %v", i, pins[i]))
+		log.Debugf("setting up pin[%d] %v", i, pins[i])
 		if globals.RunningOnUnsupportedHardware() {
 			continue
 		}

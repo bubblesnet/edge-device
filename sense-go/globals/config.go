@@ -40,17 +40,17 @@ type ControlState struct {
 type DeviceSettings struct {
 	HeightSensor bool `json:"height_sensor"`
 	Humidifier bool `json:"humidifier"`
-	HumiditySensor bool `json:"humidity_sensor"`
-	ExternalHumiditySensor bool `json:"external_humidity_sensor"`
+	HumiditySensor bool `json:"humidity_sensor_internal"`
+	ExternalHumiditySensor bool `json:"humidity_sensor_external"`
 	Heater bool `json:"heater"`
 	ThermometerTop bool `json:"thermometer_top"`
 	ThermometerMiddle bool `json:"thermometer_middle"`
 	ThermometerBottom bool `json:"thermometer_bottom"`
-	ThermometerExternal bool `json:"external_thermometer"`
+	ThermometerExternal bool `json:"thermometer_external"`
 	ThermometerWater bool `json:"thermometer_water"`
 	WaterPump bool `json:"water_pump"`
 	AirPump bool `json:"air_pump"`
-	LightSensor bool `json:"light_sensor"`
+	LightSensor bool `json:"light_sensor_internal"`
 	CabinetDoorSensor bool `json:"cabinet_door_sensor"`
 	OuterDoorSensor bool `json:"outer_door_sensor"`
 	MovementSensor bool `json:"movement_sensor"`
@@ -91,18 +91,18 @@ type ACOutlet struct {
 }
 
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Configuration, currentStageSchedule *StageSchedule) error {
-	log.Debug(fmt.Sprintf("readConfig"))
+	log.Debug("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	fmt.Printf("readConfig from %s", fullpath)
 	file, _ := ioutil.ReadFile(fullpath)
 
 	_ = json.Unmarshal([]byte(file), config)
 
-	log.Debug(fmt.Sprintf("data = %v", *config))
+	log.Debugf("data = %v", *config)
 	for i := 0; i < len(config.StageSchedules); i++ {
 		if config.StageSchedules[i].Name == config.Stage {
 			*currentStageSchedule = config.StageSchedules[i]
-			log.Info(fmt.Sprintf("Current stage is %s - schedule is %v", config.Stage, currentStageSchedule))
+			log.Infof("Current stage is %s - schedule is %v", config.Stage, currentStageSchedule)
 			return nil
 		}
 	}

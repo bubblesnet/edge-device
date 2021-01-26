@@ -20,10 +20,23 @@ lastTemp = 0.0
 config = {}
 LightAddress = 0
 
-
 lastHumidity = 0.0
 lastPressure = 0.0
 lastLight = 0.0
+
+global temperature_sensor_name
+global humidity_sensor_name
+global pressure_sensor_name
+global temperature_measurement_name
+global humidity_measurement_name
+global pressure_measurement_name
+
+temperature_sensor_name = "UNKNOWN"
+humidity_sensor_name = "UNKNOWN"
+pressure_sensor_name = "UNKNOWN"
+temperature_measurement_name = "UNKNOWN"
+humidity_measurement_name = "UNKNOWN"
+pressure_measurement_name = "UNKNOWN"
 
 
 def read_config():
@@ -116,15 +129,37 @@ def get_address(device_type):
 
 
 def is_our_device(device_type):
-    ret = False
     for attached_device in config['attached_devices']:
+        if config['deviceid'] != attached_device['deviceid']:
+            continue
         if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == device_type:
             return True
 
-    return ret
+    return False
 
 
-# end new config functions
+def bme280_names():
+    global config
+    global temperature_sensor_name
+    global humidity_sensor_name
+    global pressure_sensor_name
+    global temperature_measurement_name
+    global humidity_measurement_name
+    global pressure_measurement_name
+    for attached_device in config['attached_devices']:
+        if config['deviceid'] != attached_device['deviceid']:
+            continue
+        if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == "bme280":
+            for included_sensor in attached_device['included_sensors']:
+                if 'temp' in included_sensor['measurement_name']:
+                    temperature_sensor_name = included_sensor['sensor_name']
+                    temperature_measurement_name = included_sensor['measurement_name']
+                if 'pressure' in included_sensor['measurement_name']:
+                    pressure_sensor_name = included_sensor['sensor_name']
+                    pressure_measurement_name = included_sensor['measurement_name']
+                if 'humidity' in included_sensor['measurement_name']:
+                    humidity_sensor_name = included_sensor['sensor_name']
+                    humidity_measurement_name = included_sensor['measurement_name']
 
 
 def append_bh1750_data(msg, sensor_name, measurement_name):
@@ -178,17 +213,17 @@ def report_polled_sensor_parameters(bus):
     if is_our_device('bme280'):
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bme280_temp(bus, msg, 'thermometer_middle', 'temp_air_middle')
+        append_bme280_temp(bus, msg, temperature_sensor_name, temperature_measurement_name)
         send_message(msg)
 
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bme280_humidity(bus, msg, 'humidity_internal_sensor', 'humidity_internal')
+        append_bme280_humidity(bus, msg, humidity_sensor_name, humidity_measurement_name)
         send_message(msg)
 
         msg = {}
         msg['message_type'] = 'measurement'
-        append_bme280_pressure(bus, msg, 'pressure_internal_sensor', 'pressure_internal')
+        append_bme280_pressure(bus, msg, pressure_sensor_name, pressure_measurement_name)
         send_message(msg)
 
     if is_our_device('ads1115'):
@@ -211,9 +246,11 @@ def report_polled_sensor_parameters(bus):
 
     return
 
+
 sequence = 200000
 
-def getSequence():
+
+def get_sequence():
     global sequence
     if sequence >= 3000000:
         sequence = 200000
@@ -221,9 +258,10 @@ def getSequence():
         sequence = sequence + 1
     return sequence
 
+
 def send_message(msg):
     global config
-    seq = getSequence()
+    seq = get_sequence()
     millis = int(time.time()*1000)
     msg['sample_timestamp'] = int(millis)
     msg['deviceid'] = config['deviceid']
@@ -238,10 +276,12 @@ def send_message(msg):
 
 
 if __name__ == "__main__":
+
     logging.basicConfig(level=logging.DEBUG)
 
     logging.debug("Starting sense-python")
     read_config()
+    bme280_names()
     LightAddress = get_address('bh1750')
 
     # Create library object using our Bus I2C port
