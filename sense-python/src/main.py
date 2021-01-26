@@ -12,6 +12,8 @@ except ImportError:
 
 try:
     import board
+except NotImplementedError:
+    board = ""
 except ImportError:
     board = ""
 except AttributeError:
