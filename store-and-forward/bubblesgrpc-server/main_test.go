@@ -16,7 +16,7 @@ const emptyTestMessage = "{}"
 func initTests(t *testing.T) {
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
 	storeMountPoint := "/config"
-	fmt.Sprintf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
 	if  runtime.GOOS == "windows"{
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
