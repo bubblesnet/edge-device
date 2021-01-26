@@ -4,6 +4,7 @@ import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"context"
+	"fmt"
 	"reflect"
 	"runtime"
 	"testing"
@@ -15,12 +16,15 @@ const emptyTestMessage = "{}"
 func initTests(t *testing.T) {
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
 	storeMountPoint := "/config"
+	fmt.Sprintf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
 	if  runtime.GOOS == "windows"{
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
 	} else if runtime.GOOS == "darwin" || (runtime.GOARCH != "amd" && runtime.GOARCH != "amd64") {
 		storeMountPoint = "."
 		databaseFilename = "./testmessages.db"
+	} else {
+		fmt.Printf("WTF!!!")
 	}
 	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&config,&stageSchedule)
 
