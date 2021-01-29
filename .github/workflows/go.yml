@@ -47,4 +47,3 @@ jobs:
         pipenv install -r requirements.txt
         pipenv install pytest
         pipenv install --dev
-        pipenv run pytest

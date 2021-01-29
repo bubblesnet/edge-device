@@ -289,7 +289,7 @@ def send_message(msg):
     msg['executable_version'] = "9.9.9 "
     json_bytes = str.encode(json.dumps(msg))
     logging.debug(json_bytes)
-    message = grpcStub.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
+    message = bubblesgrpc_pb2.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
     response = stub.StoreAndForward(message)
     logging.debug(response)
     return
