@@ -1,6 +1,6 @@
 # BubblesNet Edge Device
 
-[![codecov](https://codecov.io/gh/bubblesnet/edge-device/branch/1-feature-firstapis/graph/badge.svg?token=4ETBIJSIKZ)](https://codecov.io/gh/bubblesnet/edge-device)
+[![codecov](https://codecov.io/gh/bubblesnet/edge-device/branch/1-feature-setup/graph/badge.svg?token=4ETBIJSIKZ)](https://codecov.io/gh/bubblesnet/edge-device)
 ![ci](https://github.com/bubblesnet/edge-device/workflows/BubblesNetCI/badge.svg)
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
