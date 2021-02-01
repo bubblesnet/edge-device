@@ -233,8 +233,13 @@ def report_polled_sensor_parameters(i2cbus):
 
     if is_our_device('bh1750'):
         msg = {'message_type': 'measurement'}
-        append_bh1750_data(msg, 'light_internal_sensor', 'light_internal')
-        send_message(msg)
+        # If reading the sensor hardware fails, pass the exception up here and
+        # we'll skip sending the half-complete message
+        try:
+            append_bh1750_data(msg, 'light_internal_sensor', 'light_internal')
+            send_message(msg)
+        except Exception as ee:
+            logging.error(e)
 
     if is_our_device('bme280'):
         msg = {'message_type': 'measurement'}
