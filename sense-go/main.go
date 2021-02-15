@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/log"
+	"github.com/go-stomp/stomp"
 	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
 	"github.com/stianeikeland/go-rpio"
 	"gobot.io/x/gobot"
@@ -18,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"math"
+	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -183,6 +185,44 @@ func readConfig() error {
 
 
 */
+
+func listenForCommands() (err error){
+	log.Infof("listenForCommands dial")
+	netConn, err := net.DialTimeout("tcp", "192.168.21.237:61613", 10*time.Second)
+	if err != nil {
+		log.Errorf("listenForCommands dial error %v",err)
+		return err
+	}
+	log.Infof("listenForCommands connect")
+	stompConn, err := stomp.Connect(netConn)
+	if err != nil {
+		log.Errorf("listenForCommands connect error %v",err)
+		return err
+	}
+
+	defer stompConn.Disconnect()
+
+	topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.Config.UserID, globals.Config.DeviceID)
+	log.Infof("listenForCommands subscribe to topic %s", topicName )
+
+	sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
+	if err != nil {
+		log.Errorf("listenForCommands subscribe error %v",err)
+		return err
+	}
+	// receive 5 messages and then quit
+	for i := 0;; i++ {
+		log.Infof("listenForCommands read %d",i)
+		msg := <-sub.C
+		if msg.Err != nil {
+			log.Errorf("listenForCommands read error %v", msg.Err)
+			continue
+		}
+		log.Infof("listenForCommands received message %s", string(msg.Body))
+	}
+	log.Infof("listenForCommands returning")
+	return nil
+}
 
 func makeControlDecisions() {
 	log.Info("makeControlDecisions")
@@ -364,6 +404,13 @@ func main() {
 	}
 	go runLocalStateWatcher()
 	go makeControlDecisions()
+
+	go func() {
+		err = listenForCommands()
+		if err != nil {
+			log.Errorf("listenForCommands %+v", err)
+		}
+	}()
 
 	log.Infof("all go routines started, waiting for waitgroup to finish")
 	wg.Wait()
