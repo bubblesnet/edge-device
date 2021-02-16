@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"math"
-	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -64,11 +63,11 @@ func runTamperDetector() {
 						return
 					}
 					message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-					sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+					_, err = globals.Client.StoreAndForward(context.Background(), &message)
 					if err != nil {
 						log.Errorf("runTamperDetector ERROR %v", err)
 					} else {
-						log.Debugf("%v", sensor_reply)
+//						log.Debugf("%v", sensor_reply)
 					}
 
 				} else {
@@ -124,11 +123,11 @@ func runDistanceWatcher() {
 		if err == nil {
 			log.Debugf("sending distance msg %s?", string(bytearray))
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+			_, err := globals.Client.StoreAndForward(context.Background(), &message)
 			if err != nil {
 				log.Errorf("runDistanceWatcher ERROR %v", err)
 			} else {
-				log.Debugf("%v", sensor_reply)
+//				log.Debugf("%v", sensor_reply)
 			}
 		} else {
 			globals.ReportDeviceFailed("hcsr04")
@@ -185,40 +184,101 @@ func readConfig() error {
 
 
 */
+func getNowMillis() int64 {
+	now := time.Now()
+	nanos := now.UnixNano()
+	millis := nanos / 1000000
+	return millis
+}
 
-func listenForCommands() (err error){
+func listenForCommands() (err error) {
 	log.Infof("listenForCommands dial")
-	netConn, err := net.DialTimeout("tcp", "192.168.21.237:61613", 10*time.Second)
-	if err != nil {
-		log.Errorf("listenForCommands dial error %v",err)
-		return err
-	}
-	log.Infof("listenForCommands connect")
-	stompConn, err := stomp.Connect(netConn)
-	if err != nil {
-		log.Errorf("listenForCommands connect error %v",err)
-		return err
+
+	var options func(*stomp.Conn) error = func(*stomp.Conn) error{
+		stomp.ConnOpt.Login("userid", "userpassword")
+		stomp.ConnOpt.Host("192.168.21.237")
+		stomp.ConnOpt.RcvReceiptTimeout(30*time.Second)
+		stomp.ConnOpt.HeartBeat(30*time.Second, 30*time.Second) // I put this but seems no impact
+		return nil
 	}
 
-	defer stompConn.Disconnect()
-
-	topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.Config.UserID, globals.Config.DeviceID)
-	log.Infof("listenForCommands subscribe to topic %s", topicName )
-
-	sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
-	if err != nil {
-		log.Errorf("listenForCommands subscribe error %v",err)
-		return err
-	}
-	// receive 5 messages and then quit
-	for i := 0;; i++ {
-		log.Infof("listenForCommands read %d",i)
-		msg := <-sub.C
-		if msg.Err != nil {
-			log.Errorf("listenForCommands read error %v", msg.Err)
-			continue
+	for j := 0; ; j++ {
+		log.Infof("readtimeout dial at %d", getNowMillis())
+		stompConn, err := stomp.Dial("tcp", "192.168.21.237:61613", options)
+		if err != nil {
+			log.Errorf("listenForCommands dial error %v", err)
+			return err
 		}
-		log.Infof("listenForCommands received message %s", string(msg.Body))
+		log.Infof("listenForCommands connect")
+		defer stompConn.Disconnect()
+
+		topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.Config.UserID, globals.Config.DeviceID)
+		log.Infof("listenForCommands subscribe to topic %s", topicName)
+
+		sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
+		if err != nil {
+			log.Infof("readtimeout error at %d", getNowMillis())
+			log.Errorf("listenForCommands subscribe error %v", err)
+			return err
+		}
+		// receive 5 messages and then quit
+		for i := 0; ; i++ {
+			//		log.Infof("listenForCommands read %d", i)
+			msg := <-sub.C
+			if msg == nil || msg.Err != nil {
+				if msg != nil && msg.Err != nil {
+					log.Errorf("listenForCommands read topic error %v", msg.Err)
+					time.Sleep(2 * time.Second)
+					break
+				} else {
+					//				log.Errorf("listenForCommands read topic error %v", msg)
+				}
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			type MessageHeader struct {
+				Command string `json:"command"`
+			}
+			type SwitchMessage struct {
+				Command    string `json:"command"`
+				SwitchName string `json:"switch_name"`
+				On         bool   `json:"on"`
+			}
+
+			header := MessageHeader{}
+			err = json.Unmarshal(msg.Body, &header)
+			if err != nil {
+				log.Errorf("listenForCommands marshal error %v", err)
+				continue
+			}
+			log.Infof("listenForCommands parsed body into %v", header)
+			switch header.Command {
+			case "switch":
+				{
+					switchMessage := SwitchMessage{}
+					err := json.Unmarshal(msg.Body, &switchMessage)
+					log.Infof("listenForCommands parsed body into SwitchMessage %v", switchMessage)
+					if err != nil {
+						log.Errorf("listenForCommands switch error %v", err)
+						break
+					}
+					if switchMessage.On == true {
+						log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
+						powerstrip.TurnOnOutletByName(switchMessage.SwitchName)
+					} else {
+						log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
+						powerstrip.TurnOffOutletByName(switchMessage.SwitchName)
+					}
+					break
+				}
+			default:
+				{
+					break
+				}
+			}
+
+			log.Infof("listenForCommands received message %s", string(msg.Body))
+		}
 	}
 	log.Infof("listenForCommands returning")
 	return nil
@@ -402,8 +462,11 @@ func main() {
 		log.Errorf("Exiting because of device failure %v", globals.DevicesFailed)
 		os.Exit(1)
 	}
-	go runLocalStateWatcher()
-	go makeControlDecisions()
+
+	if globals.Config.AutomaticControl == true {
+//		go runLocalStateWatcher()
+		go makeControlDecisions()
+	}
 
 	go func() {
 		err = listenForCommands()
@@ -468,11 +531,11 @@ func readPh() error {
 			phm := messaging.NewGenericSensorMessage("root_ph_sensor", "root_ph", ph, "", direction)
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+			_, err = globals.Client.StoreAndForward(context.Background(), &message)
 			if err != nil {
 				log.Errorf("RunADCPoller ERROR %v", err)
 			} else {
-				log.Infof("sensor_reply %v", sensor_reply)
+//				log.Infof("sensor_reply %v", sensor_reply)
 			}
 		}
 		time.Sleep(15 * time.Second)

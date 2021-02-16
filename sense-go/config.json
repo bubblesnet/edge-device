@@ -6,6 +6,7 @@
   "deviceid": 70000007,
   "stage": "germination",
   "light_on_hour": 5,
+  "automatic_control": false,
   "stage_schedules": [
     {
       "name": "germination",
@@ -59,59 +60,73 @@
   "ac_outlets": [
     {
       "deviceid": 70000007,
-      "name": "intake_fan",
+      "name": "intakeFan",
       "index": 0,
       "bcm_pin_number": 17,
-      "power_on": false
+      "on": false
     },
     {
       "deviceid": 70000007,
-      "name": "water_pump",
+      "name": "waterPump",
       "index": 1,
       "bcm_pin_number": 27,
-      "power_on": false
+      "on": false
     },
     {
       "deviceid": 70000007,
-      "name": "light_bloom",
+      "name": "lightBloom",
       "index": 2,
       "bcm_pin_number": 22,
-      "power_on": false
+      "on": false
     },
     {
       "deviceid": 70000007,
-      "name": "light_vegetative",
+      "name": "lightVegetative",
       "index": 3,
-      "bcm_pin_number": 5,
-      "power_on": false
-    },
-    {
-      "deviceid": 70000007,
-      "name": "heat_lamp",
-      "index": 4,
-      "bcm_pin_number": 6,
-      "power_on": false
-    },
-    {
-      "deviceid": 70000007,
-      "name": "air_pump",
-      "index": 5,
       "bcm_pin_number": 13,
-      "power_on": false
+      "on": false
     },
     {
       "deviceid": 70000007,
-      "name": "exhaust_fan",
+      "name": "heater",
+      "index": 4,
+      "bcm_pin_number": 16,
+      "on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "airPump",
+      "index": 5,
+      "bcm_pin_number": 12,
+      "on": false
+    },
+    {
+      "deviceid": 70000007,
+      "name": "exhaustFan",
       "index": 6,
       "bcm_pin_number": 19,
-      "power_on": false
+      "on": false
     },
     {
       "deviceid": 70000007,
       "name": "humidifier",
       "index": 7,
       "bcm_pin_number": 26,
-      "power_on": false
+      "on": false
+    },
+    {
+      "deviceid": 70000008,
+      "name": "heatingPad",
+      "index": 1,
+      "bcm_pin_number": 12,
+      "on": false
+    },
+    {
+      "deviceid": 70000008,
+      "name": "heatLamp",
+      "index": 1,
+      "bcm_pin_number": 16,
+      "on": false
     }
   ],
   "time_between_pictures_in_seconds": 30,

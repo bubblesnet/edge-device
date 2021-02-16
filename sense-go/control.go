@@ -81,11 +81,12 @@ func ControlHeat() {
 		return
 	}
 	if globals.ExternalCurrentState.TempF > highLimit { // TOO HOT
-		if globals.Lasttemp < highLimit { // JUST BECAME TOO HO
+		if globals.Lasttemp < highLimit { // JUST BECAME TOO HOT
 			log.Infof("Temp just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.TempF)
 		}
 		powerstrip.TurnOffOutletByName(globals.HEATLAMP) // MAKE SURE HEAT IS OFF
 		powerstrip.TurnOffOutletByName(globals.HEATPAD)  // MAKE SURE HEAT IS OFF
+		powerstrip.TurnOffOutletByName(globals.HEATER)  // MAKE SURE HEAT IS OFF
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
 		setEnvironmentalControlString()
@@ -96,6 +97,7 @@ func ControlHeat() {
 			}
 			powerstrip.TurnOnOutletByName(globals.HEATLAMP) // MAKE SURE HEAT IS ON
 			powerstrip.TurnOnOutletByName(globals.HEATPAD)  // MAKE SURE HEAT IS ON
+			powerstrip.TurnOnOutletByName(globals.HEATER)  // MAKE SURE HEAT IS ON
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
 		} else { // JUST RIGHT
@@ -126,14 +128,14 @@ func ControlHumidity() {
 		if globals.Lasthumidity < highLimit { // JUST BECAME TOO HUMID
 			log.Infof("Humidity just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.Humidity)
 		}
-		powerstrip.TurnOffOutletByName(globals.WATERPUMP) // MAKE SURE HUMIDIFIER IS OFF
+		powerstrip.TurnOffOutletByName(globals.HUMIDIFIER) // MAKE SURE HUMIDIFIER IS OFF
 		globals.LocalCurrentState.Humidifier = false
 	} else {                                                  // NOT TOO HOT
 		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
 			if globals.Lasthumidity > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
 			}
-			powerstrip.TurnOnOutletByName(globals.WATERPUMP) // MAKE SURE HUMIDIFIER IS ON
+			powerstrip.TurnOnOutletByName(globals.HUMIDIFIER) // MAKE SURE HUMIDIFIER IS ON
 			globals.LocalCurrentState.Humidifier = true
 		} else { // JUST RIGHT
 			if globals.Lasthumidity < lowLimit {

@@ -57,14 +57,14 @@
     }
   ],
   "ac_outlets": [
-    { "deviceid": 70000007, "name":  "intake_fan",          "index": 0, "bcm_pin_number": 17, "power_on": false },
-    { "deviceid": 70000007,"name":  "water_pump",         "index": 1, "bcm_pin_number": 27, "power_on": false },
-    { "deviceid": 70000007,"name":  "light_bloom", "index": 2, "bcm_pin_number": 22, "power_on": false },
-    { "deviceid": 70000007,"name":  "light_vegetative",   "index": 3, "bcm_pin_number":  5, "power_on": false },
-    { "deviceid": 70000007,"name":  "heat_lamp",          "index": 4, "bcm_pin_number":  6, "power_on": false },
-    { "deviceid": 70000007,"name":  "air_pump",           "index": 5, "bcm_pin_number": 13, "power_on": false },
-    { "deviceid": 70000007,"name":  "exhaust_fan",         "index": 6, "bcm_pin_number": 19, "power_on": false },
-    { "deviceid": 70000007,"name":  "humidifier",         "index": 7, "bcm_pin_number": 26, "power_on": false }
+    { "deviceid": 70000007, "name":  "intakeFan",          "index": 0, "bcm_pin_number": 17, "on": false },
+    { "deviceid": 70000007,"name":  "waterPump",         "index": 1, "bcm_pin_number": 27, "on": false },
+    { "deviceid": 70000007,"name":  "lightBloom", "index": 2, "bcm_pin_number": 22, "on": false },
+    { "deviceid": 70000007,"name":  "lightVegetative",   "index": 3, "bcm_pin_number":  5, "on": false },
+    { "deviceid": 70000007,"name":  "heater",          "index": 4, "bcm_pin_number":  6, "on": false },
+    { "deviceid": 70000007,"name":  "airPump",           "index": 5, "bcm_pin_number": 13, "on": false },
+    { "deviceid": 70000007,"name":  "exhaustFan",         "index": 6, "bcm_pin_number": 19, "on": false },
+    { "deviceid": 70000007,"name":  "humidifier",         "index": 7, "bcm_pin_number": 26, "on": false }
   ],
 
   "time_between_pictures_in_seconds": 30,

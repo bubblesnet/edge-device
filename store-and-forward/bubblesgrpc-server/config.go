@@ -44,7 +44,7 @@ type Configuration struct {
 type ACOutlet struct {
 	Name string `json:"name,omitempty"`
 	Index int `json:"index,omitempty"`
-	PowerOn bool `json:"power_on,omitempty"`
+	PowerOn bool `json:"on,omitempty"`
 	BCMPinNumber int `json:"bcm_pin_number,omitempty"`
 }
 

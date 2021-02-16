@@ -23,7 +23,7 @@ func InitRpioPins() {
 }
 
 func TurnAllOn(timeout time.Duration) {
-	log.Info("Toggling pins ON")
+	log.Info("Toggling all pins ON")
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		TurnOnOutlet(globals.Config.ACOutlets[i].Index)
 		if timeout > 0 {
@@ -33,8 +33,10 @@ func TurnAllOn(timeout time.Duration) {
 }
 
 func TurnOffOutletByName( name string ) {
-	if isOutletOn(name) {
-		log.Infof("TurnOffOutletByName %s", name)
+	log.Infof("TurnOffOutletByName %s", name)
+	if !isOutletOn(name) {
+		log.Infof(" %s already OFF!!", name)
+		return
 	}
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
@@ -55,8 +57,10 @@ func isOutletOn( name string ) bool {
 }
 
 func TurnOnOutletByName( name string ) {
-	if !isOutletOn(name) {
-		log.Infof("turnOnOutletByName %s", name)
+	log.Infof("turnOnOutletByName %s", name)
+	if isOutletOn(name) {
+		log.Debugf("Already ON!!!!")
+		return
 	}
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
@@ -85,6 +89,7 @@ func TurnOnOutlet( index int ) {
 				log.Infof("Skipping pin LOW because we're running on windows")
 				continue
 			}
+			log.Debugf("TurnOn setting pin LOW for outlet %s",globals.Config.ACOutlets[i].Name)
 			pins[index].Low()
 			break
 		}
@@ -99,6 +104,7 @@ func TurnOffOutlet( index int ) {
 				log.Infof("Skipping pin HIGH because we're running on windows")
 				continue
 			}
+			log.Debugf("TurnOff setting pin HIGH for outlet %s",globals.Config.ACOutlets[i].Name)
 			pins[index].High()
 			break
 		}

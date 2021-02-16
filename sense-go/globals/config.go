@@ -48,8 +48,8 @@ type DeviceSettings struct {
 	ThermometerBottom bool `json:"thermometer_bottom"`
 	ThermometerExternal bool `json:"thermometer_external"`
 	ThermometerWater bool `json:"thermometer_water"`
-	WaterPump bool `json:"water_pump"`
-	AirPump bool `json:"air_pump"`
+	WaterPump bool `json:"waterPump"`
+	AirPump bool `json:"airPump"`
 	LightSensor bool `json:"light_sensor_internal"`
 	CabinetDoorSensor bool `json:"cabinet_door_sensor"`
 	OuterDoorSensor bool `json:"outer_door_sensor"`
@@ -58,13 +58,13 @@ type DeviceSettings struct {
 	RootPhSensor bool `json:"root_ph_sensor"`
 	EnclosureType string `json:"enclosure_type"`
 	WaterLevelSensor bool `json:"water_level_sensor"`
-	IntakeFan bool `json:"intake_fan"`
-	ExhaustFan bool `json:"exhaust_fan"`
-	HeatLamp bool `json:"heat_lamp"`
-	HeatingPad bool `json:"heating_pad"`
-	LightBloom bool `json:"light_bloom"`
-	LightVegetative bool `json:"light_vegetative"`
-	LightGerminate bool `json:"light_germinate"`
+	IntakeFan bool `json:"intakeFan"`
+	ExhaustFan bool `json:"exhaustFan"`
+	HeatLamp bool `json:"heatLamp"`
+	HeatingPad bool `json:"heatingPad"`
+	LightBloom bool `json:"lightBloom"`
+	LightVegetative bool `json:"lightVegetative"`
+	LightGerminate bool `json:"lightGerminate"`
 	Relay          bool `json:"relay,omitempty"`
 }
 
@@ -80,13 +80,14 @@ type Configuration struct {
 	DeviceSettings	DeviceSettings	`json:"device_settings"`
 	LogLevel       string          `json:"log_level,omitempty"`
 	AttachedDevices []AttachedDevice	`json:"attached_devices"`
+	AutomaticControl bool `json:"automatic_control"`
 }
 
 type ACOutlet struct {
 	DeviceID int64 `json:"deviceid"`
 	Name string `json:"name,omitempty"`
 	Index int `json:"index,omitempty"`
-	PowerOn bool `json:"power_on,omitempty"`
+	PowerOn bool `json:"on,omitempty"`
 	BCMPinNumber int `json:"bcm_pin_number,omitempty"`
 }
 

@@ -162,11 +162,11 @@ func RunADCPoller() (error) {
 					break
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-				sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
 					log.Errorf("RunADCPoller ERROR %v", err)
 				} else {
-					log.Infof("sensor_reply %v", sensor_reply)
+//					log.Infof("sensor_reply %v", sensor_reply)
 				}
 			}
 		}
@@ -196,11 +196,11 @@ func RunADCPoller() (error) {
 					break
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-				sensor_reply, err := globals.Client.StoreAndForward(context.Background(), &message)
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
 					log.Errorf("RunADCPoller ERROR %v", err)
 				} else {
-					log.Infof("sensor_reply %v", sensor_reply)
+//					log.Infof("sensor_reply %v", sensor_reply)
 				}
 			}
 		}

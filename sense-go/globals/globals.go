@@ -45,14 +45,15 @@ var LocalCurrentState = LocalState {
 	Humidifier: false,
 }
 
-const INLETFAN string = "inlet_fan"
-const WATERPUMP string = "water_pump"
-const GROWLIGHTVEG string = "light_vegetative"
-const HEATPAD string = "light_bloom"
-const HEATLAMP string = "heat_lamp"
-const AIRPUMP string = "air_pump"
-const OUTLETFAN string = "exhaust_fan"
+const INLETFAN string = "inletFan"
+const WATERPUMP string = "waterPump"
+const GROWLIGHTVEG string = "lightVegetative"
+const HEATPAD string = "lightBloom"
+const HEATLAMP string = "heatLamp"
+const AIRPUMP string = "airPump"
+const OUTLETFAN string = "exhaustFan"
 const HUMIDIFIER string = "humidifier"
+const HEATER string = "heater"
 
 var CurrentStageSchedule StageSchedule
 
