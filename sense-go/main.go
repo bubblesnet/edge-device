@@ -262,7 +262,10 @@ func listenForCommands() (err error) {
 						log.Errorf("listenForCommands switch error %v", err)
 						break
 					}
-					if switchMessage.On == true {
+					if switchMessage.SwitchName == "automaticControl" {
+						log.Infof("listenForCommands setting %s to %v", switchMessage.SwitchName, switchMessage.On)
+						globals.Config.AutomaticControl = switchMessage.On
+					} else if switchMessage.On == true {
 						log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
 						powerstrip.TurnOnOutletByName(switchMessage.SwitchName)
 					} else {
@@ -293,20 +296,20 @@ func makeControlDecisions() {
 		//		grpc. (gsm)
 		if i%60 == 0 {
 			log.Debugf("LocalCurrentState = %v", globals.LocalCurrentState)
-			log.Debugf("globals.Configuration = %v", globals.Config)
+//			log.Debugf("globals.Configuration = %v", globals.Config)
 		}
-		ControlLight()
-		//		turnOnOutletByName(globals.GROWLIGHTVEG)
-		ControlHeat()
-		ControlHumidity()
-		//		turnOnOutletByName("Heat lamp")
-		if globals.RunningOnUnsupportedHardware() {
-			return
-		}
-		time.Sleep(time.Second)
-		i++
-		if i == 60 {
-			i = 0
+		if globals.Config.AutomaticControl {
+			ControlLight()
+			ControlHeat()
+			ControlHumidity()
+			if globals.RunningOnUnsupportedHardware() {
+				return
+			}
+			time.Sleep(time.Second)
+			i++
+			if i == 60 {
+				i = 0
+			}
 		}
 	}
 }
@@ -463,10 +466,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if globals.Config.AutomaticControl == true {
-//		go runLocalStateWatcher()
-		go makeControlDecisions()
-	}
+	go makeControlDecisions()
 
 	go func() {
 		err = listenForCommands()

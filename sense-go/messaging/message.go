@@ -88,6 +88,30 @@ type TamperSensorMessage struct {
 	ZMove float64	`json:"zmove,omitempty"`
 }
 
+type SwitchStatusChangeMessage struct {
+	DeviceId int64`json:"deviceid"`
+	ContainerName string `json:"container_name"`
+	ExecutableVersion string `json:"executable_version"`
+	EventTimestamp int64 `json:"event_timestamp,omitempty"`
+	MessageType string `json:"message_type"`
+	SwitchName string `json:"switch_name"`
+	On bool `json:"on"`
+	}
+
+func NewSwitchStatusChangeMessage( switch_name string, on bool ) (pmsg *SwitchStatusChangeMessage){
+	msg := SwitchStatusChangeMessage{
+		DeviceId: globals.DeviceId,
+		ContainerName:     globals.ContainerName,
+		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
+			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
+			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+		EventTimestamp: getNowMillis(),
+		MessageType: "switch_event",
+		SwitchName: switch_name,
+		On: on}
+	return &msg
+
+}
 
 func NewGenericSensorMessage( sensor_name string, measurement_name string, value float64, units string, direction string ) (pmsg *GenericSensorMessage) {
 	msg := GenericSensorMessage{

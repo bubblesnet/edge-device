@@ -1,14 +1,31 @@
 package powerstrip
 
 import (
+	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
+	"bubblesnet/edge-device/sense-go/messaging"
+	"encoding/json"
 	"github.com/go-playground/log"
 	"github.com/stianeikeland/go-rpio"
+	"golang.org/x/net/context"
 	"time"
 )
 
 // var pins = [...] rpio.Pin { rpio.Pin(17), rpio.Pin(27), rpio.Pin(22), rpio.Pin(5), rpio.Pin(6), rpio.Pin(13), rpio.Pin(19), rpio.Pin(26) }
 var pins [8] rpio.Pin
+
+func SendSwitchStatusChangeEvent(switch_name string, on bool) {
+	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
+	bytearray, err := json.Marshal(dm)
+	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "switch", Data: string(bytearray)}
+	_, err = globals.Client.StoreAndForward(context.Background(), &message)
+	if err != nil {
+		log.Errorf("sendSwitchStatusChangeEvent ERROR %v", err)
+	} else {
+		//				log.Debugf("%v", sensor_reply)
+	}
+}
+
 
 func InitRpioPins() {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
@@ -25,6 +42,7 @@ func InitRpioPins() {
 func TurnAllOn(timeout time.Duration) {
 	log.Info("Toggling all pins ON")
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
+		log.Infof("TurnAllOn Turning on outlet %s", globals.Config.ACOutlets[i].Name)
 		TurnOnOutlet(globals.Config.ACOutlets[i].Index)
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
@@ -36,11 +54,13 @@ func TurnOffOutletByName( name string ) {
 	log.Infof("TurnOffOutletByName %s", name)
 	if !isOutletOn(name) {
 		log.Infof(" %s already OFF!!", name)
+		SendSwitchStatusChangeEvent(name,false)
 		return
 	}
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
 			TurnOffOutlet(globals.Config.ACOutlets[i].Index)
+			SendSwitchStatusChangeEvent(name,false)
 			return
 		}
 	}
@@ -60,11 +80,13 @@ func TurnOnOutletByName( name string ) {
 	log.Infof("turnOnOutletByName %s", name)
 	if isOutletOn(name) {
 		log.Debugf("Already ON!!!!")
+		SendSwitchStatusChangeEvent(name,true)
 		return
 	}
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
 			TurnOnOutlet(globals.Config.ACOutlets[i].Index)
+			SendSwitchStatusChangeEvent(name,true)
 			return
 		}
 	}
@@ -74,6 +96,7 @@ func TurnOnOutletByName( name string ) {
 func TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
+		log.Infof("TurnAllOff Turning off outlet %s", globals.Config.ACOutlets[i].Name)
 		TurnOffOutletByName(globals.Config.ACOutlets[i].Name)
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
