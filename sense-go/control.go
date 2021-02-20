@@ -21,7 +21,18 @@ func setEnvironmentalControlString() {
 	}
 }
 
-func ControlLight() {
+func ControlOxygenation(force bool) {
+	powerstrip.TurnOnOutletByName("airPump", force)
+}
+func ControlRootWater(force bool) {
+	powerstrip.TurnOnOutletByName("waterPump", force)
+}
+func ControlAirflow(force bool) {
+	powerstrip.TurnOnOutletByName("exhaustFan", force)
+	powerstrip.TurnOnOutletByName("intakeFan", force)
+}
+
+func ControlLight(force bool) {
 	localTimeHours := time.Now().Hour()
 	offsetHours := 5
 	if localTimeHours - offsetHours < 0 {
@@ -34,11 +45,11 @@ func ControlLight() {
 	if globals.Config.Stage == "germination" || globals.Config.Stage == "seedling" || globals.Config.Stage == "vegetative" {
 		// If it's time for grow light veg to be on
 		if inRange(globals.Config.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			powerstrip.TurnOnOutletByName(globals.GROWLIGHTVEG)
+			powerstrip.TurnOnOutletByName(globals.GROWLIGHTVEG, force)
 			veglight = true
 		} else {
 			// If it's time for grow light veg to be off
-			powerstrip.TurnOffOutletByName(globals.GROWLIGHTVEG)
+			powerstrip.TurnOffOutletByName(globals.GROWLIGHTVEG, force)
 			veglight = false
 		}
 	} else {
@@ -71,7 +82,7 @@ func inRange( starthour int, numhours int, currenthours int ) bool {
 	}
 }
 
-func ControlHeat() {
+func ControlHeat(force bool) {
 
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
 	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
@@ -83,10 +94,11 @@ func ControlHeat() {
 	if globals.ExternalCurrentState.TempF > highLimit { // TOO HOT
 		if globals.Lasttemp < highLimit { // JUST BECAME TOO HOT
 			log.Infof("Temp just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.TempF)
+			force = true
 		}
-		powerstrip.TurnOffOutletByName(globals.HEATLAMP) // MAKE SURE HEAT IS OFF
-		powerstrip.TurnOffOutletByName(globals.HEATPAD)  // MAKE SURE HEAT IS OFF
-		powerstrip.TurnOffOutletByName(globals.HEATER)  // MAKE SURE HEAT IS OFF
+		powerstrip.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
+		powerstrip.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
+		powerstrip.TurnOffOutletByName(globals.HEATER, force)  // MAKE SURE HEAT IS OFF
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
 		setEnvironmentalControlString()
@@ -94,10 +106,11 @@ func ControlHeat() {
 		if globals.ExternalCurrentState.TempF < lowLimit { // TOO COLD
 			if globals.Lasttemp > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
+				force = true
 			}
-			powerstrip.TurnOnOutletByName(globals.HEATLAMP) // MAKE SURE HEAT IS ON
-			powerstrip.TurnOnOutletByName(globals.HEATPAD)  // MAKE SURE HEAT IS ON
-			powerstrip.TurnOnOutletByName(globals.HEATER)  // MAKE SURE HEAT IS ON
+			powerstrip.TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
+			powerstrip.TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
+			powerstrip.TurnOnOutletByName(globals.HEATER, false)  // MAKE SURE HEAT IS ON
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
 		} else { // JUST RIGHT
@@ -115,8 +128,7 @@ func ControlHeat() {
 	globals.Lasttemp = globals.ExternalCurrentState.TempF
 }
 
-func ControlHumidity() {
-
+func ControlHumidity(force bool) {
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity + 5.0
 	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
 
@@ -127,15 +139,17 @@ func ControlHumidity() {
 	if globals.ExternalCurrentState.Humidity > highLimit { // TOO HUMID
 		if globals.Lasthumidity < highLimit { // JUST BECAME TOO HUMID
 			log.Infof("Humidity just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.Humidity)
+			force = true
 		}
-		powerstrip.TurnOffOutletByName(globals.HUMIDIFIER) // MAKE SURE HUMIDIFIER IS OFF
+		powerstrip.TurnOffOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS OFF
 		globals.LocalCurrentState.Humidifier = false
 	} else {                                                  // NOT TOO HOT
 		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
 			if globals.Lasthumidity > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
+				force = true
 			}
-			powerstrip.TurnOnOutletByName(globals.HUMIDIFIER) // MAKE SURE HUMIDIFIER IS ON
+			powerstrip.TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
 			globals.LocalCurrentState.Humidifier = true
 		} else { // JUST RIGHT
 			if globals.Lasthumidity < lowLimit {

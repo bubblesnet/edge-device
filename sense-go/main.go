@@ -265,12 +265,15 @@ func listenForCommands() (err error) {
 					if switchMessage.SwitchName == "automaticControl" {
 						log.Infof("listenForCommands setting %s to %v", switchMessage.SwitchName, switchMessage.On)
 						globals.Config.AutomaticControl = switchMessage.On
+						if globals.Config.AutomaticControl {
+							initializeOutletsForAutomation()	// Make sure the switches conform to currently configured automation
+						}
 					} else if switchMessage.On == true {
 						log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
-						powerstrip.TurnOnOutletByName(switchMessage.SwitchName)
+						powerstrip.TurnOnOutletByName(switchMessage.SwitchName, true)
 					} else {
 						log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
-						powerstrip.TurnOffOutletByName(switchMessage.SwitchName)
+						powerstrip.TurnOffOutletByName(switchMessage.SwitchName, true)
 					}
 					break
 				}
@@ -287,6 +290,15 @@ func listenForCommands() (err error) {
 	return nil
 }
 
+func initializeOutletsForAutomation() {
+	ControlLight(true)
+	ControlHeat(true)
+	ControlHumidity(true)
+	ControlOxygenation(true )
+	ControlRootWater(true )
+	ControlAirflow(true )
+}
+
 func makeControlDecisions() {
 	log.Info("makeControlDecisions")
 	i := 0
@@ -299,17 +311,20 @@ func makeControlDecisions() {
 //			log.Debugf("globals.Configuration = %v", globals.Config)
 		}
 		if globals.Config.AutomaticControl {
-			ControlLight()
-			ControlHeat()
-			ControlHumidity()
+			ControlLight(false)
+			ControlHeat(false)
+			ControlHumidity(false)
+			ControlOxygenation(false )
+			ControlRootWater(false )
+			ControlAirflow(false )
 			if globals.RunningOnUnsupportedHardware() {
 				return
 			}
-			time.Sleep(time.Second)
-			i++
-			if i == 60 {
-				i = 0
-			}
+		}
+		time.Sleep(time.Second)
+		i++
+		if i == 60 {
+			i = 0
 		}
 	}
 }
@@ -331,18 +346,16 @@ func main() {
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
 	err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule)
-	//	err := readglobals.Configuration()
 	if err != nil {
 		return
 	}
 	globals.ConfigureLogging(globals.Config, "sense-go")
-	err = getConfigFromServer()
+	if err = getConfigFromServer(); err != nil {
+		return
+
+	}
 	globals.Config.DeviceSettings.HeightSensor = true
 	reportVersion()
-	//	err := readglobals.Configuration()
-	if err != nil {
-		return
-	}
 
 	log.Debug("debug")
 	log.Info("info")
@@ -356,8 +369,8 @@ func main() {
 	log.Infof("stageSchedule = %v", globals.CurrentStageSchedule)
 
 	// Set up a connection to the server.
-	log.Infof("Dialing GRPC server at %s", globals.ForwrdingAddress)
-	conn, err := grpc.Dial(globals.ForwrdingAddress, grpc.WithInsecure(), grpc.WithBlock())
+	log.Infof("Dialing GRPC server at %s", globals.ForwardingAddress)
+	conn, err := grpc.Dial(globals.ForwardingAddress, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -375,15 +388,22 @@ func main() {
 			log.Errorf("rpio.close %+v", err)
 		}
 	}()
-	if isRelayAttached(globals.DeviceId) {
-		log.Infof("Relay is attached to device %d", globals.DeviceId)
+	if isRelayAttached(globals.Config.DeviceID) {
+		log.Infof("Relay is attached to device %d", globals.Config.DeviceID)
 		powerstrip.InitRpioPins()
-		powerstrip.TurnAllOff(1)
+		if globals.Config.AutomaticControl {
+			powerstrip.TurnAllOff(1)	// turn all OFF first since initalizeOutlets doesnt
+			initializeOutletsForAutomation()
+		} else {
+			powerstrip.TurnAllOff(1)
+		}
 	} else {
-		log.Infof("There is no relay attached to device %d", globals.DeviceId)
+		log.Infof("There is no relay attached to device %d", globals.Config.DeviceID)
 	}
+	powerstrip.SendSwitchStatusChangeEvent("automaticControl",globals.Config.AutomaticControl)
+
 	log.Info("ezo")
-	if deviceShouldBeHere(globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.RootPhSensor, "ezoph") {
+	if deviceShouldBeHere(globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.RootPhSensor, "ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 		err = ezoDriver.Start()
@@ -417,14 +437,14 @@ func main() {
 	wg.Add(numGoroutines)
 
 	log.Info("movement")
-	if deviceShouldBeHere(globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.MovementSensor, "adxl345") {
+	if deviceShouldBeHere(globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.MovementSensor, "adxl345") {
 		log.Info("MovementSensor should be connected to this device, starting")
 		go runTamperDetector()
 	} else {
 		log.Warnf("No adxl345 Configured - skipping tamper detection")
 	}
-	log.Infof("adc %s %d %v ads1115", globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.WaterLevelSensor)
-	if deviceShouldBeHere(globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115") {
+	log.Infof("adc %s %d %v ads1115", globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.WaterLevelSensor)
+	if deviceShouldBeHere(globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.WaterLevelSensor, "ads1115") {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
 			err := adc.RunADCPoller()
@@ -436,7 +456,7 @@ func main() {
 		log.Warnf("No ads1115s configured - skipping A to D conversion")
 	}
 	log.Info("root ph")
-	if deviceShouldBeHere(globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.RootPhSensor, "ezoph") {
+	if deviceShouldBeHere(globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.RootPhSensor, "ezoph") {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
 			err = readPh()
@@ -447,14 +467,14 @@ func main() {
 	} else {
 		log.Warnf("No ezoph configured - skipping pH monitoring")
 	}
-	log.Infof("deviceShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.HeightSensor)
-	if deviceShouldBeHere(globals.ContainerName, globals.DeviceId, globals.Config.DeviceSettings.HeightSensor, "hcsr04") {
+	log.Infof("deviceShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.HeightSensor)
+	if deviceShouldBeHere(globals.ContainerName, globals.Config.DeviceID, globals.Config.DeviceSettings.HeightSensor, "hcsr04") {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
-	if isRelayAttached(globals.DeviceId) {
+	if isRelayAttached(globals.Config.DeviceID) {
 		log.Info("Relay configured")
 		//		go runPinToggler()
 	} else {

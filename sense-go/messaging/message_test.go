@@ -25,7 +25,7 @@ func TestNewADCSensorMessage(t *testing.T) {
 		{name: "happy",
 			args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "up", channel: 0, gain: 1, rate: 2},
 			wantPmsg: &ADCSensorMessage{
-				DeviceId: globals.DeviceId,
+				DeviceId: globals.Config.DeviceID,
 				SampleTimestamp: getNowMillis(),
 				ContainerName:     "sense-go",
 				MeasurementName:	"",
@@ -69,7 +69,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 	}{
 		{args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts", direction: "up", distanceIn: 2.2, distanceCm: 2.1},
 			wantPmsg: &DistanceSensorMessage{
-				DeviceId: globals.DeviceId,
+				DeviceId: globals.Config.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
 				MessageType:       "measurement",
@@ -110,7 +110,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 	}{
 		{name: "happy", args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts",direction: "up",},
 			wantPmsg: &GenericSensorMessage {
-				DeviceId: globals.DeviceId,
+				DeviceId: globals.Config.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
 				MessageType:       "measurement",
@@ -153,7 +153,7 @@ func TestNewTamperSensorMessage(t *testing.T) {
 	}{
 		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "", measurement_name: "movement", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
 			wantPmsg: &TamperSensorMessage{
-				DeviceId: globals.DeviceId,
+				DeviceId: globals.Config.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
 				MessageType:       "measurement",

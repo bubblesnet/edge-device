@@ -82,7 +82,7 @@ func TestTurnOffOutletByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			TurnOffOutletByName(tt.args.name)
+			TurnOffOutletByName(tt.args.name, false)
 		})
 	}
 }
@@ -116,7 +116,7 @@ func TestTurnOnOutletByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			TurnOnOutletByName(tt.args.name)
+			TurnOnOutletByName(tt.args.name, false)
 		})
 	}
 }

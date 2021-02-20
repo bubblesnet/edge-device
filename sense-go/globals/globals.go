@@ -20,12 +20,12 @@ var DevicesFailed []string
 
 var Config = Configuration{}
 
-var DeviceId = int64(70000007)
-var UserId = int64(90000009)
+// var DeviceId = int64(0)
+// var UserId = int64(0)
 
 
 const (
-	ForwrdingAddress     = "store-and-forward:50051"
+	ForwardingAddress = "store-and-forward:50051"
 )
 
 type LocalState struct {

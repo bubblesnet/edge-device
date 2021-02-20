@@ -44,19 +44,20 @@ func TurnAllOn(timeout time.Duration) {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		log.Infof("TurnAllOn Turning on outlet %s", globals.Config.ACOutlets[i].Name)
 		TurnOnOutlet(globals.Config.ACOutlets[i].Index)
+		SendSwitchStatusChangeEvent(globals.Config.ACOutlets[i].Name,true)
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
 		}
 	}
 }
 
-func TurnOffOutletByName( name string ) {
-	log.Infof("TurnOffOutletByName %s", name)
-	if !isOutletOn(name) {
-		log.Infof(" %s already OFF!!", name)
-		SendSwitchStatusChangeEvent(name,false)
+func TurnOffOutletByName( name string, force bool ) {
+	if !force && !isOutletOn(name) {
+//		log.Infof(" %s already OFF!!", name)
+//		SendSwitchStatusChangeEvent(name,false)
 		return
 	}
+	log.Infof("TurnOffOutletByName %s", name)
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
 			TurnOffOutlet(globals.Config.ACOutlets[i].Index)
@@ -76,13 +77,13 @@ func isOutletOn( name string ) bool {
 	return false
 }
 
-func TurnOnOutletByName( name string ) {
-	log.Infof("turnOnOutletByName %s", name)
-	if isOutletOn(name) {
-		log.Debugf("Already ON!!!!")
-		SendSwitchStatusChangeEvent(name,true)
+func TurnOnOutletByName( name string, force bool ) {
+	if !force && isOutletOn(name) {
+//		log.Debugf("Already ON!!!!")
+//		SendSwitchStatusChangeEvent(name,true)
 		return
 	}
+	log.Infof("turnOnOutletByName %s force %v", name, force)
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].Name == name {
 			TurnOnOutlet(globals.Config.ACOutlets[i].Index)
@@ -97,7 +98,8 @@ func TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		log.Infof("TurnAllOff Turning off outlet %s", globals.Config.ACOutlets[i].Name)
-		TurnOffOutletByName(globals.Config.ACOutlets[i].Name)
+		TurnOffOutlet(globals.Config.ACOutlets[i].Index)
+		SendSwitchStatusChangeEvent(globals.Config.ACOutlets[i].Name,false)
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
 		}

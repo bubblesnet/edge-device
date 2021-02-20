@@ -233,7 +233,7 @@
     },
     {
       "container_name": "sense-go",
-      "deviceid": 70000008,
+      "deviceid": 70000007,
       "device_type": "adxl345",
       "protocol": "i2c",
       "address": "0x53",
