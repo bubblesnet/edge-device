@@ -67,33 +67,3 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	return errors.New("No sc:hedule for stage")
 }
 
-// CustomHandler is your custom handler
-type CustomHandler struct {
-	// whatever properties you need
-}
-/*
-// Log accepts log entries to be processed
-func (c *CustomHandler) Log(e log.Entry) {
-
-	// below prints to os.Stderr but could marshal to JSON
-	// and send to central logging server
-	//																						       ---------
-	// 				                                                                 |----------> | console |
-	//                                                                               |             ---------
-	// i.e. -----------------               -----------------     Unmarshal    -------------       --------
-	//     | app log handler | -- json --> | central log app | --    to    -> | log handler | --> | syslog |
-	//      -----------------               -----------------       Entry      -------------       --------
-	//      																         |             ---------
-	//                                  									         |----------> | DataDog |
-	//
-	//         																	        	   ---------
-	b := new(bytes.Buffer)
-	b.Reset()
-	b.WriteString(e.Message)
-
-	for _, f := range e.Fields {
-		fmt.Fprintf(b, " %s=%v", f.Key, f.Value)
-	}
-	fmt.Println(b.String())
-}
-*/

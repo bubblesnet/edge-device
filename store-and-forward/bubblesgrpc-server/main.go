@@ -34,7 +34,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-//	"strconv"
 	"strings"
 	"time"
 )
@@ -64,7 +63,7 @@ type server struct {
 
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
-	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
+//	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
 	}()
@@ -103,7 +102,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				// for k, v := c.First(); k != nil; k, v = c.Next() {
-				log.Debugf("forwarding key=%s, value=%s from %s\n", k, string(v), bucketName)
+//				log.Debugf("forwarding key=%s, value=%s from %s\n", k, string(v), bucketName)
 				_ = postIt(v)
 				forwarded = append(forwarded, string(k))
 				time.Sleep(250 * time.Millisecond)
@@ -112,8 +111,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 		})
 
 		for i := 0; i < len(forwarded); i++ {
-			err := deleteFromBucket(bucketName, []byte(forwarded[i]))
-			if err != nil {
+			if err := deleteFromBucket(bucketName, []byte(forwarded[i])); err != nil {
 				log.Errorf( "delete from bucket failed %v", err)
 			}
 		}
@@ -129,7 +127,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 func postIt(message []byte) (err error){
 	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", config.ControllerHostName, config.ControllerAPIPort, config.UserID, config.DeviceID)
-	log.Debugf("Sending to %s", url)
+//	log.Debugf("Sending to %s", url)
 	resp, err := http.Post(url,
 		"application/json", bytes.NewBuffer(message))
 	if err != nil {
@@ -137,12 +135,12 @@ func postIt(message []byte) (err error){
 		return err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("readall error %v", err)
 		return err
 	}
-	log.Debugf("response %s", string(body))
+//	log.Debugf("response %s", string(body))
 	return nil
 }
 

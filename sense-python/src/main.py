@@ -4,6 +4,7 @@ import json
 import logging
 import time
 import traceback
+import requests
 
 try:
     import bme280
@@ -274,7 +275,6 @@ def report_polled_sensor_parameters(i2cbus):
 
 sequence = 200000
 
-
 def get_sequence():
     global sequence
     if sequence >= 3000000:
@@ -283,6 +283,10 @@ def get_sequence():
         sequence = sequence + 1
     return sequence
 
+
+def upload_file():
+    with open('config.json', 'rb') as f:
+        r = requests.post('http://192.168.21.237:3003/upload', files={'config.json': f})
 
 def send_message(msg):
     global config
@@ -296,7 +300,7 @@ def send_message(msg):
     logging.debug(json_bytes)
     message = bubblesgrpc_pb2.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
     response = stub.StoreAndForward(message)
-    logging.debug(response)
+#    logging.debug(response)
     return
 
 
@@ -325,8 +329,8 @@ if __name__ == "__main__":
 
                 report_polled_sensor_parameters(bus)
 
-                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
-                                                                time.strftime("%T")))
+#                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
+#                time.strftime("%T")))
                 time.sleep(config['time_between_sensor_polling_in_seconds'])
 
             logging.debug("broke out of temp/hum/distance polling loop")

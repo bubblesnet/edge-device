@@ -104,7 +104,7 @@ func addRecord(bucketName string, message string, sequence int32 ) error {
 	key := fmt.Sprintf( "%s (%6.6d)", currentTime.Format(time.RFC3339), sequence )
 
 //	key := fmt.Sprintf("%20.20d", currentTime.Unix())
-	log.Debugf("adding record key %s value %s", key, message)
+//	log.Debugf("adding record key %s value %s", key, message)
 	_ = writeableDb.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		err := b.Put([]byte(key), []byte(message))

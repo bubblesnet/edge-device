@@ -14,7 +14,6 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
-	go.etcd.io/bbolt v1.3.5 // indirect
 	gobot.io/x/gobot v1.14.0
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	golang.org/x/sys v0.0.0-20200821140526-fda516888d29 // indirect

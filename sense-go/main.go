@@ -54,7 +54,7 @@ func runTamperDetector() {
 				ymove = math.Abs(lasty - y)
 				zmove = math.Abs(lastz - z)
 				if xmove > .03 || ymove > .03 || zmove > .035 {
-					log.Infof("TAMPER!! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove)
+					log.Infof("new tamper message !! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove)
 					var tamperMessage = messaging.NewTamperSensorMessage("tamper_sensor",
 						0.0, "", "", xmove, ymove, zmove)
 					bytearray, err := json.Marshal(tamperMessage)
@@ -345,15 +345,14 @@ func main() {
 	globals.BubblesnetBuildTimestamp = BubblesnetBuildTimestamp
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
-	err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule)
-	if err != nil {
+	if err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule); err != nil {
 		return
 	}
 	globals.ConfigureLogging(globals.Config, "sense-go")
-	if err = getConfigFromServer(); err != nil {
+	if err := globals.GetConfigFromServer(); err != nil {
 		return
-
 	}
+
 	globals.Config.DeviceSettings.HeightSensor = true
 	reportVersion()
 
@@ -564,22 +563,3 @@ func readPh() error {
 	return e
 }
 
-func getConfigFromServer() (err error) {
-	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", globals.Config.ControllerHostName, globals.Config.ControllerAPIPort, globals.Config.UserID, globals.Config.DeviceID)
-	log.Debugf("Sending to %s", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Errorf("post error %v", err)
-		return err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Errorf("readall error %v", err)
-		return err
-	}
-	log.Debugf("response %s", string(body))
-	config, err := json.Marshal(body)
-	log.Debugf("received config %v", config)
-	return nil
-}

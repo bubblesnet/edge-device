@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-playground/log"
 	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
@@ -166,3 +167,22 @@ func ConfigureLogging( config Configuration, containerName string) {
 
 }
 
+func GetConfigFromServer() (err error) {
+	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", globals.Config.ControllerHostName, globals.Config.ControllerAPIPort, globals.Config.UserID, globals.Config.DeviceID)
+//	log.Debugf("Sending to %s", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Errorf("post error %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("readall error %v", err)
+		return err
+	}
+	log.Debugf("response %s", string(body))
+	config, err := json.Marshal(body)
+	log.Debugf("received config %v", config)
+	return nil
+}
