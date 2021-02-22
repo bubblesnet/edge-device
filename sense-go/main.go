@@ -8,6 +8,7 @@ import (
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	"encoding/json"
 	"fmt"
+	"github.com/dhowden/raspicam"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
 	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
@@ -17,9 +18,9 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"io/ioutil"
+//	"io/ioutil"
 	"math"
-	"net/http"
+//	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -191,6 +192,26 @@ func getNowMillis() int64 {
 	return millis
 }
 
+func takeAPicture() {
+	filename := "picture.jpg"
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "create file: %v", err)
+		return
+	}
+	defer f.Close()
+
+	s := raspicam.NewStill()
+	errCh := make(chan error)
+	go func() {
+		for x := range errCh {
+			fmt.Fprintf(os.Stderr, "%v\n", x)
+		}
+	}()
+	fmt.Println("Capturing image...")
+	raspicam.Capture(s, f, errCh)
+}
+
 func listenForCommands() (err error) {
 	log.Infof("listenForCommands dial")
 
@@ -253,6 +274,9 @@ func listenForCommands() (err error) {
 			}
 			log.Infof("listenForCommands parsed body into %v", header)
 			switch header.Command {
+			case "picture":
+				takeAPicture()
+				break
 			case "switch":
 				{
 					switchMessage := SwitchMessage{}

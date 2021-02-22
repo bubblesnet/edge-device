@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dhowden/raspicam v0.0.0-20190323051945-60ef25a6629f
 	github.com/go-playground/errors v3.3.0+incompatible // indirect
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/go-stomp/stomp v2.1.2+incompatible
