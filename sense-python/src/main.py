@@ -275,6 +275,7 @@ def report_polled_sensor_parameters(i2cbus):
 
 sequence = 200000
 
+
 def get_sequence():
     global sequence
     if sequence >= 3000000:
@@ -283,10 +284,6 @@ def get_sequence():
         sequence = sequence + 1
     return sequence
 
-
-def upload_file():
-    with open('config.json', 'rb') as f:
-        r = requests.post('http://192.168.21.237:3003/upload', files={'config.json': f})
 
 def send_message(msg):
     global config

@@ -6,6 +6,7 @@ import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/messaging"
 	"bubblesnet/edge-device/sense-go/powerstrip"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/dhowden/raspicam"
@@ -18,9 +19,11 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-//	"io/ioutil"
+	"io/ioutil"
 	"math"
-//	"net/http"
+	"mime/multipart"
+	"net/http"
+
 	"os"
 	"sync"
 	"time"
@@ -193,7 +196,10 @@ func getNowMillis() int64 {
 }
 
 func takeAPicture() {
-	filename := "picture.jpg"
+	log.Infof("takeAPicture()")
+	t := time.Now()
+	filename := fmt.Sprintf("%4.4d%2.2d%2.2d_%2.2d:%2.2d:%2.2d.jpg", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+	log.Debugf("Creating file %s", filename )
 	f, err := os.Create(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "create file: %v", err)
@@ -201,6 +207,7 @@ func takeAPicture() {
 	}
 	defer f.Close()
 
+	log.Debugf("NewStill")
 	s := raspicam.NewStill()
 	errCh := make(chan error)
 	go func() {
@@ -208,8 +215,71 @@ func takeAPicture() {
 			fmt.Fprintf(os.Stderr, "%v\n", x)
 		}
 	}()
-	fmt.Println("Capturing image...")
+	log.Debugf("Capturing image...")
 	raspicam.Capture(s, f, errCh)
+	uploadFile(f.Name())
+}
+
+func uploadFile(name string) (err error) {
+	path, _ := os.Getwd()
+	path += "/" + name
+	extraParams := map[string]string{
+		"title":       "My Document",
+		"author":      "Matt Aimonetti",
+		"description": "A document with all the Go programming language secrets",
+	}
+	request, err := newfileUploadRequest("https://192.168.21.237:3003/api/video/90000009/70000007/upload", extraParams, "file", "/tmp/doc.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		var bodyContent []byte
+		fmt.Println(resp.StatusCode)
+		fmt.Println(resp.Header)
+		resp.Body.Read(bodyContent)
+		resp.Body.Close()
+		fmt.Println(bodyContent)
+	}
+	return nil
+}
+
+// Creates a new file upload http request with optional extra params
+func newfileUploadRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	fileContents, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	fi, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(paramName, fi.Name())
+	if err != nil {
+		return nil, err
+	}
+	part.Write(fileContents)
+
+	for key, val := range params {
+		_ = writer.WriteField(key, val)
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return http.NewRequest("POST", uri, body)
 }
 
 func listenForCommands() (err error) {
@@ -273,8 +343,10 @@ func listenForCommands() (err error) {
 				continue
 			}
 			log.Infof("listenForCommands parsed body into %v", header)
+			log.Infof("header.Command === %s", header.Command)
 			switch header.Command {
 			case "picture":
+				log.Infof("switch calling takeAPicture")
 				takeAPicture()
 				break
 			case "switch":

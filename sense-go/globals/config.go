@@ -168,7 +168,7 @@ func ConfigureLogging( config Configuration, containerName string) {
 }
 
 func GetConfigFromServer() (err error) {
-	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", globals.Config.ControllerHostName, globals.Config.ControllerAPIPort, globals.Config.UserID, globals.Config.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", Config.ControllerHostName, Config.ControllerAPIPort, Config.UserID, Config.DeviceID)
 //	log.Debugf("Sending to %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
