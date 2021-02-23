@@ -1,4 +1,4 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%-golang
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-buster
 
 RUN apt-get update
 
