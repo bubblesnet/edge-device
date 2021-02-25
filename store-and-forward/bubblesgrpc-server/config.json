@@ -1,7 +1,7 @@
 {
   "controller_hostname": "192.168.21.237",
   "controller_api_port": 3003,
-  "userid": 999999,
+  "userid": 90000009,
   "deviceid": 70000007,
   "stage": "germination",
   "light_on_hour": 5,

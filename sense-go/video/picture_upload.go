@@ -1,11 +1,15 @@
 package video
 
 import (
+	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
+	"bubblesnet/edge-device/sense-go/messaging"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/dhowden/raspicam"
 	"github.com/go-playground/log"
+	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -41,7 +45,22 @@ func TakeAPicture() {
 	raspicam.Capture(s, f, errCh)
 	log.Debugf("skipping uploading %s", f.Name())
 	uploadFile(f.Name())
+	SendPictureTakenEvent()
+
 }
+
+func SendPictureTakenEvent() {
+	dm := messaging.NewPictureTakenMessage()
+	bytearray, err := json.Marshal(dm)
+	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "picture", Data: string(bytearray)}
+	_, err = globals.Client.StoreAndForward(context.Background(), &message)
+	if err != nil {
+		log.Errorf("SendPictureTakenEvent ERROR %v", err)
+	} else {
+		//				log.Debugf("%v", sensor_reply)
+	}
+}
+
 
 func uploadFile(name string) (err error) {
 	log.Infof("uploadFile %s", name)

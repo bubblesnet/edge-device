@@ -1,7 +1,7 @@
 FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-buster-run
 
 RUN apt-get update
-RUN apt-get install -y wireless-tools network-manager vim
+RUN apt-get install -y vim
 
 COPY ca-certificates.crt /etc/ssl/certs/
 COPY build/sense-go /go/bin
