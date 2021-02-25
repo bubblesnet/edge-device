@@ -4,7 +4,6 @@ import json
 import logging
 import time
 import traceback
-import requests
 
 try:
     import bme280

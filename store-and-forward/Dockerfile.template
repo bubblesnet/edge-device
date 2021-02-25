@@ -1,7 +1,7 @@
 FROM balenalib/%%BALENA_MACHINE_NAME%%-golang
 
-ADD ca-certificates.crt /etc/ssl/certs/
-ADD bubblesgrpc-server/build/bubblesgrpc-server /go/bin
+COPY ca-certificates.crt /etc/ssl/certs/
+COPY bubblesgrpc-server/build/bubblesgrpc-server /go/bin
 
 RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/bubblesgrpc-server; ls -la /go/bin'
 

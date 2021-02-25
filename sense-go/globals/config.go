@@ -181,8 +181,8 @@ func GetConfigFromServer() (err error) {
 		log.Errorf("readall error %v", err)
 		return err
 	}
-	log.Debugf("response %s", string(body))
-	config, err := json.Marshal(body)
-	log.Debugf("received config %v", config)
+//	log.Debugf("response %s", string(body))
+	_, err = json.Marshal(body)
+//	log.Debugf("received config %v", config)
 	return nil
 }

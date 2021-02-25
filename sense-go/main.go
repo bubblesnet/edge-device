@@ -6,10 +6,9 @@ import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/messaging"
 	"bubblesnet/edge-device/sense-go/powerstrip"
-	"bytes"
+	"bubblesnet/edge-device/sense-go/video"
 	"encoding/json"
 	"fmt"
-	"github.com/dhowden/raspicam"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
 	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
@@ -19,11 +18,7 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"io/ioutil"
 	"math"
-	"mime/multipart"
-	"net/http"
-
 	"os"
 	"sync"
 	"time"
@@ -195,99 +190,13 @@ func getNowMillis() int64 {
 	return millis
 }
 
-func takeAPicture() {
-	log.Infof("takeAPicture()")
-	t := time.Now()
-	filename := fmt.Sprintf("%4.4d%2.2d%2.2d_%2.2d:%2.2d:%2.2d.jpg", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
-	log.Debugf("Creating file %s", filename )
-	f, err := os.Create(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "create file: %v", err)
-		return
-	}
-	defer f.Close()
-
-	log.Debugf("NewStill")
-	s := raspicam.NewStill()
-	errCh := make(chan error)
-	go func() {
-		for x := range errCh {
-			fmt.Fprintf(os.Stderr, "%v\n", x)
-		}
-	}()
-	log.Debugf("Capturing image...")
-	raspicam.Capture(s, f, errCh)
-	uploadFile(f.Name())
-}
-
-func uploadFile(name string) (err error) {
-	path, _ := os.Getwd()
-	path += "/" + name
-	extraParams := map[string]string{
-		"title":       "My Document",
-		"author":      "Matt Aimonetti",
-		"description": "A document with all the Go programming language secrets",
-	}
-	request, err := newfileUploadRequest("https://192.168.21.237:3003/api/video/90000009/70000007/upload", extraParams, "file", "/tmp/doc.pdf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := &http.Client{}
-	resp, err := client.Do(request)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		var bodyContent []byte
-		fmt.Println(resp.StatusCode)
-		fmt.Println(resp.Header)
-		resp.Body.Read(bodyContent)
-		resp.Body.Close()
-		fmt.Println(bodyContent)
-	}
-	return nil
-}
-
-// Creates a new file upload http request with optional extra params
-func newfileUploadRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	fileContents, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	fi, err := file.Stat()
-	if err != nil {
-		return nil, err
-	}
-	file.Close()
-
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(paramName, fi.Name())
-	if err != nil {
-		return nil, err
-	}
-	part.Write(fileContents)
-
-	for key, val := range params {
-		_ = writer.WriteField(key, val)
-	}
-	err = writer.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	return http.NewRequest("POST", uri, body)
-}
 
 func listenForCommands() (err error) {
 	log.Infof("listenForCommands dial")
 
 	var options func(*stomp.Conn) error = func(*stomp.Conn) error{
 		stomp.ConnOpt.Login("userid", "userpassword")
-		stomp.ConnOpt.Host("192.168.21.237")
+		stomp.ConnOpt.Host(globals.Config.ControllerHostName)
 		stomp.ConnOpt.RcvReceiptTimeout(30*time.Second)
 		stomp.ConnOpt.HeartBeat(30*time.Second, 30*time.Second) // I put this but seems no impact
 		return nil
@@ -295,7 +204,8 @@ func listenForCommands() (err error) {
 
 	for j := 0; ; j++ {
 		log.Infof("readtimeout dial at %d", getNowMillis())
-		stompConn, err := stomp.Dial("tcp", "192.168.21.237:61613", options)
+		host_port := fmt.Sprintf("%s:%d", globals.Config.ControllerHostName, 61613)
+		stompConn, err := stomp.Dial("tcp", host_port, options)
 		if err != nil {
 			log.Errorf("listenForCommands dial error %v", err)
 			return err
@@ -347,7 +257,7 @@ func listenForCommands() (err error) {
 			switch header.Command {
 			case "picture":
 				log.Infof("switch calling takeAPicture")
-				takeAPicture()
+				video.TakeAPicture()
 				break
 			case "switch":
 				{
@@ -441,7 +351,7 @@ func main() {
 	globals.BubblesnetBuildTimestamp = BubblesnetBuildTimestamp
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
-	if err := globals.ReadFromPersistentStore("/go", "", "config.json", &globals.Config, &globals.CurrentStageSchedule); err != nil {
+	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.Config, &globals.CurrentStageSchedule); err != nil {
 		return
 	}
 	globals.ConfigureLogging(globals.Config, "sense-go")

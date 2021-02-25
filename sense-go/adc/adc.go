@@ -1,3 +1,6 @@
+// +build linux
+// +build arm
+
 package adc
 
 import (
