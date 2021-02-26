@@ -208,7 +208,7 @@ func RunADCPoller() (error) {
 			}
 		}
 		//		readAllChannels(ads1115s[1],a1)
-		time.Sleep(time.Second * 15)
+		time.Sleep(time.Duration(globals.Config.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 	log.Errorf("loopforever returning err = %v", err)
 	return nil

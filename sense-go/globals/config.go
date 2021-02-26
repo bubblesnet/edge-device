@@ -69,6 +69,17 @@ type DeviceSettings struct {
 	Relay          bool `json:"relay,omitempty"`
 }
 
+type PiCam struct {
+	PiCamera	bool		`json:"picamera"`
+	ResolutionX	string		`json:"resolutionX"`
+	ResolutionY	string		`json:"resolutionY"`
+}
+
+type Tamper struct {
+	Xmove float64		`json:"xmove"`
+	Ymove float64			`json:"ymove"`
+	Zmove float64			`json:"zmove"`
+}
 type Configuration struct {
 	ControllerHostName	string		`json:"controller_hostname"`
 	ControllerAPIPort	int			`json:"controller_api_port"`
@@ -78,10 +89,13 @@ type Configuration struct {
 	LightOnHour    int             `json:"light_on_hour,omitempty"`
 	StageSchedules []StageSchedule `json:"stage_schedules,omitempty"`
 	ACOutlets      [8]ACOutlet     `json:"ac_outlets,omitempty"`
+	Camera			PiCam			`json:"camera,omitempty"`
 	DeviceSettings	DeviceSettings	`json:"device_settings"`
-	LogLevel       string          `json:"log_level,omitempty"`
+	LogLevel       string          	`json:"log_level,omitempty"`
 	AttachedDevices []AttachedDevice	`json:"attached_devices"`
-	AutomaticControl bool `json:"automatic_control"`
+	AutomaticControl bool 			`json:"automatic_control"`
+	TimeBetweenSensorPollingInSeconds	int64 `json:"time_between_sensor_polling_in_seconds"`
+	TamperSpec	Tamper				`json:"tamper"`
 }
 
 type ACOutlet struct {

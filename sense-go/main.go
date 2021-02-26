@@ -52,7 +52,7 @@ func runTamperDetector() {
 				xmove = math.Abs(lastx - x)
 				ymove = math.Abs(lasty - y)
 				zmove = math.Abs(lastz - z)
-				if xmove > .03 || ymove > .03 || zmove > .035 {
+				if xmove > globals.Config.TamperSpec.Xmove ||  ymove > globals.Config.TamperSpec.Ymove ||  zmove > globals.Config.TamperSpec.Zmove {
 					log.Infof("new tamper message !! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove)
 					var tamperMessage = messaging.NewTamperSensorMessage("tamper_sensor",
 						0.0, "", "", xmove, ymove, zmove)
@@ -136,7 +136,7 @@ func runDistanceWatcher() {
 		if globals.RunningOnUnsupportedHardware() {
 			return
 		}
-		time.Sleep(15 * time.Second)
+		time.Sleep(time.Duration(globals.Config.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 }
 
@@ -157,7 +157,7 @@ func runLocalStateWatcher() {
 		if globals.RunningOnUnsupportedHardware() {
 			break
 		}
-		time.Sleep(15 * time.Second)
+		time.Sleep(time.Duration(globals.Config.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 }
 
@@ -188,6 +188,27 @@ func getNowMillis() int64 {
 	nanos := now.UnixNano()
 	millis := nanos / 1000000
 	return millis
+}
+
+func countACOutlets() int {
+	count := 0
+	for i := 0; i < len(globals.Config.ACOutlets); i++ {
+		if globals.Config.ACOutlets[i].DeviceID == globals.Config.DeviceID {
+			count++
+		}
+	}
+	return count
+}
+
+func isMySwitch(switchName string) bool {
+	for i := 0; i < len(globals.Config.ACOutlets); i++ {
+		if globals.Config.ACOutlets[i].DeviceID == globals.Config.DeviceID {
+			if globals.Config.ACOutlets[i].Name == switchName {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 
@@ -222,7 +243,7 @@ func listenForCommands() (err error) {
 			log.Errorf("listenForCommands subscribe error %v", err)
 			return err
 		}
-		// receive 5 messages and then quit
+		//
 		for i := 0; ; i++ {
 			//		log.Infof("listenForCommands read %d", i)
 			msg := <-sub.C
@@ -256,17 +277,29 @@ func listenForCommands() (err error) {
 			log.Infof("header.Command === %s", header.Command)
 			switch header.Command {
 			case "picture":
-				log.Infof("switch calling takeAPicture")
-				video.TakeAPicture()
+				if globals.Config.Camera.PiCamera == false{
+					log.Infof("No camera configured, skipping picture")
+				} else {
+					log.Infof("switch calling takeAPicture")
+					video.TakeAPicture()
+				}
 				break
 			case "switch":
 				{
+				if countACOutlets() == 0 {
+					log.Infof("No ac outlets configured on this device")
+					break
+				}
 					switchMessage := SwitchMessage{}
 					err := json.Unmarshal(msg.Body, &switchMessage)
 					log.Infof("listenForCommands parsed body into SwitchMessage %v", switchMessage)
 					if err != nil {
 						log.Errorf("listenForCommands switch error %v", err)
 						break
+					}
+					if !isMySwitch( switchMessage.SwitchName) {
+						log.Infof("Not my switch %s", switchMessage.SwitchName)
+						break;
 					}
 					if switchMessage.SwitchName == "automaticControl" {
 						log.Infof("listenForCommands setting %s to %v", switchMessage.SwitchName, switchMessage.On)
@@ -563,7 +596,7 @@ func readPh() error {
 //				log.Infof("sensor_reply %v", sensor_reply)
 			}
 		}
-		time.Sleep(15 * time.Second)
+		time.Sleep(time.Duration(globals.Config.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 	log.Debugf("returning %v from readph", e)
 	return e
