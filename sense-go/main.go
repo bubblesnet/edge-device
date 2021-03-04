@@ -387,12 +387,14 @@ func main() {
 	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.Config, &globals.CurrentStageSchedule); err != nil {
 		return
 	}
-	globals.ConfigureLogging(globals.Config, "sense-go")
-	if err := globals.GetConfigFromServer(); err != nil {
+	fmt.Printf("\ngetconfigfromserver\n")
+	if err := globals.GetConfigFromServer("/config", "", "config.json"); err != nil {
 		return
 	}
+	fmt.Printf("done getting config from server %v", globals.Config)
+	globals.ConfigureLogging(globals.Config, "sense-go")
 
-	globals.Config.DeviceSettings.HeightSensor = true
+//	globals.Config.DeviceSettings.HeightSensor = true
 	reportVersion()
 
 	log.Debug("debug")

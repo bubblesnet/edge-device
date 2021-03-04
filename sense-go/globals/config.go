@@ -109,6 +109,9 @@ type ACOutlet struct {
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Configuration, currentStageSchedule *StageSchedule) error {
 	log.Debug("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
+	if relativePath == "" {
+		fullpath = storeMountPoint + "/" + fileName
+	}
 	fmt.Printf("readConfig from %s", fullpath)
 	file, _ := ioutil.ReadFile(fullpath)
 
@@ -181,7 +184,7 @@ func ConfigureLogging( config Configuration, containerName string) {
 
 }
 
-func GetConfigFromServer() (err error) {
+func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", Config.ControllerHostName, Config.ControllerAPIPort, Config.UserID, Config.DeviceID)
 //	log.Debugf("Sending to %s", url)
 	resp, err := http.Get(url)
@@ -196,7 +199,23 @@ func GetConfigFromServer() (err error) {
 		return err
 	}
 //	log.Debugf("response %s", string(body))
-	_, err = json.Marshal(body)
-//	log.Debugf("received config %v", config)
+	newconfig := Configuration{}
+	err = json.Unmarshal(body, &newconfig)
+	Config = newconfig
+
+	fmt.Printf("set config to newconfig %v\n", Config )
+
+	bytes, err := json.MarshalIndent(Config, "", "  ")
+	filepath := fmt.Sprintf("%s/%s/%s", storeMountPoint,relativePath,fileName)
+	if len(relativePath) == 0 {
+		filepath = fmt.Sprintf("%s/%s", storeMountPoint,fileName)
+	}
+	err = ioutil.WriteFile(filepath, bytes, 0777)
+	if err != nil {
+		log.Errorf("error save config file %v", err)
+		return(err)
+	}
+
+	//	log.Debugf("received config %v", config)
 	return nil
 }
