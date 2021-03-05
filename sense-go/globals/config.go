@@ -186,19 +186,19 @@ func ConfigureLogging( config Configuration, containerName string) {
 
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", Config.ControllerHostName, Config.ControllerAPIPort, Config.UserID, Config.DeviceID)
-//	log.Debugf("Sending to %s", url)
+	fmt.Printf("Sending to %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Errorf("post error %v", err)
+		fmt.Printf("post error %v", err)
 		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("readall error %v", err)
+		fmt.Printf("readall error %v", err)
 		return err
 	}
-//	log.Debugf("response %s", string(body))
+	fmt.Printf("response %s", string(body))
 	newconfig := Configuration{}
 	err = json.Unmarshal(body, &newconfig)
 	Config = newconfig
@@ -210,12 +210,13 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	if len(relativePath) == 0 {
 		filepath = fmt.Sprintf("%s/%s", storeMountPoint,fileName)
 	}
+	fmt.Printf("writing config to file %s\n\n",filepath)
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
 		log.Errorf("error save config file %v", err)
 		return(err)
 	}
 
-	//	log.Debugf("received config %v", config)
+	fmt.Printf("received config\n\n")
 	return nil
 }
