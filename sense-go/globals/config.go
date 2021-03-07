@@ -71,8 +71,8 @@ type DeviceSettings struct {
 
 type PiCam struct {
 	PiCamera	bool		`json:"picamera"`
-	ResolutionX	string		`json:"resolutionX"`
-	ResolutionY	string		`json:"resolutionY"`
+	ResolutionX	int		`json:"resolutionX"`
+	ResolutionY	int		`json:"resolutionY"`
 }
 
 type Tamper struct {
@@ -200,7 +200,10 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	}
 	fmt.Printf("response %s", string(body))
 	newconfig := Configuration{}
-	err = json.Unmarshal(body, &newconfig)
+	if err = json.Unmarshal(body, &newconfig); err != nil {
+		fmt.Printf("err on config %v\n", err)
+		return errors.New("err on config")
+	}
 	Config = newconfig
 
 	fmt.Printf("set config to newconfig %v\n", Config )

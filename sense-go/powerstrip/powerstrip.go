@@ -15,6 +15,7 @@ import (
 var pins [8] rpio.Pin
 
 func SendSwitchStatusChangeEvent(switch_name string, on bool) {
+	log.Infof("Reporting switch %s status %v", switch_name, on)
 	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "switch", Data: string(bytearray)}

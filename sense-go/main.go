@@ -201,6 +201,10 @@ func countACOutlets() int {
 }
 
 func isMySwitch(switchName string) bool {
+	if switchName == "automaticControl" {
+		return true
+	}
+
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		if globals.Config.ACOutlets[i].DeviceID == globals.Config.DeviceID {
 			if globals.Config.ACOutlets[i].Name == switchName {
