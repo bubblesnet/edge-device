@@ -398,7 +398,7 @@ func main() {
 	fmt.Printf("done getting config from server %v\n\n", globals.Config)
 	globals.ConfigureLogging(globals.Config, "sense-go")
 
-//	globals.Config.DeviceSettings.HeightSensor = true
+//	globals.Config.Cabinet.HeightSensor = true
 	reportVersion()
 
 	log.Debug("debug")

@@ -11,34 +11,24 @@ import (
 	"strings"
 )
 
-type IncludedSensor struct {
-	SensorName	string `json:"sensor_name"`
-	InternalAddress	string `json:"internal_address"`
-}
-type AttachedDevice struct {
-	ContainerName	string `json:"container_name"`
-	DeviceID		int64			`json:"deviceid"`
-	DeviceType	string	`json:"device_type"`
-	Protocol	string `json:"protocol"`
-	Address	string `json:"address"`
-	IncludedSensors []IncludedSensor `json:"included_sensors"`
-}
-
-type EnvironmentalTarget struct {
-	Temperature float32 `json:"temperature,omitempty"`
-	Humidity float32 `json:"humidity,omitempty"`
+/**
+Top-level object in the data hierarchy.  A farm is identified by the user/owner
+and contains multiple cabinets.
+ */
+type Farm struct {
+	UserID int64 `json:"userid"`
+	ControllerHostName	string		`json:"controller_hostname"`
+	ControllerAPIPort	int			`json:"controller_api_port"`
+	AutomaticControl bool 			`json:"automatic_control"`
+	Cabinets []Cabinet `json:"cabinets"`
 }
 
-type StageSchedule struct {
-	Name                 string              `json:"name,omitempty"`
-	HoursOfLight         int                 `json:"hours_of_light,omitempty"`
-	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
-}
-
-type ControlState struct {
-}
-
-type DeviceSettings struct {
+/**
+A cabinet is a grow-unit, typically either a cabinet or a tent.  A cabinet
+contains multiple edge devices, typically Raspberry Pi.
+ */
+type Cabinet struct {
+	CabinetID	int64`json:"cabinetid"`
 	HeightSensor bool `json:"height_sensor"`
 	Humidifier bool `json:"humidifier"`
 	HumiditySensor bool `json:"humidity_sensor_internal"`
@@ -67,6 +57,54 @@ type DeviceSettings struct {
 	LightVegetative bool `json:"lightVegetative"`
 	LightGerminate bool `json:"lightGerminate"`
 	Relay          bool `json:"relay,omitempty"`
+	AttachedDevices	[]AttachedDevice `json:"attached_devices"`
+}
+
+/**
+A DeviceModule is typically an add-on board attached to the edge device that
+generates one or more types of measurements.  An AttachedDevice can have multiple
+DeviceModules.
+*/
+type DeviceModule struct {
+	ModuleID	int64	`json:"moduleid"`
+	ModuleName      string `json:"module_name"`
+	InternalAddress string `json:"internal_address"`
+	IncludedSensors []Sensor `json:"included_sensors"`
+}
+
+type Sensor struct {
+	SensorID int64 `json:"sensorid"`
+	SensorName	string	`json:"sensor_name"`
+	MeasurementName	string `json:"measurement_name"`
+}
+/**
+An AttachedDevice is a single-board-computer that, with the other
+AttachedDevices in the Cabinet, implements the intelligence of the Cabinet
+such that the ideal grow-conditions for the plants inside the Cabinet are
+always maintained, and a stream of event and environmental sensor messages are sent to
+the time-series database.
+ */
+type AttachedDevice struct {
+	ContainerName	string        `json:"container_name"`
+	DeviceID		int64          `json:"deviceid"`
+	DeviceType	string           `json:"device_type"`
+	Protocol	string             `json:"protocol"`
+	Address	string              `json:"address"`
+	DeviceModules []DeviceModule `json:"included_modules"`
+}
+
+type EnvironmentalTarget struct {
+	Temperature float32 `json:"temperature,omitempty"`
+	Humidity float32 `json:"humidity,omitempty"`
+}
+
+type StageSchedule struct {
+	Name                 string              `json:"name,omitempty"`
+	HoursOfLight         int                 `json:"hours_of_light,omitempty"`
+	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
+}
+
+type ControlState struct {
 }
 
 type PiCam struct {
@@ -81,24 +119,22 @@ type Tamper struct {
 	Zmove float64			`json:"zmove"`
 }
 type Configuration struct {
-	ControllerHostName	string		`json:"controller_hostname"`
-	ControllerAPIPort	int			`json:"controller_api_port"`
-	UserID			int64			`json:"userid"`
-	DeviceID		int64			`json:"deviceid"`
-	Stage          string          `json:"stage,omitempty"`
-	LightOnHour    int             `json:"light_on_hour,omitempty"`
-	StageSchedules []StageSchedule `json:"stage_schedules,omitempty"`
-	ACOutlets      [8]ACOutlet     `json:"ac_outlets,omitempty"`
-	Camera			PiCam			`json:"camera,omitempty"`
-	DeviceSettings	DeviceSettings	`json:"device_settings"`
-	LogLevel       string          	`json:"log_level,omitempty"`
-	AttachedDevices []AttachedDevice	`json:"attached_devices"`
-	AutomaticControl bool 			`json:"automatic_control"`
-	TimeBetweenSensorPollingInSeconds	int64 `json:"time_between_sensor_polling_in_seconds"`
-	TamperSpec	Tamper				`json:"tamper"`
+	ControllerHostName                string           `json:"controller_hostname"`
+	ControllerAPIPort                 int              `json:"controller_api_port"`
+	UserID                            int64            `json:"userid"`
+	DeviceID                          int64            `json:"deviceid"`
+	Stage                             string           `json:"stage,omitempty"`
+	LightOnHour                       int              `json:"light_on_hour,omitempty"`
+	StageSchedules                    []StageSchedule  `json:"stage_schedules,omitempty"`
+	ACOutlets                         [8]ACOutlet      `json:"ac_outlets,omitempty"`
+	Camera                            PiCam            `json:"camera,omitempty"`
+	DeviceSettings                    Cabinet          `json:"device_settings"`
+	LogLevel                          string           `json:"log_level,omitempty"`
+	AttachedDevices                   []AttachedDevice `json:"attached_devices"`
+	AutomaticControl                  bool             `json:"automatic_control"`
+	TimeBetweenSensorPollingInSeconds int64            `json:"time_between_sensor_polling_in_seconds"`
+	TamperSpec                        Tamper           `json:"tamper"`
 }
-
-
 
 type ACOutlet struct {
 	DeviceID int64 `json:"deviceid"`

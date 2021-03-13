@@ -40,7 +40,7 @@ type ADCSensorMessage struct {
 	ContainerName string `json:"container_name"`
 	ExecutableVersion string `json:"executable_version"`
 	MessageType string `json:"message_type"`
-	SensorName string `json:"sensor_name"`
+	ModuleName string `json:"sensor_name"`
 	ChannelNumber int `json:"channel_number,omitempty"`
 	Voltage float64 `json:"value,omitempty"`
 	Units string	`json:"units"`
