@@ -98,6 +98,8 @@ type Configuration struct {
 	TamperSpec	Tamper				`json:"tamper"`
 }
 
+
+
 type ACOutlet struct {
 	DeviceID int64 `json:"deviceid"`
 	Name string `json:"name,omitempty"`
