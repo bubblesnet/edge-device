@@ -16,6 +16,7 @@ Top-level object in the data hierarchy.  A farm is identified by the user/owner
 and contains multiple cabinets.
  */
 type Farm struct {
+	FarmID int64 `json:"farmid"`
 	UserID int64 `json:"userid"`
 	ControllerHostName	string		`json:"controller_hostname"`
 	ControllerAPIPort	int			`json:"controller_api_port"`

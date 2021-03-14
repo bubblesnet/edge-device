@@ -333,28 +333,28 @@ globals.ExternalCurrentState.TempF
 func testHeat( t *testing.T) {
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
-	ControlHeat()
+	ControlHeat(true)
 
 	// all set
 	globals.Lasttemp = 80
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat()
+	ControlHeat(true)
 
 	globals.Lasttemp = 79
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat()
+	ControlHeat(true)
 
 	globals.Lasttemp = 79
 	globals.ExternalCurrentState.TempF = 79
-	ControlHeat()
+	ControlHeat(true)
 
 	globals.Lasttemp = 81
 	globals.ExternalCurrentState.TempF = 80
-	ControlHeat()
+	ControlHeat(true)
 
 	globals.Lasttemp = 81
 	globals.ExternalCurrentState.TempF = 83
-	ControlHeat()
+	ControlHeat(true)
 
 }
 func TestControlHumidity(t *testing.T) {
@@ -382,19 +382,19 @@ func testHumidity(t *testing.T) {
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.Lasthumidity = 59
 		globals.ExternalCurrentState.Humidity = 50
-		ControlHumidity()
+		ControlHumidity(true)
 	}
 
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.Lasthumidity = 61
 		globals.ExternalCurrentState.Humidity = 67
-		ControlHumidity()
+		ControlHumidity(true)
 	}
 
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.Lasthumidity = 60
 		globals.ExternalCurrentState.Humidity = 60
-		ControlHumidity()
+		ControlHumidity(true)
 	}
 }
 
@@ -435,7 +435,7 @@ func testLight(t *testing.T) {
 				globals.Config.LightOnHour = h
 				for k := 0; k < len(growlightstates); k++ {
 					globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
-					ControlLight()
+					ControlLight(true)
 				}
 			}
 		}
@@ -514,7 +514,7 @@ func Test_getConfigFromServer(t *testing.T) {
 	}
 		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := getConfigFromServer(); (err != nil) != tt.wantErr {
+			if err := globals.GetConfigFromServer(".","", "config.json"); (err != nil) != tt.wantErr {
 				t.Errorf("getConfigFromServer() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -662,4 +662,3 @@ func Test_setEnvironmentalControlString(t *testing.T) {
 		})
 	}
 }
-

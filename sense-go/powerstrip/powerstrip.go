@@ -1,3 +1,5 @@
+// +build linux
+
 package powerstrip
 
 import (
@@ -5,6 +7,7 @@ import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/messaging"
 	"encoding/json"
+	"fmt"
 	"github.com/go-playground/log"
 	"github.com/stianeikeland/go-rpio"
 	"golang.org/x/net/context"
@@ -19,11 +22,15 @@ func SendSwitchStatusChangeEvent(switch_name string, on bool) {
 	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "switch", Data: string(bytearray)}
-	_, err = globals.Client.StoreAndForward(context.Background(), &message)
-	if err != nil {
-		log.Errorf("sendSwitchStatusChangeEvent ERROR %v", err)
+	if globals.Client == nil {
+		fmt.Printf("No connection to grpc client\n")
 	} else {
-		//				log.Debugf("%v", sensor_reply)
+		_, err = globals.Client.StoreAndForward(context.Background(), &message)
+		if err != nil {
+			log.Errorf("sendSwitchStatusChangeEvent ERROR %v", err)
+		} else {
+			//				log.Debugf("%v", sensor_reply)
+		}
 	}
 }
 
@@ -98,9 +105,11 @@ func TurnOnOutletByName( name string, force bool ) {
 func TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		log.Infof("TurnAllOff Turning off outlet %s", globals.Config.ACOutlets[i].Name)
+		fmt.Printf("TurnAllOff Turning off outlet %s\n", globals.Config.ACOutlets[i].Name)
 		TurnOffOutlet(globals.Config.ACOutlets[i].Index)
+		fmt.Printf("TurnAllOff 1 after\n")
 		SendSwitchStatusChangeEvent(globals.Config.ACOutlets[i].Name,false)
+		fmt.Printf("TurnAllOff 2 after\n")
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
 		}

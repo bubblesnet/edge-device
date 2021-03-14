@@ -71,7 +71,6 @@ type PhMessage struct {
 	Direction string `json:"direction"`
 }
 
-
 type TamperSensorMessage struct {
 	DeviceId int64`json:"deviceid"`
 	ContainerName string `json:"container_name"`
