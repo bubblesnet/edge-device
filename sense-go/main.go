@@ -6,13 +6,13 @@ import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/messaging"
 	"bubblesnet/edge-device/sense-go/powerstrip"
+	"bubblesnet/edge-device/sense-go/rpio"
 	"bubblesnet/edge-device/sense-go/video"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
 	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
-	"github.com/stianeikeland/go-rpio"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
@@ -423,7 +423,7 @@ func main() {
 
 	_, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-
+/*
 	log.Info("Calling rpio.open")
 	_ = rpio.Open()
 	defer func() {
@@ -432,6 +432,8 @@ func main() {
 			log.Errorf("rpio.close %+v", err)
 		}
 	}()
+ */
+	rpio.OpenRpio()
 	if isRelayAttached(globals.Config.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.Config.DeviceID)
 		powerstrip.InitRpioPins()

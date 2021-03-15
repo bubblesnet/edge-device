@@ -1,5 +1,4 @@
-// +build linux
-// +build arm
+// +build linux,arm windows,amd64
 
 package adc
 

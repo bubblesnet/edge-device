@@ -1,4 +1,4 @@
-// +build linux
+// +build linux, arm
 
 package powerstrip
 
@@ -39,6 +39,7 @@ func InitRpioPins() {
 	for i := 0; i < len(globals.Config.ACOutlets); i++ {
 		log.Infof("initing BCM%d controlling the device named %s", globals.Config.ACOutlets[i].BCMPinNumber, globals.Config.ACOutlets[i].Name )
 		pins[i] = rpio.Pin(globals.Config.ACOutlets[i].BCMPinNumber)
+		log.Infof("pins[i] = %v", pins[i])
 		if globals.RunningOnUnsupportedHardware() {
 			log.Infof("Skipping pin output because we're running on windows")
 			continue
