@@ -106,7 +106,7 @@ type PictureTakenMessage struct {
 
 func NewSwitchStatusChangeMessage( switch_name string, on bool ) (pmsg *SwitchStatusChangeMessage){
 	msg := SwitchStatusChangeMessage{
-		DeviceId: globals.Config.DeviceID,
+		DeviceId: globals.MyDevice.DeviceID,
 		ContainerName:     globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -121,7 +121,7 @@ func NewSwitchStatusChangeMessage( switch_name string, on bool ) (pmsg *SwitchSt
 
 func NewPictureTakenMessage( ) (pmsg *PictureTakenMessage){
 	msg := PictureTakenMessage{
-		DeviceId: globals.Config.DeviceID,
+		DeviceId: globals.MyDevice.DeviceID,
 		ContainerName:     globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -136,7 +136,7 @@ func NewPictureTakenMessage( ) (pmsg *PictureTakenMessage){
 
 func NewGenericSensorMessage( sensor_name string, measurement_name string, value float64, units string, direction string ) (pmsg *GenericSensorMessage) {
 	msg := GenericSensorMessage{
-		DeviceId: globals.Config.DeviceID,
+		DeviceId: globals.MyDevice.DeviceID,
 		ContainerName:     globals.ContainerName,
 		MeasurementName: measurement_name,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
@@ -155,7 +155,7 @@ func NewGenericSensorMessage( sensor_name string, measurement_name string, value
 
 func NewADCSensorMessage( sensor_name string, measurement_name string, value float64, units string, direction string, channel int, gain int, rate int ) (pmsg *ADCSensorMessage) {
 	msg := ADCSensorMessage{
-		DeviceId: globals.Config.DeviceID,
+		DeviceId: globals.MyDevice.DeviceID,
 		ContainerName:     globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -177,7 +177,7 @@ func NewADCSensorMessage( sensor_name string, measurement_name string, value flo
 
 func NewDistanceSensorMessage( sensor_name string, measurement_name string, value float64, units string, direction string, distanceCm float64, distanceIn float64 ) (pmsg *DistanceSensorMessage) {
 	msg := DistanceSensorMessage{
-		DeviceId: globals.Config.DeviceID,
+		DeviceId: globals.MyDevice.DeviceID,
 		ContainerName:     globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -198,7 +198,7 @@ func NewDistanceSensorMessage( sensor_name string, measurement_name string, valu
 
 func NewTamperSensorMessage( sensor_name string, value float64, units string, direction string, moveX float64, moveY float64, moveZ float64 ) (pmsg *TamperSensorMessage) {
 	msg := TamperSensorMessage{
-		DeviceId: globals.Config.DeviceID,
+		DeviceId: globals.MyDevice.DeviceID,
 		ContainerName:     globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,

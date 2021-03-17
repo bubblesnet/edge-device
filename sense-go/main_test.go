@@ -412,8 +412,8 @@ func TestControlLight(t *testing.T) {
 }
 
 /*
-globals.Config.Stage
-globals.Config.LightOnHour
+globals.MyFarm.Stage
+globals.MyFarm.LightOnHour
 globals.CurrentStageSchedule.HoursOfLight
 globals.LocalCurrentState.GrowLightVeg
 "germination"
@@ -428,11 +428,11 @@ var growlightstates = []bool {
 }
 func testLight(t *testing.T) {
 	for i := 0; i < len(stages); i++  {
-		globals.Config.Stage = stages[i]
+		globals.MyCabinet.CurrentStage = stages[i]
 		for n := 1; n <= 24; n++ {
 			globals.CurrentStageSchedule.HoursOfLight = n
 			for h := 0; h < 24; h++ {
-				globals.Config.LightOnHour = h
+				globals.MyCabinet.LightOnHour = h
 				for k := 0; k < len(growlightstates); k++ {
 					globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
 					ControlLight(true)

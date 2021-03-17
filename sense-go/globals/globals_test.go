@@ -7,19 +7,19 @@ import (
 
 func TestConfigureLogging(t *testing.T) {
 	type args struct {
-		config        Configuration
+		farm          Farm
 		containerName string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{name: "happy1", args: args{Configuration{LogLevel: "error,warn,info,debug,notice,panic"}, "sense-go"}},
+		{name: "happy1", args: args{Farm{LogLevel: "error,warn,info,debug,notice,panic"}, "sense-go"}},
 
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ConfigureLogging(tt.args.config,tt.args.containerName)
+			ConfigureLogging(tt.args.farm,tt.args.containerName)
 		})
 	}
 }
@@ -64,10 +64,10 @@ func TestReadFromPersistentStore(t *testing.T) {
 		storeMountPoint      string
 		relativePath         string
 		fileName             string
-		config               *Configuration
+		farm                 *Farm
 		currentStageSchedule *StageSchedule
 	}
-	config := Configuration{}
+	config := Farm{}
 	stageSchedule := StageSchedule{}
 
 	tests := []struct {
@@ -76,13 +76,13 @@ func TestReadFromPersistentStore(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "happy",
-			args: args{ storeMountPoint: ".", relativePath: "", fileName: "config.json", config: &config, currentStageSchedule: &stageSchedule},
+			args: args{ storeMountPoint: ".", relativePath: "", fileName: "config.json", farm: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ReadFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.config, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {
+			if err := ReadFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.farm, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {
 				t.Errorf("ReadFromPersistentStore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

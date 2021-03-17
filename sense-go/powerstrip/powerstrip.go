@@ -36,9 +36,10 @@ func SendSwitchStatusChangeEvent(switch_name string, on bool) {
 
 
 func InitRpioPins() {
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		log.Infof("initing BCM%d controlling the device named %s", globals.Config.ACOutlets[i].BCMPinNumber, globals.Config.ACOutlets[i].Name )
-		pins[i] = rpio.Pin(globals.Config.ACOutlets[i].BCMPinNumber)
+	log.Infof("InitRpioPins")
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		log.Infof("initing BCM%d controlling the device named %s", globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name )
+		pins[i] = rpio.Pin(globals.MyDevice.ACOutlets[i].BCMPinNumber)
 		log.Infof("pins[i] = %v", pins[i])
 		if globals.RunningOnUnsupportedHardware() {
 			log.Infof("Skipping pin output because we're running on windows")
@@ -50,10 +51,10 @@ func InitRpioPins() {
 
 func TurnAllOn(timeout time.Duration) {
 	log.Info("Toggling all pins ON")
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		log.Infof("TurnAllOn Turning on outlet %s", globals.Config.ACOutlets[i].Name)
-		TurnOnOutlet(globals.Config.ACOutlets[i].Index)
-		SendSwitchStatusChangeEvent(globals.Config.ACOutlets[i].Name,true)
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		log.Infof("TurnAllOn Turning on outlet %s", globals.MyDevice.ACOutlets[i].Name)
+		TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
+		SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name,true)
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
 		}
@@ -67,9 +68,9 @@ func TurnOffOutletByName( name string, force bool ) {
 		return
 	}
 	log.Infof("TurnOffOutletByName %s", name)
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		if globals.Config.ACOutlets[i].Name == name {
-			TurnOffOutlet(globals.Config.ACOutlets[i].Index)
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].Name == name {
+			TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
 			SendSwitchStatusChangeEvent(name,false)
 			return
 		}
@@ -78,9 +79,9 @@ func TurnOffOutletByName( name string, force bool ) {
 }
 
 func isOutletOn( name string ) bool {
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		if globals.Config.ACOutlets[i].Name == name {
-			return globals.Config.ACOutlets[i].PowerOn
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].Name == name {
+			return globals.MyDevice.ACOutlets[i].PowerOn
 		}
 	}
 	return false
@@ -93,9 +94,9 @@ func TurnOnOutletByName( name string, force bool ) {
 		return
 	}
 	log.Infof("turnOnOutletByName %s force %v", name, force)
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		if globals.Config.ACOutlets[i].Name == name {
-			TurnOnOutlet(globals.Config.ACOutlets[i].Index)
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].Name == name {
+			TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
 			SendSwitchStatusChangeEvent(name,true)
 			return
 		}
@@ -105,11 +106,11 @@ func TurnOnOutletByName( name string, force bool ) {
 
 func TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		fmt.Printf("TurnAllOff Turning off outlet %s\n", globals.Config.ACOutlets[i].Name)
-		TurnOffOutlet(globals.Config.ACOutlets[i].Index)
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		fmt.Printf("TurnAllOff Turning off outlet %s\n", globals.MyDevice.ACOutlets[i].Name)
+		TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
 		fmt.Printf("TurnAllOff 1 after\n")
-		SendSwitchStatusChangeEvent(globals.Config.ACOutlets[i].Name,false)
+		SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name,false)
 		fmt.Printf("TurnAllOff 2 after\n")
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
@@ -118,14 +119,14 @@ func TurnAllOff(timeout time.Duration) {
 }
 
 func TurnOnOutlet( index int ) {
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		if globals.Config.ACOutlets[i].Index == index {
-			globals.Config.ACOutlets[i].PowerOn = true
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].Index == index {
+			globals.MyDevice.ACOutlets[i].PowerOn = true
 			if globals.RunningOnUnsupportedHardware()  {
 				log.Infof("Skipping pin LOW because we're running on windows")
 				continue
 			}
-			log.Debugf("TurnOn setting pin LOW for outlet %s",globals.Config.ACOutlets[i].Name)
+			log.Debugf("TurnOn setting pin LOW for outlet %s",globals.MyDevice.ACOutlets[i].Name)
 			pins[index].Low()
 			break
 		}
@@ -133,14 +134,14 @@ func TurnOnOutlet( index int ) {
 }
 
 func TurnOffOutlet( index int ) {
-	for i := 0; i < len(globals.Config.ACOutlets); i++ {
-		if globals.Config.ACOutlets[i].Index == index {
-			globals.Config.ACOutlets[i].PowerOn = false
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].Index == index {
+			globals.MyDevice.ACOutlets[i].PowerOn = false
 			if globals.RunningOnUnsupportedHardware()  {
 				log.Infof("Skipping pin HIGH because we're running on windows")
 				continue
 			}
-			log.Debugf("TurnOff setting pin HIGH for outlet %s",globals.Config.ACOutlets[i].Name)
+			log.Debugf("TurnOff setting pin HIGH for outlet %s",globals.MyDevice.ACOutlets[i].Name)
 			pins[index].High()
 			break
 		}

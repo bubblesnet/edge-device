@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+
 /**
 Top-level object in the data hierarchy.  A farm is identified by the user/owner
 and contains multiple cabinets.
@@ -20,6 +21,7 @@ type Farm struct {
 	UserID int64 `json:"userid"`
 	ControllerHostName	string		`json:"controller_hostname"`
 	ControllerAPIPort	int			`json:"controller_api_port"`
+	LogLevel         string           `json:"log_level,omitempty"`
 	AutomaticControl bool 			`json:"automatic_control"`
 	Cabinets []Cabinet `json:"cabinets"`
 }
@@ -59,6 +61,10 @@ type Cabinet struct {
 	LightGerminate bool `json:"lightGerminate"`
 	Relay          bool `json:"relay,omitempty"`
 	AttachedDevices	[]AttachedDevice `json:"attached_devices"`
+	StageSchedules  []StageSchedule  `json:"stage_schedules,omitempty"`
+	CurrentStage	string `json:current_stage`
+	LightOnHour     int  `json:"light_on_hour,omitempty"`
+	TamperSpec                        Tamper           `json:"tamper"`
 }
 
 /**
@@ -92,6 +98,9 @@ type AttachedDevice struct {
 	Protocol	string             `json:"protocol"`
 	Address	string              `json:"address"`
 	DeviceModules []DeviceModule `json:"included_modules"`
+	ACOutlets  [8]ACOutlet      `json:"ac_outlets,omitempty"`
+	Camera PiCam	`json:"camera,omitempty"`
+	TimeBetweenSensorPollingInSeconds int64            `json:"time_between_sensor_polling_in_seconds"`
 }
 
 type EnvironmentalTarget struct {
@@ -119,7 +128,8 @@ type Tamper struct {
 	Ymove float64			`json:"ymove"`
 	Zmove float64			`json:"zmove"`
 }
-type Configuration struct {
+
+type Configuration1 struct {
 	ControllerHostName                string           `json:"controller_hostname"`
 	ControllerAPIPort                 int              `json:"controller_api_port"`
 	UserID                            int64            `json:"userid"`
@@ -127,7 +137,6 @@ type Configuration struct {
 	Stage                             string           `json:"stage,omitempty"`
 	LightOnHour                       int              `json:"light_on_hour,omitempty"`
 	StageSchedules                    []StageSchedule  `json:"stage_schedules,omitempty"`
-	ACOutlets                         [8]ACOutlet      `json:"ac_outlets,omitempty"`
 	Camera                            PiCam            `json:"camera,omitempty"`
 	DeviceSettings                    Cabinet          `json:"device_settings"`
 	LogLevel                          string           `json:"log_level,omitempty"`
@@ -145,7 +154,7 @@ type ACOutlet struct {
 	BCMPinNumber int `json:"bcm_pin_number,omitempty"`
 }
 
-func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, config *Configuration, currentStageSchedule *StageSchedule) error {
+func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, farm *Farm, currentStageSchedule *StageSchedule) error {
 	log.Debug("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
@@ -154,17 +163,18 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	fmt.Printf("readConfig from %s", fullpath)
 	file, _ := ioutil.ReadFile(fullpath)
 
-	_ = json.Unmarshal([]byte(file), config)
+	_ = json.Unmarshal([]byte(file), farm)
 
-	log.Debugf("data = %v", *config)
-	for i := 0; i < len(config.StageSchedules); i++ {
-		if config.StageSchedules[i].Name == config.Stage {
-			*currentStageSchedule = config.StageSchedules[i]
-			log.Infof("Current stage is %s - schedule is %v", config.Stage, currentStageSchedule)
+	log.Debugf("data = %v", *farm)
+
+	for i := 0; i < len(MyCabinet.StageSchedules); i++ {
+		if MyCabinet.StageSchedules[i].Name == MyCabinet.CurrentStage {
+			*currentStageSchedule = MyCabinet.StageSchedules[i]
+			log.Infof("Current stage is %s - schedule is %v", MyCabinet.CurrentStage, currentStageSchedule)
 			return nil
 		}
 	}
-	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", config.Stage)
+	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyCabinet.CurrentStage)
 	log.Error(errstr)
 	return errors.New(errstr)
 }
@@ -199,32 +209,32 @@ func (c *CustomHandler) Log(e log.Entry) {
 	fmt.Println(b.String())
 }
 
-func ConfigureLogging( config Configuration, containerName string) {
+func ConfigureLogging( farm Farm, containerName string) {
 	cLog := new(CustomHandler)
 
-	if strings.Contains(config.LogLevel,"error") {
+	if strings.Contains(farm.LogLevel,"error") {
 		log.AddHandler(cLog, log.ErrorLevel)
 	}
-	if strings.Contains(config.LogLevel,"warn") {
+	if strings.Contains(farm.LogLevel,"warn") {
 		log.AddHandler(cLog, log.WarnLevel)
 	}
-	if strings.Contains(config.LogLevel,"debug") {
+	if strings.Contains(farm.LogLevel,"debug") {
 		log.AddHandler(cLog, log.DebugLevel)
 	}
-	if strings.Contains(config.LogLevel,"info") {
+	if strings.Contains(farm.LogLevel,"info") {
 		log.AddHandler(cLog, log.InfoLevel)
 	}
-	if strings.Contains(config.LogLevel,"notice") {
+	if strings.Contains(farm.LogLevel,"notice") {
 		log.AddHandler(cLog, log.NoticeLevel)
 	}
-	if strings.Contains(config.LogLevel,"panic") {
+	if strings.Contains(farm.LogLevel,"panic") {
 		log.AddHandler(cLog, log.PanicLevel)
 	}
 
 }
 
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
-	url := fmt.Sprintf("http://%s:%d/api/config/%8.8d/%8.8d", Config.ControllerHostName, Config.ControllerAPIPort, Config.UserID, Config.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/farm/%8.8d/%8.8d", MyFarm.ControllerHostName, MyFarm.ControllerAPIPort, MyFarm.UserID, MyDevice.DeviceID)
 	fmt.Printf("Sending to %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -238,27 +248,27 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return err
 	}
 	fmt.Printf("response %s", string(body))
-	newconfig := Configuration{}
+	newconfig := Farm{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
-		fmt.Printf("err on config %v\n", err)
-		return errors.New("err on config")
+		fmt.Printf("err on farm %v\n", err)
+		return errors.New("err on farm")
 	}
-	Config = newconfig
+	MyFarm = newconfig
 
-	fmt.Printf("set config to newconfig %v\n", Config )
+	fmt.Printf("set farm to newconfig %v\n", MyFarm)
 
-	bytes, err := json.MarshalIndent(Config, "", "  ")
+	bytes, err := json.MarshalIndent(MyFarm, "", "  ")
 	filepath := fmt.Sprintf("%s/%s/%s", storeMountPoint,relativePath,fileName)
 	if len(relativePath) == 0 {
 		filepath = fmt.Sprintf("%s/%s", storeMountPoint,fileName)
 	}
-	fmt.Printf("writing config to file %s\n\n",filepath)
+	fmt.Printf("writing farm to file %s\n\n",filepath)
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
-		log.Errorf("error save config file %v", err)
+		log.Errorf("error save farm file %v", err)
 		return(err)
 	}
 
-	fmt.Printf("received config\n\n")
+	fmt.Printf("received farm\n\n")
 	return nil
 }
