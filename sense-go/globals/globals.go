@@ -19,6 +19,10 @@ var ContainerName = "sense-go"
 var DevicesFailed []string
 
 var MyFarm = Farm{}
+var MyDevice *AttachedDevice
+var MyCabinet *Cabinet
+
+var MyDeviceID = int64(0)
 
 // var DeviceId = int64(0)
 // var UserId = int64(0)
@@ -54,9 +58,6 @@ const AIRPUMP string = "airPump"
 const OUTLETFAN string = "exhaustFan"
 const HUMIDIFIER string = "humidifier"
 const HEATER string = "heater"
-
-var MyDevice *AttachedDevice
-var MyCabinet *Cabinet
 
 var CurrentStageSchedule StageSchedule
 

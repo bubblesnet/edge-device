@@ -388,6 +388,13 @@ func main() {
 	globals.BubblesnetBuildTimestamp = BubblesnetBuildTimestamp
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
+	var err error
+	globals.MyDeviceID, err = globals.ReadMyDeviceId("/config","", "deviceid")
+	if err != nil {
+		fmt.Printf("error read device %v\n", err)
+		return
+	}
+	fmt.Printf("Read deviceid %d\n", globals.MyDeviceID)
 	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.MyFarm, &globals.CurrentStageSchedule); err != nil {
 		return
 	}

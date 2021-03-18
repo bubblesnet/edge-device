@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/log"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -154,6 +155,19 @@ type ACOutlet struct {
 	BCMPinNumber int `json:"bcm_pin_number,omitempty"`
 }
 
+func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string,) (id int64, err error) {
+	log.Debug("ReadMyDeviceId")
+	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
+	if relativePath == "" {
+		fullpath = storeMountPoint + "/" + fileName
+	}
+	fmt.Printf("readConfig from %s", fullpath)
+	file, _ := ioutil.ReadFile(fullpath)
+	idstring := strings.TrimSpace(string(file))
+
+	id, err = strconv.ParseInt(idstring,10, 64)
+	return id, err
+}
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, farm *Farm, currentStageSchedule *StageSchedule) error {
 	log.Debug("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
@@ -166,7 +180,19 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	_ = json.Unmarshal([]byte(file), farm)
 
 	log.Debugf("data = %v", *farm)
-
+	found := false
+	for i := 0; i < len(farm.Cabinets) && !found; i++ {
+		for j := 0; j < len(farm.Cabinets[i].AttachedDevices) && !found; j++ {
+			log.Infof("Comparing deviceid %d with %v", MyDeviceID, farm.Cabinets[i].AttachedDevices[j])
+			if MyDeviceID == farm.Cabinets[i].AttachedDevices[j].DeviceID {
+				log.Infof("My deviceid %d matchess %v", MyDeviceID, farm.Cabinets[i].AttachedDevices[j])
+				MyCabinet = &farm.Cabinets[i]
+				MyDevice = &farm.Cabinets[i].AttachedDevices[j]
+				found = true
+			}
+		}
+	}
+	log.Infof("MyCabinet = %v", MyCabinet)
 	for i := 0; i < len(MyCabinet.StageSchedules); i++ {
 		if MyCabinet.StageSchedules[i].Name == MyCabinet.CurrentStage {
 			*currentStageSchedule = MyCabinet.StageSchedules[i]
