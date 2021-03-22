@@ -1,11 +1,27 @@
+//+build linux,arm
+
 package powerstrip
 
 import (
+	"bubblesnet/edge-device/sense-go/rpio"
+	"bubblesnet/edge-device/sense-go/globals"
 	"testing"
 	"time"
 )
 
+func ginit() {
+	rpio.OpenRpio()
+	globals.MyDevice = &globals.AttachedDevice{}
+	// globals.MyDevice.ACOutlets = [8]globals.ACOutlet{}
+	for i:=0; i< 8; i++ {
+		globals.MyDevice.ACOutlets[i].Name = "test"
+		globals.MyDevice.ACOutlets[i].BCMPinNumber = 17
+	}
+
+}
+
 func TestInitRpioPins(t *testing.T) {
+	ginit()
 	tests := []struct {
 		name string
 	}{
