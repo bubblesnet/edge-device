@@ -22,18 +22,30 @@ func setEnvironmentalControlString() {
 }
 
 func ControlOxygenation(force bool) {
+	if isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlList - no relay attached")
+	}
 	powerstrip.TurnOnOutletByName("airPump", force)
 }
 func ControlRootWater(force bool) {
+	if isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlList - no relay attached")
+	}
 	powerstrip.TurnOnOutletByName("waterPump", force)
 }
 func ControlAirflow(force bool) {
+	if isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlList - no relay attached")
+	}
 	powerstrip.TurnOnOutletByName("exhaustFan", force)
 	powerstrip.TurnOnOutletByName("intakeFan", force)
 }
 
 func ControlLight(force bool) {
-	localTimeHours := time.Now().Hour()
+	if isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlList - no relay attached")
+	}
+		localTimeHours := time.Now().Hour()
 	offsetHours := 5
 	if localTimeHours - offsetHours < 0 {
 		localTimeHours = 24 + (localTimeHours - offsetHours)
@@ -83,6 +95,9 @@ func inRange( starthour int, numhours int, currenthours int ) bool {
 }
 
 func ControlHeat(force bool) {
+	if isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlList - no relay attached")
+	}
 
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
 	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
@@ -129,6 +144,9 @@ func ControlHeat(force bool) {
 }
 
 func ControlHumidity(force bool) {
+	if isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlList - no relay attached")
+	}
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity + 5.0
 	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
 

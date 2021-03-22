@@ -453,10 +453,10 @@ func main() {
 		} else {
 			powerstrip.TurnAllOff(1)
 		}
+		powerstrip.SendSwitchStatusChangeEvent("automaticControl",globals.MyFarm.AutomaticControl)
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
 	}
-	powerstrip.SendSwitchStatusChangeEvent("automaticControl",globals.MyFarm.AutomaticControl)
 
 	log.Info("ezo")
 	if deviceShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
@@ -530,12 +530,15 @@ func main() {
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
+	/*
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Info("Relay configured")
 		//		go runPinToggler()
 	} else {
-		log.Warnf("No relay Ccnfigured - skipping GPIO relay control")
+		log.Warnf("No relay configured - skipping GPIO relay control")
 	}
+
+	 */
 
 	if len(globals.DevicesFailed) > 0 {
 		log.Errorf("Exiting because of device failure %v", globals.DevicesFailed)
