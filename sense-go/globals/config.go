@@ -63,7 +63,7 @@ type Cabinet struct {
 	Relay          bool `json:"relay,omitempty"`
 	AttachedDevices	[]AttachedDevice `json:"attached_devices"`
 	StageSchedules  []StageSchedule  `json:"stage_schedules,omitempty"`
-	CurrentStage	string `json:current_stage`
+	CurrentStage	string `json:"current_stage"`
 	LightOnHour     int  `json:"light_on_hour,omitempty"`
 	TamperSpec                        Tamper           `json:"tamper"`
 }
@@ -168,18 +168,28 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 	id, err = strconv.ParseInt(idstring,10, 64)
 	return id, err
 }
+
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, farm *Farm, currentStageSchedule *StageSchedule) error {
 	log.Debug("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
 		fullpath = storeMountPoint + "/" + fileName
 	}
-	fmt.Printf("readConfig from %s", fullpath)
-	file, _ := ioutil.ReadFile(fullpath)
-
-	_ = json.Unmarshal([]byte(file), farm)
-
-	log.Debugf("data = %v", *farm)
+	fmt.Printf("readConfig from %s\n", fullpath)
+	file, err := ioutil.ReadFile(fullpath)
+	if err != nil {
+		fmt.Printf("Read config from %s failed %v", fullpath, err )
+		return err
+	}
+	str := string(file)
+	log.Infof(str)
+	err = json.Unmarshal([]byte(file), farm)
+	if err != nil {
+		fmt.Printf("Error unmarshalling %v\n\n", err )
+		fmt.Printf("filestr = %s\n", str )
+		return err
+	}
+	fmt.Printf("data = %v", *farm)
 	found := false
 	for i := 0; i < len(farm.Cabinets) && !found; i++ {
 		for j := 0; j < len(farm.Cabinets[i].AttachedDevices) && !found; j++ {
@@ -260,7 +270,7 @@ func ConfigureLogging( farm Farm, containerName string) {
 }
 
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
-	url := fmt.Sprintf("http://%s:%d/api/farm/%8.8d/%8.8d", MyFarm.ControllerHostName, MyFarm.ControllerAPIPort, MyFarm.UserID, MyDevice.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/config/farm/%8.8d/%8.8d", MyFarm.ControllerHostName, MyFarm.ControllerAPIPort, MyFarm.UserID, MyDevice.DeviceID)
 	fmt.Printf("Sending to %s", url)
 	resp, err := http.Get(url)
 	if err != nil {

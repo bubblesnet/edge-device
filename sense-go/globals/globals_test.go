@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+func init_config() {
+	MyDeviceID = 70000007
+}
+
 func TestConfigureLogging(t *testing.T) {
 	type args struct {
 		farm          Farm
@@ -48,7 +52,7 @@ func TestGetSequence(t *testing.T) {
 		want int32
 	}{
 		// TODO: Add test cases.
-		{name: "happy",want: 1,},
+		{name: "happy",want: 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -60,6 +64,8 @@ func TestGetSequence(t *testing.T) {
 }
 
 func TestReadFromPersistentStore(t *testing.T) {
+	init_config()
+
 	type args struct {
 		storeMountPoint      string
 		relativePath         string
@@ -75,10 +81,12 @@ func TestReadFromPersistentStore(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "happy",
+		{name: "Read valid config file with plausible data",
 			args: args{ storeMountPoint: ".", relativePath: "", fileName: "config.json", farm: &config, currentStageSchedule: &stageSchedule},
+			wantErr: false},
+		{name: "Read non-existent config file",
+			args: args{ storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", farm: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -398,6 +398,9 @@ func main() {
 	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.MyFarm, &globals.CurrentStageSchedule); err != nil {
 		return
 	}
+	globals.MyFarm.ControllerHostName="192.168.21.237"
+	globals.MyFarm.ControllerAPIPort=3003
+	globals.MyFarm.UserID=90000009
 	fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MyFarm)
 	if err := globals.GetConfigFromServer("/config", "", "config.json"); err != nil {
 		return
