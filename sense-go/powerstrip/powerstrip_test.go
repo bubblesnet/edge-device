@@ -11,7 +11,7 @@ import (
 
 func ginit() {
 	rpio.OpenRpio()
-	globals.MyDevice = &globals.AttachedDevice{}
+	globals.MyDevice = &globals.EdgeDevice{}
 	// globals.MyDevice.ACOutlets = [8]globals.ACOutlet{}
 	for i:=0; i< 8; i++ {
 		globals.MyDevice.ACOutlets[i].Name = "test"

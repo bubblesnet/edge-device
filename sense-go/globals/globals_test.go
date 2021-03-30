@@ -63,6 +63,47 @@ func TestGetSequence(t *testing.T) {
 	}
 }
 
+func nextGlobalMisConfig() {
+	if MyFarm.ControllerAPIPort == 3003 && MyFarm.ControllerHostName == "localhost" && MyFarm.UserID == 90000009 {
+		MyFarm.ControllerAPIPort = 0
+	} else {
+		if MyFarm.ControllerAPIPort == 0 {
+			MyFarm.ControllerAPIPort = 3003
+			MyFarm.ControllerHostName = "localhost"
+			MyFarm.UserID = -1
+		} else {
+			MyFarm.ControllerAPIPort = 3003
+			MyFarm.ControllerHostName = "blahblah"
+			MyFarm.UserID = 90000009
+		}
+	}
+}
+
+func Test_getConfigFromServer(t *testing.T) {
+	MyFarm.ControllerAPIPort = 3003
+	MyFarm.ControllerHostName = "localhost"
+	MyFarm.UserID = 90000009
+	MyDevice = &EdgeDevice{ DeviceID: int64(70000007) }
+
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{ name: "happy", wantErr: false},
+		{ name: "bad_port", wantErr: true},
+		{ name: "bad_user", wantErr: true},
+		{ name: "bad_host", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := GetConfigFromServer(".","", "config.json"); (err != nil) != tt.wantErr {
+				t.Errorf("getConfigFromServer() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			nextGlobalMisConfig()
+		})
+	}
+}
+
 func TestReadFromPersistentStore(t *testing.T) {
 	init_config()
 

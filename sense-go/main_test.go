@@ -498,28 +498,13 @@ func Test_deviceShouldBeHere(t *testing.T) {
 	}
 		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotShouldBePresent := deviceShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInCabinet, tt.args.deviceType); gotShouldBePresent != tt.wantShouldBePresent {
-				t.Errorf("deviceShouldBeHere() = %v, want %v", gotShouldBePresent, tt.wantShouldBePresent)
+			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInCabinet, tt.args.deviceType); gotShouldBePresent != tt.wantShouldBePresent {
+				t.Errorf("moduleShouldBeHere() = %v, want %v", gotShouldBePresent, tt.wantShouldBePresent)
 			}
 		})
 	}
 }
 
-func Test_getConfigFromServer(t *testing.T) {
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		{ name: "happy", wantErr: true},
-	}
-		for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := globals.GetConfigFromServer(".","", "config.json"); (err != nil) != tt.wantErr {
-				t.Errorf("getConfigFromServer() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
 func Test_inRange(t *testing.T) {
 	type args struct {

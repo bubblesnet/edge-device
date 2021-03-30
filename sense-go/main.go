@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc"
 	"math"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -191,13 +192,7 @@ func getNowMillis() int64 {
 }
 
 func countACOutlets() int {
-	count := 0
-	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].DeviceID == globals.MyDevice.DeviceID {
-			count++
-		}
-	}
-	return count
+	return len(globals.MyDevice.ACOutlets)
 }
 
 func isMySwitch(switchName string) bool {
@@ -206,15 +201,12 @@ func isMySwitch(switchName string) bool {
 	}
 
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].DeviceID == globals.MyDevice.DeviceID {
-			if globals.MyDevice.ACOutlets[i].Name == switchName {
-				return true
-			}
+		if globals.MyDevice.ACOutlets[i].Name == switchName {
+			return true
 		}
 	}
 	return false
 }
-
 
 func listenForCommands() (err error) {
 	log.Infof("listenForCommands dial")
@@ -228,7 +220,7 @@ func listenForCommands() (err error) {
 	}
 
 	for j := 0; ; j++ {
-		log.Infof("readtimeout dial at %d", getNowMillis())
+		log.Debugf("stomp.Dial at %d", getNowMillis())
 		host_port := fmt.Sprintf("%s:%d", globals.MyFarm.ControllerHostName, 61613)
 		stompConn, err := stomp.Dial("tcp", host_port, options)
 		if err != nil {
@@ -253,7 +245,11 @@ func listenForCommands() (err error) {
 			msg := <-sub.C
 			if msg == nil || msg.Err != nil {
 				if msg != nil && msg.Err != nil {
-					log.Errorf("listenForCommands read topic error %v", msg.Err)
+					if strings.Contains(fmt.Sprintf("%v",msg.Err), "timeout") {
+						log.Debugf("queue read timed out - resubscribing %v", msg.Err)
+					} else {
+						log.Errorf("listenForCommands read topic error %v", msg.Err)
+					}
 					time.Sleep(2 * time.Second)
 					break
 				} else {
@@ -459,7 +455,7 @@ func main() {
 	}
 
 	log.Info("ezo")
-	if deviceShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 		err = ezoDriver.Start()
@@ -493,14 +489,14 @@ func main() {
 	wg.Add(numGoroutines)
 
 	log.Info("movement")
-	if deviceShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.MovementSensor, "adxl345") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.MovementSensor, "adxl345") {
 		log.Info("MovementSensor should be connected to this device, starting")
 		go runTamperDetector()
 	} else {
 		log.Warnf("No adxl345 Configured - skipping tamper detection")
 	}
 	log.Infof("adc %s %d %v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.WaterLevelSensor)
-	if deviceShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.WaterLevelSensor, "ads1115") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.WaterLevelSensor, "ads1115") {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
 			err := adc.RunADCPoller()
@@ -512,7 +508,7 @@ func main() {
 		log.Warnf("No ads1115s configured - skipping A to D conversion")
 	}
 	log.Info("root ph")
-	if deviceShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
 			err = readPh()
@@ -523,8 +519,8 @@ func main() {
 	} else {
 		log.Warnf("No ezoph configured - skipping pH monitoring")
 	}
-	log.Infof("deviceShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.HeightSensor)
-	if deviceShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.HeightSensor, "hcsr04") {
+	log.Infof("moduleShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.HeightSensor)
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.HeightSensor, "hcsr04") {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
@@ -560,23 +556,23 @@ func main() {
 }
 
 func isRelayAttached(deviceid int64) (relayIsAttached bool) {
-	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].DeviceID == deviceid {
-			return true
-		}
+	if len(globals.MyDevice.ACOutlets) > 0 {
+		return true
 	}
 	return false
 }
 
-func deviceShouldBeHere(containerName string, mydeviceid int64, deviceInCabinet bool, deviceType string) (shouldBePresent bool) {
+func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInCabinet bool, deviceType string) (shouldBePresent bool) {
 	if !deviceInCabinet {
 		return false
 	}
-	for i := 0; i < len(globals.MyCabinet.AttachedDevices); i++ {
+	for i := 0; i < len(globals.MyCabinet.EdgeDevices); i++ {
 		//		log.Infof("%v", globals.MyFarm.AttachedDevices[i])
-		if globals.MyCabinet.AttachedDevices[i].ContainerName == containerName && globals.MyCabinet.AttachedDevices[i].DeviceID == mydeviceid && globals.MyCabinet.AttachedDevices[i].DeviceType == deviceType {
-			log.Infof("Device %s should be present at %s", globals.MyCabinet.AttachedDevices[i].DeviceType, globals.MyCabinet.AttachedDevices[i].Address)
-			return true
+		for j := 0; j < len(globals.MyCabinet.EdgeDevices[i].DeviceModules); j++ {
+			if globals.MyCabinet.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && globals.MyCabinet.EdgeDevices[i].DeviceID == mydeviceid && globals.MyCabinet.EdgeDevices[i].DeviceType == deviceType {
+				log.Infof("Device %s should be present at %s", globals.MyCabinet.EdgeDevices[i].DeviceType, globals.MyCabinet.EdgeDevices[i].DeviceModules[j].Address)
+				return true
+			}
 		}
 	}
 	return false

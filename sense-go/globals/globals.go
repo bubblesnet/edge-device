@@ -19,14 +19,13 @@ var ContainerName = "sense-go"
 var DevicesFailed []string
 
 var MyFarm = Farm{}
-var MyDevice *AttachedDevice
+var MyDevice *EdgeDevice
 var MyCabinet *Cabinet
 
 var MyDeviceID = int64(0)
 
 // var DeviceId = int64(0)
 // var UserId = int64(0)
-
 
 const (
 	ForwardingAddress = "store-and-forward:50051"
@@ -38,7 +37,6 @@ type LocalState struct {
 	Heater bool `json:"heater"`
 	HeaterPad bool `json:"heater_pad"`
 	GrowLightVeg bool `json:"grow_light_veg"`
-
 }
 
 var LocalCurrentState = LocalState {
