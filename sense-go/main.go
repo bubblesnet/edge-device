@@ -392,15 +392,17 @@ func main() {
 	}
 	fmt.Printf("Read deviceid %d\n", globals.MyDeviceID)
 	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.MyFarm, &globals.CurrentStageSchedule); err != nil {
-		return
+		globals.MyFarm.ControllerHostName = "192.168.21.237"
+		globals.MyFarm.ControllerAPIPort = 3003
+		globals.MyFarm.UserID = 90000009
+		d := globals.EdgeDevice{ DeviceID: globals.MyDeviceID }
+		globals.MyDevice = &d
+		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MyFarm)
 	}
-	globals.MyFarm.ControllerHostName="192.168.21.237"
-	globals.MyFarm.ControllerAPIPort=3003
-	globals.MyFarm.UserID=90000009
-	fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MyFarm)
 	if err := globals.GetConfigFromServer("/config", "", "config.json"); err != nil {
 		return
 	}
+	globals.MyFarm.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
 	fmt.Printf("done getting config from server %v\n\n", globals.MyFarm)
 	globals.ConfigureLogging(globals.MyFarm, "sense-go")
 

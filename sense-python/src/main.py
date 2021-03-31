@@ -44,6 +44,7 @@ import bubblesgrpc_pb2
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 
 lastTemp = 0.0
+global config
 config = {}
 LightAddress = 0
 
@@ -66,10 +67,20 @@ humidity_measurement_name = "UNKNOWN"
 pressure_measurement_name = "UNKNOWN"
 
 
+def read_deviceid(filename):
+    deviceid = -1
+    with open(filename) as f:
+        for line in f:
+            logging.info("line = %s " % line )
+            deviceid = int(line)
+        return (deviceid)
+
 def read_config(fullpath):
     global config
+    deviceid = config['deviceid']
     with open(fullpath) as f:
         config = json.load(f)
+        config['deviceid'] = deviceid
 
 
 def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
@@ -148,18 +159,18 @@ def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name):
 
 # new config functions
 def get_address(device_type):
-    for attached_device in config['attached_devices']:
-        if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == device_type:
-            x = int(attached_device['address'], 16)
+    for module in config['modules']:
+        if module['container_name'] == 'sense-python' and module['device_type'] == device_type:
+            x = int(module['address'], 16)
             return x
     return 0
 
 
 def is_our_device(device_type):
-    for attached_device in config['attached_devices']:
-        if config['deviceid'] != attached_device['deviceid']:
+    for module in config['modules']:
+        if config['deviceid'] != module['deviceid']:
             continue
-        if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == device_type:
+        if module['container_name'] == 'sense-python' and module['device_type'] == device_type:
             return True
 
     return False
@@ -173,20 +184,23 @@ def bme280_names():
     global temperature_measurement_name
     global humidity_measurement_name
     global pressure_measurement_name
-    for attached_device in config['attached_devices']:
-        if config['deviceid'] != attached_device['deviceid']:
+    print(config)
+    for edge_device in config['cabinets'][1]['edge_devices']:
+        logging.info("deviceid = %d" % config['deviceid'])
+        if config['deviceid'] != edge_device['deviceid']:
             continue
-        if attached_device['container_name'] == 'sense-python' and attached_device['device_type'] == "bme280":
-            for included_sensor in attached_device['included_sensors']:
-                if 'temp' in included_sensor['measurement_name']:
-                    temperature_sensor_name = included_sensor['sensor_name']
-                    temperature_measurement_name = included_sensor['measurement_name']
-                if 'pressure' in included_sensor['measurement_name']:
-                    pressure_sensor_name = included_sensor['sensor_name']
-                    pressure_measurement_name = included_sensor['measurement_name']
-                if 'humidity' in included_sensor['measurement_name']:
-                    humidity_sensor_name = included_sensor['sensor_name']
-                    humidity_measurement_name = included_sensor['measurement_name']
+        for module in edge_device['modules']:
+            if module['container_name'] == 'sense-python' and module['device_type'] == "bme280":
+                for included_sensor in module['included_sensors']:
+                    if 'temp' in included_sensor['measurement_name']:
+                        temperature_sensor_name = included_sensor['sensor_name']
+                        temperature_measurement_name = included_sensor['measurement_name']
+                    if 'pressure' in included_sensor['measurement_name']:
+                        pressure_sensor_name = included_sensor['sensor_name']
+                        pressure_measurement_name = included_sensor['measurement_name']
+                    if 'humidity' in included_sensor['measurement_name']:
+                        humidity_sensor_name = included_sensor['sensor_name']
+                        humidity_measurement_name = included_sensor['measurement_name']
 
 
 def append_bh1750_data(msg, sensor_name, measurement_name):
@@ -296,15 +310,18 @@ def send_message(msg):
     logging.debug(json_bytes)
     message = bubblesgrpc_pb2.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
     response = stub.StoreAndForward(message)
-#    logging.debug(response)
+    #    logging.debug(response)
     return
 
 
 if __name__ == "__main__":
 
+
     logging.basicConfig(level=logging.DEBUG)
 
     logging.debug("Starting sense-python")
+    config['deviceid'] = read_deviceid('/config/deviceid')
+    logging.info("deviceid from file is %d" % config['deviceid'])
     read_config('/config/config.json')
     bme280_names()
     LightAddress = get_address('bh1750')
@@ -325,8 +342,8 @@ if __name__ == "__main__":
 
                 report_polled_sensor_parameters(bus)
 
-#                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
-#                time.strftime("%T")))
+                #                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
+                #                time.strftime("%T")))
                 time.sleep(config['time_between_sensor_polling_in_seconds'])
 
             logging.debug("broke out of temp/hum/distance polling loop")

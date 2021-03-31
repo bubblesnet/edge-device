@@ -299,8 +299,8 @@ func validateConfigurable() (err error) {
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MyDevice).(*EdgeDevice); ok == false || t == nil {
-		fmt.Printf(" context %s should be %T, is %T value %v\n", "MyDevice.DeviceID", t, MyDevice, t)
-		log.Errorf(" context %s should be %T, is %T", "MyDevice.DeviceID", t, MyDevice)
+		fmt.Printf(" context %s should be %T, is %T value %v\n", "MyDevice", t, MyDevice, t)
+		log.Errorf(" context %s should be %T, is %T", "MyDevice", t, MyDevice)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MyDevice.DeviceID).(int64); ok == false || t <= 0 {
@@ -312,6 +312,7 @@ func validateConfigurable() (err error) {
 }
 func validateConfigured() (err error) {
 	if err := validateConfigurable(); err != nil {
+		log.Errorf("validateConfigured error %v", err )
 		return err
 	}
 	if t, ok := interface{}(MyFarm).(Farm); ok == false {
@@ -334,6 +335,7 @@ func validateConfigured() (err error) {
 
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	if err = validateConfigurable(); err != nil {
+		log.Errorf("GetConfigFromServer error %v", err )
 		return err
 	}
 	if t, ok := interface{}(storeMountPoint).(string); ok == false {
