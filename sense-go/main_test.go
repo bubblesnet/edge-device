@@ -333,6 +333,7 @@ globals.ExternalCurrentState.TempF
 func testHeat( t *testing.T) {
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
+	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
 	ControlHeat(true)
 
 	// all set
