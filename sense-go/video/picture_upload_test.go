@@ -1,3 +1,5 @@
+// +build darwin windows linux,arm
+
 package video
 
 import (
