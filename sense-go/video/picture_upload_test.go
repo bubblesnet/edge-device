@@ -25,7 +25,7 @@ func Test_uploadFile(t *testing.T) {
 	globals.MySite.ControllerHostName = "192.168.21.237"
 		globals.MySite.ControllerAPIPort = 3003
 		globals.MySite.UserID = 90000009
-		globals.MyDevice.DeviceID = 70000007
+		globals.MyDevice = &globals.EdgeDevice{DeviceID: 70000007}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
