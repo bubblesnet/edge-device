@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewADCSensorMessage(t *testing.T) {
+	globals.MyDevice = &globals.EdgeDevice{DeviceID: 90000009}
 	type args struct {
 		sensor_name string
 		measurement_name string
