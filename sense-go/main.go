@@ -9,6 +9,7 @@ import (
 	"bubblesnet/edge-device/sense-go/rpio"
 	"bubblesnet/edge-device/sense-go/video"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
@@ -516,7 +517,7 @@ func main() {
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
-			err = readPh()
+			err = readPh(false)
 			if err != nil {
 				log.Errorf("readPh %+v", err)
 			}
@@ -585,7 +586,7 @@ func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInStation 
 
 var lastPh = float64(0.0)
 
-func readPh() error {
+func readPh(once_only bool) error {
 	ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 	err := ezoDriver.Start()
 	if err != nil {
@@ -611,12 +612,19 @@ func readPh() error {
 			phm := messaging.NewGenericSensorMessage("root_ph_sensor", "root_ph", ph, "", direction)
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			_, err = globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("RunADCPoller ERROR %v", err)
+			if globals.Client == nil {
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Errorf("RunADCPoller ERROR %v", err)
+				} else {
+					//				log.Infof("sensor_reply %v", sensor_reply)
+				}
 			} else {
-//				log.Infof("sensor_reply %v", sensor_reply)
+				e = errors.New("GRPC client is not connected!")
 			}
+		}
+		if once_only {
+			break
 		}
 		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
