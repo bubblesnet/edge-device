@@ -338,7 +338,7 @@ func initializeOutletsForAutomation() {
 	ControlAirflow(true )
 }
 
-func makeControlDecisions() {
+func makeControlDecisions(once_only bool) {
 	log.Info("makeControlDecisions")
 	i := 0
 
@@ -359,6 +359,9 @@ func makeControlDecisions() {
 			if globals.RunningOnUnsupportedHardware() {
 				return
 			}
+		}
+		if once_only {
+			break
 		}
 		time.Sleep(time.Second)
 		i++
@@ -543,7 +546,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	go makeControlDecisions()
+	go makeControlDecisions(false)
 
 	go func() {
 		err = listenForCommands()
