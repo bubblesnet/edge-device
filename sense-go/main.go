@@ -517,8 +517,7 @@ func main() {
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
-			err = readPh(false)
-			if err != nil {
+			if err = readPh(false); err != nil {
 				log.Errorf("readPh %+v", err)
 			}
 		}()
@@ -612,7 +611,7 @@ func readPh(once_only bool) error {
 			phm := messaging.NewGenericSensorMessage("root_ph_sensor", "root_ph", ph, "", direction)
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			if globals.Client == nil {
+			if globals.Client != nil {
 				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
 					log.Errorf("RunADCPoller ERROR %v", err)
