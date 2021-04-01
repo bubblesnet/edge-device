@@ -1,4 +1,4 @@
-// +build darwin windows
+// +build darwin windows linux,amd64
 
 package powerstrip
 
