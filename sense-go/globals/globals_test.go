@@ -116,6 +116,7 @@ func TestReadFromPersistentStore(t *testing.T) {
 	}
 	config := Site{}
 	stageSchedule := StageSchedule{}
+	MyStation = &Station { CurrentStage: "idle" }
 
 	tests := []struct {
 		name    string
