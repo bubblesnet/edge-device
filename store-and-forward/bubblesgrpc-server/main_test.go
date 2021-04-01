@@ -23,9 +23,9 @@ func initTests(t *testing.T) {
 	} else {
 		fmt.Printf("WTF!!!")
 	}
-	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&config,&stageSchedule)
+	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&MySite,&stageSchedule)
 
-	t.Logf("config = %v", config)
+	t.Logf("MySite = %v", MySite)
 	t.Logf("stageSchedule = %v", stageSchedule)
 	initDb(databaseFilename)
 	t.Logf("returned from initDb")

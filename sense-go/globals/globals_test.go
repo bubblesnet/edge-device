@@ -11,19 +11,19 @@ func init_config() {
 
 func TestConfigureLogging(t *testing.T) {
 	type args struct {
-		farm          Farm
+		site          Site
 		containerName string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{name: "happy1", args: args{Farm{LogLevel: "error,warn,info,debug,notice,panic"}, "sense-go"}},
+		{name: "happy1", args: args{Site{LogLevel: "error,warn,info,debug,notice,panic"}, "sense-go"}},
 
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ConfigureLogging(tt.args.farm,tt.args.containerName)
+			ConfigureLogging(tt.args.site,tt.args.containerName)
 		})
 	}
 }
@@ -64,25 +64,25 @@ func TestGetSequence(t *testing.T) {
 }
 
 func nextGlobalMisConfig() {
-	if MyFarm.ControllerAPIPort == 3003 && MyFarm.ControllerHostName == "localhost" && MyFarm.UserID == 90000009 {
-		MyFarm.ControllerAPIPort = 0
+	if MySite.ControllerAPIPort == 3003 && MySite.ControllerHostName == "localhost" && MySite.UserID == 90000009 {
+		MySite.ControllerAPIPort = 0
 	} else {
-		if MyFarm.ControllerAPIPort == 0 {
-			MyFarm.ControllerAPIPort = 3003
-			MyFarm.ControllerHostName = "localhost"
-			MyFarm.UserID = -1
+		if MySite.ControllerAPIPort == 0 {
+			MySite.ControllerAPIPort = 3003
+			MySite.ControllerHostName = "localhost"
+			MySite.UserID = -1
 		} else {
-			MyFarm.ControllerAPIPort = 3003
-			MyFarm.ControllerHostName = "blahblah"
-			MyFarm.UserID = 90000009
+			MySite.ControllerAPIPort = 3003
+			MySite.ControllerHostName = "blahblah"
+			MySite.UserID = 90000009
 		}
 	}
 }
 
 func Test_getConfigFromServer(t *testing.T) {
-	MyFarm.ControllerAPIPort = 3003
-	MyFarm.ControllerHostName = "localhost"
-	MyFarm.UserID = 90000009
+	MySite.ControllerAPIPort = 3003
+	MySite.ControllerHostName = "localhost"
+	MySite.UserID = 90000009
 	MyDevice = &EdgeDevice{ DeviceID: int64(70000007) }
 
 	tests := []struct {
@@ -111,10 +111,10 @@ func TestReadFromPersistentStore(t *testing.T) {
 		storeMountPoint      string
 		relativePath         string
 		fileName             string
-		farm                 *Farm
+		site                 *Site
 		currentStageSchedule *StageSchedule
 	}
-	config := Farm{}
+	config := Site{}
 	stageSchedule := StageSchedule{}
 
 	tests := []struct {
@@ -123,15 +123,15 @@ func TestReadFromPersistentStore(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "Read valid config file with plausible data",
-			args: args{ storeMountPoint: ".", relativePath: "", fileName: "config.json", farm: &config, currentStageSchedule: &stageSchedule},
+			args: args{ storeMountPoint: ".", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: false},
 		{name: "Read non-existent config file",
-			args: args{ storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", farm: &config, currentStageSchedule: &stageSchedule},
+			args: args{ storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ReadFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.farm, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {
+			if err := ReadFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.site, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {
 				t.Errorf("ReadFromPersistentStore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

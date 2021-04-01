@@ -54,9 +54,9 @@ func ControlLight(force bool) {
 	}
 	veglight := false
 
-	if globals.MyCabinet.CurrentStage == "germination" || globals.MyCabinet.CurrentStage == "seedling" || globals.MyCabinet.CurrentStage == "vegetative" {
+	if globals.MyStation.CurrentStage == "germination" || globals.MyStation.CurrentStage == "seedling" || globals.MyStation.CurrentStage == "vegetative" {
 		// If it's time for grow light veg to be on
-		if inRange(globals.MyCabinet.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
+		if inRange(globals.MyStation.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
 			powerstrip.TurnOnOutletByName(globals.GROWLIGHTVEG, force)
 			veglight = true
 		} else {

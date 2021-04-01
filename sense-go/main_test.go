@@ -412,8 +412,8 @@ func TestControlLight(t *testing.T) {
 }
 
 /*
-globals.MyFarm.Stage
-globals.MyFarm.LightOnHour
+globals.MySite.Stage
+globals.MySite.LightOnHour
 globals.CurrentStageSchedule.HoursOfLight
 globals.LocalCurrentState.GrowLightVeg
 "germination"
@@ -428,11 +428,11 @@ var growlightstates = []bool {
 }
 func testLight(t *testing.T) {
 	for i := 0; i < len(stages); i++  {
-		globals.MyCabinet.CurrentStage = stages[i]
+		globals.MyStation.CurrentStage = stages[i]
 		for n := 1; n <= 24; n++ {
 			globals.CurrentStageSchedule.HoursOfLight = n
 			for h := 0; h < 24; h++ {
-				globals.MyCabinet.LightOnHour = h
+				globals.MyStation.LightOnHour = h
 				for k := 0; k < len(growlightstates); k++ {
 					globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
 					ControlLight(true)
@@ -486,7 +486,7 @@ func Test_deviceShouldBeHere(t *testing.T) {
 	type args struct {
 		containerName   string
 		mydeviceid      int64
-		deviceInCabinet bool
+		deviceInStation bool
 		deviceType      string
 	}
 	tests := []struct {
@@ -494,11 +494,11 @@ func Test_deviceShouldBeHere(t *testing.T) {
 		args                args
 		wantShouldBePresent bool
 	}{
-		{ name: "happy", args: args{ containerName: "sense-go", mydeviceid: 70000007, deviceInCabinet: true, deviceType: "test"}},
+		{ name: "happy", args: args{ containerName: "sense-go", mydeviceid: 70000007, deviceInStation: true, deviceType: "test"}},
 	}
 		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInCabinet, tt.args.deviceType); gotShouldBePresent != tt.wantShouldBePresent {
+			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.deviceType); gotShouldBePresent != tt.wantShouldBePresent {
 				t.Errorf("moduleShouldBeHere() = %v, want %v", gotShouldBePresent, tt.wantShouldBePresent)
 			}
 		})

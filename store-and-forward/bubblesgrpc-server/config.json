@@ -88,7 +88,7 @@
     "water_pump": true,
     "air_pump": true,
     "light_sensor": true,
-    "cabinet_door_sensor": true,
+    "station_door_sensor": true,
     "outer_door_sensor": true,
     "movement_sensor": true,
     "pressure_sensors": true,
@@ -110,7 +110,7 @@
     "light_germinate": true
   },
 
-  "attached_devices" : [
+  "edge_devices" : [
     {"deviceid": 70000007,"device_type": "bme280", "protocol": "i2c", "address": "0x76","included_sensors": [{"sensor_name": "humidity_sensor_internal"}
     ,{"sensor_name": "pressure_sensor_internal", "address": "44"},{"sensor_name": "thermometer_middle", "address": "55"}]},
     {"deviceid": 70000008,"device_type": "bme280", "protocol": "i2c", "address": "0x76","included_sensors": [{"sensor_name": "humidity_sensor_external", "address": "55"},
@@ -121,7 +121,7 @@
     {"deviceid": 70000007,"device_type": "adxl345","protocol": "i2c", "address": "0x53","included_sensors": [{"sensor_name": "movement_sensor", "address": "55"}]},
     {"deviceid": 70000007,"device_type": "ezoph","protocol": "i2c", "address": "0x63","included_sensors": [{"sensor_name": "root_ph_sensor", "address": "55"}]},
     {"deviceid": 70000007,"device_type": "hcsr04","protocol": "i2c", "address": "0x47","included_sensors": [{"sensor_name": "distance_sensor", "address": "55"}]},
-    {"deviceid": 70000007,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "cabinet_door_sensor", "address": "55"}]},
+    {"deviceid": 70000007,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "station_door_sensor", "address": "55"}]},
     {"deviceid": 70000007,"device_type": "GPIO","protocol": "gpio", "address": "0x47","included_sensors": [{"sensor_name": "external_door_sensor", "address": "55"}]}
     ]
   }

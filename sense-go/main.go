@@ -53,7 +53,7 @@ func runTamperDetector() {
 				xmove = math.Abs(lastx - x)
 				ymove = math.Abs(lasty - y)
 				zmove = math.Abs(lastz - z)
-				if xmove > globals.MyCabinet.TamperSpec.Xmove ||  ymove > globals.MyCabinet.TamperSpec.Ymove ||  zmove > globals.MyCabinet.TamperSpec.Zmove {
+				if xmove > globals.MyStation.TamperSpec.Xmove ||  ymove > globals.MyStation.TamperSpec.Ymove ||  zmove > globals.MyStation.TamperSpec.Zmove {
 					log.Infof("new tamper message !! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove)
 					var tamperMessage = messaging.NewTamperSensorMessage("tamper_sensor",
 						0.0, "", "", xmove, ymove, zmove)
@@ -167,18 +167,18 @@ func readConfig() error {
 	log.Debugf("readglobals.Configuration"))
 	file, _ := ioutil.ReadFile("/globals.Configuration/globals.Configuration.json")
 
-	_ = json.Unmarshal([]byte(file), &globals.MyFarm)
+	_ = json.Unmarshal([]byte(file), &globals.MySite)
 
-	log.Debugf("data = %v", globals.MyFarm ))
+	log.Debugf("data = %v", globals.MySite ))
 
-	for i := 0; i < len(globals.MyFarm.StageSchedules); i++ {
-		if globals.MyFarm.StageSchedules[i].Name == globals.MyFarm.Stage {
-			globals.CurrentStageSchedule = globals.MyFarm.StageSchedules[i]
-			log.Infof("Current stage is %s - schedule is %v", globals.MyFarm.Stage, globals.CurrentStageSchedule))
+	for i := 0; i < len(globals.MySite.StageSchedules); i++ {
+		if globals.MySite.StageSchedules[i].Name == globals.MySite.Stage {
+			globals.CurrentStageSchedule = globals.MySite.StageSchedules[i]
+			log.Infof("Current stage is %s - schedule is %v", globals.MySite.Stage, globals.CurrentStageSchedule))
 			return nil
 		}
 	}
-	log.Error(fmt.Sprintf("ERROR: No schedule for stage %s", globals.MyFarm.Stage))
+	log.Error(fmt.Sprintf("ERROR: No schedule for stage %s", globals.MySite.Stage))
 	return errors.New("No schedule for stage")
 }
 
@@ -213,7 +213,7 @@ func listenForCommands() (err error) {
 
 	var options func(*stomp.Conn) error = func(*stomp.Conn) error{
 		stomp.ConnOpt.Login("userid", "userpassword")
-		stomp.ConnOpt.Host(globals.MyFarm.ControllerHostName)
+		stomp.ConnOpt.Host(globals.MySite.ControllerHostName)
 		stomp.ConnOpt.RcvReceiptTimeout(30*time.Second)
 		stomp.ConnOpt.HeartBeat(30*time.Second, 30*time.Second) // I put this but seems no impact
 		return nil
@@ -221,7 +221,7 @@ func listenForCommands() (err error) {
 
 	for j := 0; ; j++ {
 		log.Debugf("stomp.Dial at %d", getNowMillis())
-		host_port := fmt.Sprintf("%s:%d", globals.MyFarm.ControllerHostName, 61613)
+		host_port := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
 		stompConn, err := stomp.Dial("tcp", host_port, options)
 		if err != nil {
 			log.Errorf("listenForCommands dial error %v", err)
@@ -230,7 +230,7 @@ func listenForCommands() (err error) {
 		log.Infof("listenForCommands connect")
 		defer stompConn.Disconnect()
 
-		topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MyFarm.UserID, globals.MyDevice.DeviceID)
+		topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
 		log.Infof("listenForCommands subscribe to topic %s", topicName)
 
 		sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
@@ -303,8 +303,8 @@ func listenForCommands() (err error) {
 					}
 					if switchMessage.SwitchName == "automaticControl" {
 						log.Infof("listenForCommands setting %s to %v", switchMessage.SwitchName, switchMessage.On)
-						globals.MyFarm.AutomaticControl = switchMessage.On
-						if globals.MyFarm.AutomaticControl {
+						globals.MySite.AutomaticControl = switchMessage.On
+						if globals.MySite.AutomaticControl {
 							initializeOutletsForAutomation()	// Make sure the switches conform to currently configured automation
 						}
 					} else if switchMessage.On == true {
@@ -347,9 +347,9 @@ func makeControlDecisions() {
 		//		grpc. (gsm)
 		if i%60 == 0 {
 			log.Debugf("LocalCurrentState = %v", globals.LocalCurrentState)
-//			log.Debugf("globals.Configuration = %v", globals.MyFarm)
+//			log.Debugf("globals.Configuration = %v", globals.MySite)
 		}
-		if globals.MyFarm.AutomaticControl {
+		if globals.MySite.AutomaticControl {
 			ControlLight(false)
 			ControlHeat(false)
 			ControlHumidity(false)
@@ -391,22 +391,22 @@ func main() {
 		return
 	}
 	fmt.Printf("Read deviceid %d\n", globals.MyDeviceID)
-	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.MyFarm, &globals.CurrentStageSchedule); err != nil {
-		globals.MyFarm.ControllerHostName = "192.168.21.237"
-		globals.MyFarm.ControllerAPIPort = 3003
-		globals.MyFarm.UserID = 90000009
+	if err := globals.ReadFromPersistentStore("/config", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		globals.MySite.ControllerHostName = "192.168.21.237"
+		globals.MySite.ControllerAPIPort = 3003
+		globals.MySite.UserID = 90000009
 		d := globals.EdgeDevice{ DeviceID: globals.MyDeviceID }
 		globals.MyDevice = &d
-		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MyFarm)
+		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
 	}
 	if err := globals.GetConfigFromServer("/config", "", "config.json"); err != nil {
 		return
 	}
-	globals.MyFarm.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
-	fmt.Printf("done getting config from server %v\n\n", globals.MyFarm)
-	globals.ConfigureLogging(globals.MyFarm, "sense-go")
+	globals.MySite.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
+	fmt.Printf("done getting config from server %v\n\n", globals.MySite)
+	globals.ConfigureLogging(globals.MySite, "sense-go")
 
-//	globals.MyFarm.Cabinet.HeightSensor = true
+//	globals.MySite.Station.HeightSensor = true
 	reportVersion()
 
 	log.Debug("debug")
@@ -417,7 +417,7 @@ func main() {
 	// log.Panic("panic") // this will panic
 	log.Alert("alert")
 
-	log.Infof("globals.Configuration = %v", globals.MyFarm)
+	log.Infof("globals.Configuration = %v", globals.MySite)
 	log.Infof("stageSchedule = %v", globals.CurrentStageSchedule)
 
 	// Set up a connection to the server.
@@ -445,19 +445,19 @@ func main() {
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
 		powerstrip.InitRpioPins()
-		if globals.MyFarm.AutomaticControl {
+		if globals.MySite.AutomaticControl {
 			powerstrip.TurnAllOff(1)	// turn all OFF first since initalizeOutlets doesnt
 			initializeOutletsForAutomation()
 		} else {
 			powerstrip.TurnAllOff(1)
 		}
-		powerstrip.SendSwitchStatusChangeEvent("automaticControl",globals.MyFarm.AutomaticControl)
+		powerstrip.SendSwitchStatusChangeEvent("automaticControl",globals.MySite.AutomaticControl)
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
 	}
 
 	log.Info("ezo")
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("Starting Atlas EZO driver")
 		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 		err = ezoDriver.Start()
@@ -471,19 +471,19 @@ func main() {
 	log.Info("after ezo")
 
 	numGoroutines := 6
-	if !globals.MyCabinet.MovementSensor {
+	if !globals.MyStation.MovementSensor {
 		numGoroutines--
 	}
-	if !globals.MyCabinet.WaterLevelSensor {
+	if !globals.MyStation.WaterLevelSensor {
 		numGoroutines--
 	}
-	if !globals.MyCabinet.RootPhSensor {
+	if !globals.MyStation.RootPhSensor {
 		numGoroutines--
 	}
-	if !globals.MyCabinet.HeightSensor {
+	if !globals.MyStation.HeightSensor {
 		numGoroutines--
 	}
-	if !globals.MyCabinet.Relay {
+	if !globals.MyStation.Relay {
 		numGoroutines--
 	}
 	log.Infof("Waiting for %d goroutines", numGoroutines)
@@ -491,14 +491,14 @@ func main() {
 	wg.Add(numGoroutines)
 
 	log.Info("movement")
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.MovementSensor, "adxl345") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
 		log.Info("MovementSensor should be connected to this device, starting")
 		go runTamperDetector()
 	} else {
 		log.Warnf("No adxl345 Configured - skipping tamper detection")
 	}
-	log.Infof("adc %s %d %v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.WaterLevelSensor)
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.WaterLevelSensor, "ads1115") {
+	log.Infof("adc %s %d %v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor)
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
 			err := adc.RunADCPoller()
@@ -510,7 +510,7 @@ func main() {
 		log.Warnf("No ads1115s configured - skipping A to D conversion")
 	}
 	log.Info("root ph")
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.RootPhSensor, "ezoph") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 		go func() {
 			err = readPh()
@@ -521,8 +521,8 @@ func main() {
 	} else {
 		log.Warnf("No ezoph configured - skipping pH monitoring")
 	}
-	log.Infof("moduleShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.HeightSensor)
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyCabinet.HeightSensor, "hcsr04") {
+	log.Infof("moduleShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
 		go runDistanceWatcher()
 	} else {
@@ -564,15 +564,15 @@ func isRelayAttached(deviceid int64) (relayIsAttached bool) {
 	return false
 }
 
-func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInCabinet bool, deviceType string) (shouldBePresent bool) {
-	if !deviceInCabinet {
+func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInStation bool, deviceType string) (shouldBePresent bool) {
+	if !deviceInStation {
 		return false
 	}
-	for i := 0; i < len(globals.MyCabinet.EdgeDevices); i++ {
-		//		log.Infof("%v", globals.MyFarm.AttachedDevices[i])
-		for j := 0; j < len(globals.MyCabinet.EdgeDevices[i].DeviceModules); j++ {
-			if globals.MyCabinet.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && globals.MyCabinet.EdgeDevices[i].DeviceID == mydeviceid && globals.MyCabinet.EdgeDevices[i].DeviceType == deviceType {
-				log.Infof("Device %s should be present at %s", globals.MyCabinet.EdgeDevices[i].DeviceType, globals.MyCabinet.EdgeDevices[i].DeviceModules[j].Address)
+	for i := 0; i < len(globals.MyStation.EdgeDevices); i++ {
+		//		log.Infof("%v", globals.MySite.AttachedDevices[i])
+		for j := 0; j < len(globals.MyStation.EdgeDevices[i].DeviceModules); j++ {
+			if globals.MyStation.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && globals.MyStation.EdgeDevices[i].DeviceID == mydeviceid && globals.MyStation.EdgeDevices[i].DeviceType == deviceType {
+				log.Infof("Device %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceType, globals.MyStation.EdgeDevices[i].DeviceModules[j].Address)
 				return true
 			}
 		}

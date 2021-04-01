@@ -1,8 +1,8 @@
 {
-  "cabinets": [
+  "stations": [
     {
       "current_stage": "idle",
-      "cabinetid": 8,
+      "stationid": 8,
       "controller_hostname": "192.168.21.237",
       "controller_api_port": 3003,
       "stage": "idle",
@@ -24,7 +24,7 @@
       "water_pump": false,
       "air_pump": false,
       "light_sensor_internal": false,
-      "cabinet_door_sensor": false,
+      "station_door_sensor": false,
       "outer_door_sensor": false,
       "movement_sensor": false,
       "pressure_sensors": false,
@@ -100,11 +100,11 @@
           }
         }
       ],
-      "attached_devices": []
+      "edge_devices": []
     },
     {
       "current_stage": "idle",
-      "cabinetid": 1,
+      "stationid": 1,
       "controller_hostname": "192.168.21.237",
       "controller_api_port": 3003,
       "stage": "idle",
@@ -126,7 +126,7 @@
       "water_pump": true,
       "air_pump": true,
       "light_sensor_internal": true,
-      "cabinet_door_sensor": true,
+      "station_door_sensor": true,
       "outer_door_sensor": true,
       "movement_sensor": true,
       "pressure_sensors": true,
@@ -202,9 +202,9 @@
         }
       ],
       "automatic_control": true,
-      "attached_devices": [
+      "edge_devices": [
         {
-          "cabinetid": 1,
+          "stationid": 1,
           "deviceid": 70000007,
           "modules": [
             {
@@ -421,13 +421,13 @@
           ]
         },
         {
-          "cabinetid": 1,
+          "stationid": 1,
           "deviceid": 70000006,
           "modules": [],
           "ac_outlets": []
         },
         {
-          "cabinetid": 1,
+          "stationid": 1,
           "deviceid": 70000008,
           "modules": [
             {

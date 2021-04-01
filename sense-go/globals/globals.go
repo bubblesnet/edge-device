@@ -18,9 +18,9 @@ var ContainerName = "sense-go"
 
 var DevicesFailed []string
 
-var MyFarm = Farm{}
+var MySite = Site{}
 var MyDevice *EdgeDevice
-var MyCabinet *Cabinet
+var MyStation *Station
 
 var MyDeviceID = int64(0)
 

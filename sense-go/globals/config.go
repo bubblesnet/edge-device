@@ -14,49 +14,49 @@ import (
 
 
 /**
-Top-level object in the data hierarchy.  A farm is identified by the user/owner
-and contains multiple cabinets.
+Top-level object in the data hierarchy.  A site is identified by the user/owner
+and contains multiple stations.
  */
-type Farm struct {
-	FarmID int64 `json:"farmid"`
-	UserID int64 `json:"userid"`
-	ControllerHostName	string		`json:"controller_hostname"`
-	ControllerAPIPort	int			`json:"controller_api_port"`
-	LogLevel         string           `json:"log_level,omitempty"`
-	AutomaticControl bool 			`json:"automatic_control"`
-	Cabinets []Cabinet `json:"cabinets,omitempty"`
+type Site struct {
+	SiteID             int64     `json:"siteid"`
+	UserID             int64     `json:"userid"`
+	ControllerHostName string    `json:"controller_hostname"`
+	ControllerAPIPort  int       `json:"controller_api_port"`
+	LogLevel           string    `json:"log_level,omitempty"`
+	AutomaticControl   bool      `json:"automatic_control"`
+	Stations           []Station `json:"stations,omitempty"`
 }
 
 /**
-A cabinet is a grow-unit, typically either a cabinet or a tent.  A cabinet
+A station is a grow-unit, typically either a cabinet or a tent.  A station
 contains multiple edge devices, typically Raspberry Pi.
  */
-type Cabinet struct {
-	CabinetID		int64`json:"cabinetid"`
-	HeightSensor 	bool `json:"height_sensor,omitempty"`
-	Humidifier 		bool `json:"humidifier,omitempty"`
-	HumiditySensor 	bool `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool `json:"humidity_sensor_external,omitempty"`
-	Heater 			bool `json:"heater,omitempty"`
-	ThermometerTop 	bool `json:"thermometer_top,omitempty"`
-	ThermometerMiddle bool `json:"thermometer_middle,omitempty"`
-	ThermometerBottom bool `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal bool `json:"thermometer_external,omitempty"`
-	ThermometerWater bool `json:"thermometer_water,omitempty"`
-	WaterPump 		bool `json:"waterPump,omitempty"`
-	AirPump 		bool `json:"airPump,omitempty"`
-	LightSensor 	bool `json:"light_sensor_internal,omitempty"`
-	CabinetDoorSensor bool `json:"cabinet_door_sensor,omitempty"`
-	OuterDoorSensor bool `json:"outer_door_sensor,omitempty"`
-	MovementSensor 	bool `json:"movement_sensor,omitempty"`
-	PressureSensor 	bool `json:"pressure_sensors,omitempty"`
-	RootPhSensor 	bool `json:"root_ph_sensor,omitempty"`
-	EnclosureType 	string `json:"enclosure_type,omitempty"`
-	WaterLevelSensor bool `json:"water_level_sensor,omitempty"`
-	IntakeFan 		bool `json:"intakeFan,omitempty"`
-	ExhaustFan 		bool `json:"exhaustFan,omitempty"`
-	HeatLamp 		bool `json:"heatLamp,omitempty"`
-	HeatingPad 		bool `json:"heatingPad,omitempty"`
+type Station struct {
+	StationID              int64 `json:"stationid"`
+	HeightSensor           bool  `json:"height_sensor,omitempty"`
+	Humidifier             bool  `json:"humidifier,omitempty"`
+	HumiditySensor         bool  `json:"humidity_sensor_internal,omitempty"`
+	ExternalHumiditySensor bool   `json:"humidity_sensor_external,omitempty"`
+	Heater                 bool   `json:"heater,omitempty"`
+	ThermometerTop         bool   `json:"thermometer_top,omitempty"`
+	ThermometerMiddle      bool   `json:"thermometer_middle,omitempty"`
+	ThermometerBottom      bool   `json:"thermometer_bottom,omitempty"`
+	ThermometerExternal    bool   `json:"thermometer_external,omitempty"`
+	ThermometerWater       bool   `json:"thermometer_water,omitempty"`
+	WaterPump              bool   `json:"waterPump,omitempty"`
+	AirPump                bool   `json:"airPump,omitempty"`
+	LightSensor            bool   `json:"light_sensor_internal,omitempty"`
+	StationDoorSensor      bool   `json:"station_door_sensor,omitempty"`
+	OuterDoorSensor        bool   `json:"outer_door_sensor,omitempty"`
+	MovementSensor         bool   `json:"movement_sensor,omitempty"`
+	PressureSensor         bool   `json:"pressure_sensors,omitempty"`
+	RootPhSensor           bool   `json:"root_ph_sensor,omitempty"`
+	EnclosureType          string `json:"enclosure_type,omitempty"`
+	WaterLevelSensor       bool   `json:"water_level_sensor,omitempty"`
+	IntakeFan              bool   `json:"intakeFan,omitempty"`
+	ExhaustFan             bool   `json:"exhaustFan,omitempty"`
+	HeatLamp               bool   `json:"heatLamp,omitempty"`
+	HeatingPad             bool   `json:"heatingPad,omitempty"`
 	LightBloom 		bool `json:"lightBloom,omitempty"`
 	LightVegetative bool `json:"lightVegetative,omitempty"`
 	LightGerminate 	bool `json:"lightGerminate,omitempty"`
@@ -70,8 +70,8 @@ type Cabinet struct {
 
 /**
 An EdgeDevice is a single-board-computer that, with the other
-AttachedDevices in the Cabinet, implements the intelligence of the Cabinet
-such that the ideal grow-conditions for the plants inside the Cabinet are
+AttachedDevices in the Station, implements the intelligence of the Station
+such that the ideal grow-conditions for the plants inside the Station are
 always maintained, and a stream of event and environmental sensor messages are sent to
 the time-series database.
 */
@@ -95,7 +95,8 @@ DeviceModules.
 type DeviceModule struct {
 	ModuleID	int64	`json:"moduleid"`
 	ContainerName	string        `json:"container_name,omitempty"`
-	ModuleName  string `json:"module_name"`
+	ModuleName  string `json:"module_name,omitempty"`
+	ModuleType	string `json:"module_type,omitempty"`
 	Protocol	string             `json:"protocol,omitempty"`
 	Address		string              `json:"address,omitempty"`
 	InternalAddress string `json:"internal_address"`
@@ -151,9 +152,9 @@ type Configuration1 struct {
 	LightOnHour                       int              `json:"light_on_hour,omitempty"`
 	StageSchedules                    []StageSchedule  `json:"stage_schedules,omitempty"`
 	Camera                            PiCam            `json:"camera,omitempty"`
-	DeviceSettings                    Cabinet          `json:"device_settings"`
+	DeviceSettings                    Station          `json:"device_settings"`
 	LogLevel                          string           `json:"log_level,omitempty"`
-	AttachedDevices                   []AttachedDevice `json:"attached_devices"`
+	AttachedDevices                   []AttachedDevice `json:"edge_devices"`
 	AutomaticControl                  bool             `json:"automatic_control"`
 	TimeBetweenSensorPollingInSeconds int64            `json:"time_between_sensor_polling_in_seconds"`
 	TamperSpec                        Tamper           `json:"tamper"`
@@ -182,7 +183,7 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 	return id, err
 }
 
-func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, farm *Farm, currentStageSchedule *StageSchedule) error {
+func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, site *Site, currentStageSchedule *StageSchedule) error {
 	log.Debug("readConfig")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
@@ -196,34 +197,37 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	}
 	str := string(file)
 	log.Infof(str)
-	err = json.Unmarshal([]byte(file), farm)
+	err = json.Unmarshal([]byte(file), site)
 	if err != nil {
 		fmt.Printf("Error unmarshalling %v\n\n", err )
 		fmt.Printf("filestr = %s\n", str )
 		return err
 	}
-	fmt.Printf("data = %v", *farm)
+	fmt.Printf("data = %v", *site)
 	found := false
-	for i := 0; i < len(farm.Cabinets) && !found; i++ {
-		for j := 0; j < len(farm.Cabinets[i].EdgeDevices) && !found; j++ {
-			log.Infof("Comparing deviceid %d with %v", MyDeviceID, farm.Cabinets[i].EdgeDevices[j])
-			if MyDeviceID == farm.Cabinets[i].EdgeDevices[j].DeviceID {
-				log.Infof("My deviceid %d matches %v", MyDeviceID, farm.Cabinets[i].EdgeDevices[j])
-				MyCabinet = &farm.Cabinets[i]
-				MyDevice = &farm.Cabinets[i].EdgeDevices[j]
+	for i := 0; i < len(site.Stations) && !found; i++ {
+		for j := 0; j < len(site.Stations[i].EdgeDevices) && !found; j++ {
+			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
+			if MyDeviceID == site.Stations[i].EdgeDevices[j].DeviceID {
+				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
+				MyStation = &site.Stations[i]
+				MyDevice = &site.Stations[i].EdgeDevices[j]
 				found = true
 			}
 		}
 	}
-	log.Infof("MyCabinet = %v", MyCabinet)
-	for i := 0; i < len(MyCabinet.StageSchedules); i++ {
-		if MyCabinet.StageSchedules[i].Name == MyCabinet.CurrentStage {
-			*currentStageSchedule = MyCabinet.StageSchedules[i]
-			log.Infof("Current stage is %s - schedule is %v", MyCabinet.CurrentStage, currentStageSchedule)
+	if MyStation == nil {
+		log.Fatalf("MyStation not found!!")
+	}
+	fmt.Printf("MyStation = %v\n", MyStation)
+	for i := 0; i < len(MyStation.StageSchedules); i++ {
+		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
+			*currentStageSchedule = MyStation.StageSchedules[i]
+			log.Infof("Current stage is %s - schedule is %v", MyStation.CurrentStage, currentStageSchedule)
 			return nil
 		}
 	}
-	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyCabinet.CurrentStage)
+	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.CurrentStage)
 	log.Error(errstr)
 	return errors.New(errstr)
 }
@@ -258,44 +262,44 @@ func (c *CustomHandler) Log(e log.Entry) {
 	fmt.Println(b.String())
 }
 
-func ConfigureLogging( farm Farm, containerName string) {
+func ConfigureLogging( site Site, containerName string) {
 	cLog := new(CustomHandler)
 
-	if strings.Contains(farm.LogLevel,"error") {
+	if strings.Contains(site.LogLevel,"error") {
 		log.AddHandler(cLog, log.ErrorLevel)
 	}
-	if strings.Contains(farm.LogLevel,"warn") {
+	if strings.Contains(site.LogLevel,"warn") {
 		log.AddHandler(cLog, log.WarnLevel)
 	}
-	if strings.Contains(farm.LogLevel,"debug") {
+	if strings.Contains(site.LogLevel,"debug") {
 		log.AddHandler(cLog, log.DebugLevel)
 	}
-	if strings.Contains(farm.LogLevel,"info") {
+	if strings.Contains(site.LogLevel,"info") {
 		log.AddHandler(cLog, log.InfoLevel)
 	}
-	if strings.Contains(farm.LogLevel,"notice") {
+	if strings.Contains(site.LogLevel,"notice") {
 		log.AddHandler(cLog, log.NoticeLevel)
 	}
-	if strings.Contains(farm.LogLevel,"panic") {
+	if strings.Contains(site.LogLevel,"panic") {
 		log.AddHandler(cLog, log.PanicLevel)
 	}
 
 }
 
 func validateConfigurable() (err error) {
-	if t, ok := interface{}(MyFarm).(Farm); ok == false {
-		fmt.Printf(" context %s should be %T, is %T\n", "MyFarm", t, MyFarm)
-		log.Errorf(" context %s should be %T, is %T", "MyFarm", t, MyFarm)
+	if t, ok := interface{}(MySite).(Site); ok == false {
+		fmt.Printf(" context %s should be %T, is %T\n", "MySite", t, MySite)
+		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		return errors.New("bad global")
 	}
-	if t, ok := interface{}(MyFarm.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf(" context %s should be %T, is %T value %s\n", "MyFarm.ControllerHostName", t, MyFarm.ControllerHostName, t)
-		log.Errorf(" context %s should be %T, is %T", "MyFarm.ControllerHostName", t, MyFarm.ControllerHostName)
+	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
+		fmt.Printf(" context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		return errors.New("bad global")
 	}
-	if t, ok := interface{}(MyFarm.ControllerAPIPort).(int); ok == false || t <= 0 {
-		fmt.Printf(" context %s should be %T, is %T value %d\n", "MyFarm.ControllerAPIPort", t, MyFarm.ControllerAPIPort, t)
-		log.Errorf(" context %s should be %T, is %T", "MyFarm.ControllerAPIPort", t, MyFarm.ControllerAPIPort)
+	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
+		fmt.Printf(" context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MyDevice).(*EdgeDevice); ok == false || t == nil {
@@ -315,19 +319,19 @@ func validateConfigured() (err error) {
 		log.Errorf("validateConfigured error %v", err )
 		return err
 	}
-	if t, ok := interface{}(MyFarm).(Farm); ok == false {
-		fmt.Printf(" context %s should be %T, is %T\n", "MyFarm", t, MyFarm)
-		log.Errorf(" context %s should be %T, is %T", "MyFarm", t, MyFarm)
+	if t, ok := interface{}(MySite).(Site); ok == false {
+		fmt.Printf(" context %s should be %T, is %T\n", "MySite", t, MySite)
+		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		return errors.New("bad global")
 	}
-	if t, ok := interface{}(MyFarm.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf(" context %s should be %T, is %T value %s\n", "MyFarm.ControllerHostName", t, MyFarm.ControllerHostName, t)
-		log.Errorf(" context %s should be %T, is %T", "MyFarm.ControllerHostName", t, MyFarm.ControllerHostName)
+	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
+		fmt.Printf(" context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		return errors.New("bad global")
 	}
-	if t, ok := interface{}(MyFarm.ControllerAPIPort).(int); ok == false || t <= 0 {
-		fmt.Printf(" context %s should be %T, is %T value %d\n", "MyFarm.ControllerAPIPort", t, MyFarm.ControllerAPIPort, t)
-		log.Errorf(" context %s should be %T, is %T", "MyFarm.ControllerAPIPort", t, MyFarm.ControllerAPIPort)
+	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
+		fmt.Printf(" context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
 		return errors.New("bad global")
 	}
 	return nil
@@ -351,7 +355,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return errors.New("bad global")
 	}
 
-	url := fmt.Sprintf("http://%s:%d/api/config/farm/%8.8d/%8.8d", MyFarm.ControllerHostName, MyFarm.ControllerAPIPort, MyFarm.UserID, MyDevice.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/config/site/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDevice.DeviceID)
 	fmt.Printf("Sending to %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -365,30 +369,30 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return err
 	}
 	fmt.Printf("response %s\n", string(body))
-	newconfig := Farm{}
+	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
-		fmt.Printf("err on farm %v\n", err)
-		return errors.New("err on farm")
+		fmt.Printf("err on site %v\n", err)
+		return errors.New("err on site")
 	}
-	MyFarm.Cabinets = newconfig.Cabinets
-	js, _ := json.Marshal(MyFarm)
-	fmt.Printf("\nset farm to newconfig \n%s\n", string(js) )
+	MySite.Stations = newconfig.Stations
+	js, _ := json.Marshal(MySite)
+	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
 	if err = validateConfigured(); err != nil {
 		return err
 	}
 
-	bytes, err := json.MarshalIndent(MyFarm, "", "  ")
+	bytes, err := json.MarshalIndent(MySite, "", "  ")
 	filepath := fmt.Sprintf("%s/%s/%s", storeMountPoint,relativePath,fileName)
 	if len(relativePath) == 0 {
 		filepath = fmt.Sprintf("%s/%s", storeMountPoint,fileName)
 	}
-	fmt.Printf("writing farm to file %s\n\n",filepath)
+	fmt.Printf("writing site to file %s\n\n",filepath)
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
-		log.Errorf("error save farm file %v", err)
+		log.Errorf("error save site file %v", err)
 		return(err)
 	}
 
-	fmt.Printf("received farm\n\n")
+	fmt.Printf("received site\n\n")
 	return nil
 }

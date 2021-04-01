@@ -71,8 +71,8 @@ func uploadFile(name string) (err error) {
 		"author":      "JR",
 		"description": "uploaded picture",
 	}
-	url := fmt.Sprintf("http://%s:%d/api/video/%8.8d/%8.8d/upload", globals.MyFarm.ControllerHostName,
-		globals.MyFarm.ControllerAPIPort, globals.MyFarm.UserID, globals.MyDevice.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/video/%8.8d/%8.8d/upload", globals.MySite.ControllerHostName,
+		globals.MySite.ControllerAPIPort, globals.MySite.UserID, globals.MyDevice.DeviceID)
 	log.Debugf("Uploading to api at %s", url)
 	request, err := newfileUploadRequest(url, extraParams, "filename", name)
 	if err != nil {

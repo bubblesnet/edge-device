@@ -22,9 +22,9 @@ func Test_uploadFile(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	globals.MyFarm.ControllerHostName = "192.168.21.237"
-		globals.MyFarm.ControllerAPIPort = 3003
-		globals.MyFarm.UserID = 90000009
+	globals.MySite.ControllerHostName = "192.168.21.237"
+		globals.MySite.ControllerAPIPort = 3003
+		globals.MySite.UserID = 90000009
 		globals.MyDevice.DeviceID = 70000007
 
 	for _, tt := range tests {

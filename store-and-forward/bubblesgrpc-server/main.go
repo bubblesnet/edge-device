@@ -126,7 +126,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 }
 
 func postIt(message []byte) (err error){
-	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", config.ControllerHostName, config.ControllerAPIPort, config.UserID, config.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDeviceID)
 //	log.Debugf("Sending to %s", url)
 	resp, err := http.Post(url,
 		"application/json", bytes.NewBuffer(message))
@@ -144,7 +144,6 @@ func postIt(message []byte) (err error){
 	return nil
 }
 
-var config Configuration
 var stageSchedule StageSchedule
 func handleVersioningFromLoader() (err error ) {
 	BubblesnetBuildTimestamp = strings.ReplaceAll(BubblesnetBuildTimestamp, "'", "")
@@ -170,9 +169,17 @@ func main() {
 		storeMountPoint = "."
 		databaseFilename = "./messages.db"
 	}
-	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&config,&stageSchedule)
+	var err error
+	MyDeviceID, err = ReadMyDeviceId("/config","", "deviceid")
+	if err != nil {
+		fmt.Printf("error read device %v\n", err)
+		return
+	}
+	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 
-	fmt.Printf("config = %v", config)
+	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&MySite,&stageSchedule)
+
+	fmt.Printf("MySite = %v", MySite)
 	fmt.Printf("stageSchedule = %v", stageSchedule)
 	initDb(databaseFilename)
 

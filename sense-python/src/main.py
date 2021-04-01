@@ -44,8 +44,12 @@ import bubblesgrpc_pb2
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 
 lastTemp = 0.0
-global config
-config = {}
+global my_site
+my_site = {}
+global my_station
+my_station = {}
+global my_device
+my_device = {}
 LightAddress = 0
 
 lastHumidity = 0.0
@@ -75,12 +79,21 @@ def read_deviceid(filename):
             deviceid = int(line)
         return (deviceid)
 
+
 def read_config(fullpath):
-    global config
-    deviceid = config['deviceid']
+    global my_site, my_station, my_device
+    deviceid = my_site['deviceid']
     with open(fullpath) as f:
-        config = json.load(f)
-        config['deviceid'] = deviceid
+        my_site = json.load(f)
+        my_site['deviceid'] = deviceid
+        for station in my_site['stations']:
+            if 'edge_devices' not in station:
+                continue
+            for device in station['edge_devices']:
+                if device['deviceid'] == deviceid:
+                    my_device = device
+                    my_station = station
+                    my_site['time_between_sensor_polling_in_seconds'] = 15
 
 
 def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
@@ -158,39 +171,34 @@ def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name):
 
 
 # new config functions
-def get_address(device_type):
-    for module in config['modules']:
-        if module['container_name'] == 'sense-python' and module['device_type'] == device_type:
+def get_address(module_type):
+    for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == module_type:
             x = int(module['address'], 16)
             return x
     return 0
 
 
-def is_our_device(device_type):
-    for module in config['modules']:
-        if config['deviceid'] != module['deviceid']:
-            continue
-        if module['container_name'] == 'sense-python' and module['device_type'] == device_type:
+def is_our_device(module_type):
+    for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == module_type:
             return True
 
     return False
 
 
 def bme280_names():
-    global config
+    global my_site
+    global my_device
     global temperature_sensor_name
     global humidity_sensor_name
     global pressure_sensor_name
     global temperature_measurement_name
     global humidity_measurement_name
     global pressure_measurement_name
-    print(config)
-    for edge_device in config['cabinets'][1]['edge_devices']:
-        logging.info("deviceid = %d" % config['deviceid'])
-        if config['deviceid'] != edge_device['deviceid']:
-            continue
-        for module in edge_device['modules']:
-            if module['container_name'] == 'sense-python' and module['device_type'] == "bme280":
+    print(my_device)
+    for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == "bme280":
                 for included_sensor in module['included_sensors']:
                     if 'temp' in included_sensor['measurement_name']:
                         temperature_sensor_name = included_sensor['sensor_name']
@@ -242,7 +250,7 @@ def append_axl345_data(msg):
 
 
 def report_polled_sensor_parameters(i2cbus):
-    global config
+    global my_site
     #    logging.debug("reportPolledSensorParameters")
 
     if is_our_device('bh1750'):
@@ -299,11 +307,11 @@ def get_sequence():
 
 
 def send_message(msg):
-    global config
+    global my_site
     seq = get_sequence()
     millis = int(time.time() * 1000)
     msg['sample_timestamp'] = int(millis)
-    msg['deviceid'] = config['deviceid']
+    msg['deviceid'] = my_device['deviceid']
     msg['container_name'] = "sense-python"
     msg['executable_version'] = "9.9.9 "
     json_bytes = str.encode(json.dumps(msg))
@@ -320,8 +328,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     logging.debug("Starting sense-python")
-    config['deviceid'] = read_deviceid('/config/deviceid')
-    logging.info("deviceid from file is %d" % config['deviceid'])
+    my_site['deviceid'] = read_deviceid('/config/deviceid')
+    logging.info("deviceid from file is %d" % my_site['deviceid'])
     read_config('/config/config.json')
     bme280_names()
     LightAddress = get_address('bh1750')
@@ -344,7 +352,7 @@ if __name__ == "__main__":
 
                 #                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
                 #                time.strftime("%T")))
-                time.sleep(config['time_between_sensor_polling_in_seconds'])
+                time.sleep(my_site['time_between_sensor_polling_in_seconds'])
 
             logging.debug("broke out of temp/hum/distance polling loop")
         except Exception as e:

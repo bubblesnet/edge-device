@@ -94,7 +94,7 @@
     "water_pump": true,
     "air_pump": true,
     "light_sensor_internal": true,
-    "cabinet_door_sensor": true,
+    "station_door_sensor": true,
     "outer_door_sensor": true,
     "movement_sensor": true,
     "pressure_sensors": true,
@@ -116,7 +116,7 @@
     "light_germinate": true
   },
 
-  "attached_devices": [
+  "edge_devices": [
     {
       "container_name": "sense-python",
       "deviceid": 70000007,
@@ -286,8 +286,8 @@
       "address": "0x47",
       "included_sensors": [
         {
-          "sensor_name": "cabinet_door_sensor",
-          "measurement_name": "cabinet_door_open",
+          "sensor_name": "station_door_sensor",
+          "measurement_name": "station_door_open",
           "address": "55"
         }
       ]

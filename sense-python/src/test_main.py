@@ -8,7 +8,7 @@ from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 class Test(TestCase):
     def test_read_config(self):
         main.read_config('../config.json')
-        if main.config['deviceid'] <= 0:
+        if main.my_site['deviceid'] <= 0:
             self.fail()
         return
 
