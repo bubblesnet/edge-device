@@ -422,12 +422,13 @@ globals.LocalCurrentState.GrowLightVeg
 "vegetative"
 */
 var stages = []string {
-"germination","seedling","vegetative",
+"germination","seedling","vegetative","idle",
 }
 var growlightstates = []bool {
 	true,false,
 }
 func testLight(t *testing.T) {
+	globals.MyStation = &globals.Station{CurrentStage: "idle"}
 	for i := 0; i < len(stages); i++  {
 		globals.MyStation.CurrentStage = stages[i]
 		for n := 1; n <= 24; n++ {
