@@ -94,7 +94,7 @@ func Test_getConfigFromServer(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
-		{ name: "happy", wantErr: !ci},
+		{ name: "happy", wantErr: ci},
 		{ name: "bad_port", wantErr: true},
 		{ name: "bad_user", wantErr: true},
 		{ name: "bad_host", wantErr: true},
