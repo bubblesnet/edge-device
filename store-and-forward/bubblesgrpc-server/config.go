@@ -207,7 +207,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	found := false
 	for i := 0; i < len(site.Stations) && !found; i++ {
 		for j := 0; j < len(site.Stations[i].EdgeDevices) && !found; j++ {
-			log.Infof("Comparing deviceid %d with %v", MyDeviceID, site.Stations[i].EdgeDevices[j])
+			fmt.Printf("Comparing deviceid %d with %v", MyDeviceID, site.Stations[i].EdgeDevices[j])
 			if MyDeviceID == site.Stations[i].EdgeDevices[j].DeviceID {
 				log.Infof("My deviceid %d matches %v", MyDeviceID, site.Stations[i].EdgeDevices[j])
 				MyStation = &site.Stations[i]
@@ -216,7 +216,10 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 			}
 		}
 	}
-	log.Infof("MyStation = %v", MyStation)
+	if MyStation == nil {
+		return errors.New(fmt.Sprintf("DeviceID %d not found in %v", MyDeviceID, site.Stations))
+	}
+	fmt.Printf("MyStation = %v", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]

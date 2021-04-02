@@ -18,20 +18,20 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: Build Sense Go
-      working-directory: sense-go
-      run: go build -v ./...
-
-    - name: Test Sense Go
-      working-directory: sense-go
-      run: go test -v ./...
-
     - name: Build BubbleGPRC
       working-directory: store-and-forward/bubblesgrpc-server
       run: go build -v ./...
 
     - name: Test BubblesGRPC
       working-directory: store-and-forward/bubblesgrpc-server
+      run: go test -v ./...
+
+    - name: Build Sense Go
+      working-directory: sense-go
+      run: go build -v ./...
+
+    - name: Test Sense Go
+      working-directory: sense-go
       run: go test -v ./...
 
     - name: Setup Sense-Python

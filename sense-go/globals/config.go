@@ -217,7 +217,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 		}
 	}
 	if MyStation == nil {
-		return errors.New("MyStation not found!!")
+		return errors.New(fmt.Sprintf("DeviceID %d not found in %v", MyDeviceID, site.Stations))
 	}
 	fmt.Printf("MyStation = %v\n", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {

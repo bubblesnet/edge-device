@@ -13,7 +13,7 @@ import (
 const badTestMessage = "dkdlkdkdkdk"
 const emptyTestMessage = "{}"
 
-func initTests(t *testing.T) {
+func initTests(t *testing.T) (err error){
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
 	storeMountPoint := "/config"
 	fmt.Printf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
@@ -23,16 +23,28 @@ func initTests(t *testing.T) {
 	} else {
 		fmt.Printf("WTF!!!")
 	}
-	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&MySite,&stageSchedule)
+	if MyDeviceID, err =  ReadMyDeviceId(storeMountPoint, "", "deviceid"); err != nil {
+		fmt.Printf("ReadMyDeviceId error %v", err )
+		return err
+	}
+
+	if err := ReadFromPersistentStore(storeMountPoint, "", "config.json",&MySite,&stageSchedule); err != nil {
+		fmt.Printf("Read config error %v", err )
+		return err
+	}
 
 	t.Logf("MySite = %v", MySite)
 	t.Logf("stageSchedule = %v", stageSchedule)
 	initDb(databaseFilename)
 	t.Logf("returned from initDb")
+	return nil
 }
 
 func Test_forwardMessages(t *testing.T) {
-	initTests(t)
+	if err := initTests(t); err != nil {
+		t.Errorf("error %v", err)
+		return
+	}
 	type args struct {
 		bucketName string
 	}
