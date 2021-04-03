@@ -1,0 +1,16 @@
+RPi.bme280==0.2.3
+
+adafruit-circuitpython-busdevice>=4.1.1
+# Adafruit-GPIO==1.0.3
+Adafruit-PlatformDetect>=2.1.0
+Adafruit-PureIO>=1.0.4
+Flask==1.1.1
+gpiozero==1.5.1
+grpcio==1.26.0
+protobuf==3.11.2
+RPi.GPIO==0.7.0
+
+#;  platform_machine=='armv7l' or platform_machine=='armv6l'
+smbus2==0.3.0
+stringify==0.1.1
+#picamera==1.13

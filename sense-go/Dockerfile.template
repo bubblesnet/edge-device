@@ -1,0 +1,20 @@
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-buster-run
+
+RUN apt-get update
+RUN apt-get install -y vim
+
+COPY ca-certificates.crt /etc/ssl/certs/
+COPY build/sense-go /go/bin
+# ADD config.json /go
+
+RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/sense-go; ls -la /go/bin'
+
+# Enable udevd so that plugged dynamic hardware devices show up in our container.
+ENV UDEV=1
+
+ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+
+CMD ["modprobe i2c-dev; export I2C_BUS=1"]
+CMD ["/go/bin/sense-go"]
+# CMD ["bash"]
+

@@ -1,0 +1,42 @@
+version: '2'
+volumes:
+  resin-data:
+services:
+  sense-go:
+    build: ./sense-go
+    privileged: true
+    restart: always
+    depends_on:
+      - store-and-forward
+    labels:
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.dbus: '1'
+    volumes:
+      - 'resin-data:/config'
+
+  store-and-forward:
+    build: ./store-and-forward
+    privileged: true
+    restart: always
+    labels:
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.dbus: '1'
+    volumes:
+      - 'resin-data:/data'
+      - 'resin-data:/config'
+    ports:
+      - "50051:50051"
+      - "8080:8080"
+  sense-python:
+    build: ./sense-python
+    privileged: true
+    depends_on:
+      - store-and-forward
+    labels:
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.dbus: '1'
+    volumes:
+      - 'resin-data:/config'
+
+
+
