@@ -25,20 +25,20 @@ func ControlOxygenation(force bool) {
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Debugf("ControlList - no relay attached")
 	}
-	powerstrip.TurnOnOutletByName("airPump", force)
+	powerstrip.PowerstripSvc.TurnOnOutletByName("airPump", force)
 }
 func ControlRootWater(force bool) {
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Debugf("ControlList - no relay attached")
 	}
-	powerstrip.TurnOnOutletByName("waterPump", force)
+	powerstrip.PowerstripSvc.TurnOnOutletByName("waterPump", force)
 }
 func ControlAirflow(force bool) {
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Debugf("ControlList - no relay attached")
 	}
-	powerstrip.TurnOnOutletByName("exhaustFan", force)
-	powerstrip.TurnOnOutletByName("intakeFan", force)
+	powerstrip.PowerstripSvc.TurnOnOutletByName("exhaustFan", force)
+	powerstrip.PowerstripSvc.TurnOnOutletByName("intakeFan", force)
 }
 
 func ControlLight(force bool) {
@@ -57,11 +57,11 @@ func ControlLight(force bool) {
 	if globals.MyStation.CurrentStage == "germination" || globals.MyStation.CurrentStage == "seedling" || globals.MyStation.CurrentStage == "vegetative" {
 		// If it's time for grow light veg to be on
 		if inRange(globals.MyStation.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			powerstrip.TurnOnOutletByName(globals.GROWLIGHTVEG, force)
+			powerstrip.PowerstripSvc.TurnOnOutletByName(globals.GROWLIGHTVEG, force)
 			veglight = true
 		} else {
 			// If it's time for grow light veg to be off
-			powerstrip.TurnOffOutletByName(globals.GROWLIGHTVEG, force)
+			powerstrip.PowerstripSvc.TurnOffOutletByName(globals.GROWLIGHTVEG, force)
 			veglight = false
 		}
 	} else {
@@ -111,9 +111,9 @@ func ControlHeat(force bool) {
 			log.Infof("Temp just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.TempF)
 			force = true
 		}
-		powerstrip.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
-		powerstrip.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
-		powerstrip.TurnOffOutletByName(globals.HEATER, force)  // MAKE SURE HEAT IS OFF
+		powerstrip.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
+		powerstrip.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
+		powerstrip.PowerstripSvc.TurnOffOutletByName(globals.HEATER, force)  // MAKE SURE HEAT IS OFF
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
 		setEnvironmentalControlString()
@@ -123,9 +123,9 @@ func ControlHeat(force bool) {
 				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
 				force = true
 			}
-			powerstrip.TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
-			powerstrip.TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
-			powerstrip.TurnOnOutletByName(globals.HEATER, false)  // MAKE SURE HEAT IS ON
+			powerstrip.PowerstripSvc.TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
+			powerstrip.PowerstripSvc.TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
+			powerstrip.PowerstripSvc.TurnOnOutletByName(globals.HEATER, false)  // MAKE SURE HEAT IS ON
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
 		} else { // JUST RIGHT
@@ -159,7 +159,7 @@ func ControlHumidity(force bool) {
 			log.Infof("Humidity just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.Humidity)
 			force = true
 		}
-		powerstrip.TurnOffOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS OFF
+		powerstrip.PowerstripSvc.TurnOffOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS OFF
 		globals.LocalCurrentState.Humidifier = false
 	} else {                                                  // NOT TOO HOT
 		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
@@ -167,7 +167,7 @@ func ControlHumidity(force bool) {
 				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
 				force = true
 			}
-			powerstrip.TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
+			powerstrip.PowerstripSvc.TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
 			globals.LocalCurrentState.Humidifier = true
 		} else { // JUST RIGHT
 			if globals.Lasthumidity < lowLimit {

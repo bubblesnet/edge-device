@@ -6,6 +6,7 @@ import (
 	"runtime"
 )
 
+
 // These are shadows of vars in main
 var BubblesnetVersionMajorString string
 var BubblesnetVersionMinorString=""

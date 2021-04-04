@@ -246,10 +246,10 @@ func listenForCommands() (err error) {
 						}
 					} else if switchMessage.On == true {
 						log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
-						powerstrip.TurnOnOutletByName(switchMessage.SwitchName, true)
+						powerstrip.PowerstripSvc.TurnOnOutletByName(switchMessage.SwitchName, true)
 					} else {
 						log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
-						powerstrip.TurnOffOutletByName(switchMessage.SwitchName, true)
+						powerstrip.PowerstripSvc.TurnOffOutletByName(switchMessage.SwitchName, true)
 					}
 					break
 				}
@@ -384,14 +384,14 @@ func main() {
 	rpio.OpenRpio()
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
-		powerstrip.InitRpioPins()
+		powerstrip.PowerstripSvc.InitRpioPins()
 		if globals.MySite.AutomaticControl {
-			powerstrip.TurnAllOff(1)	// turn all OFF first since initalizeOutlets doesnt
+			powerstrip.PowerstripSvc.TurnAllOff(1)	// turn all OFF first since initalizeOutlets doesnt
 			initializeOutletsForAutomation()
 		} else {
-			powerstrip.TurnAllOff(1)
+			powerstrip.PowerstripSvc.TurnAllOff(1)
 		}
-		powerstrip.SendSwitchStatusChangeEvent("automaticControl",globals.MySite.AutomaticControl)
+		powerstrip.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl",globals.MySite.AutomaticControl)
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
 	}
