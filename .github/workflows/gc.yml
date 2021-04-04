@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [ MocksForUnits, develop ]
+    branches: [ feature/MocksForUnits, develop ]
   pull_request:
     branches: [ develop ]
 
