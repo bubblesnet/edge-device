@@ -4,17 +4,13 @@ import (
 	"bubblesnet/edge-device/sense-go/adc"
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
-	"bubblesnet/edge-device/sense-go/messaging"
 	"bubblesnet/edge-device/sense-go/powerstrip"
 	"bubblesnet/edge-device/sense-go/rpio"
 	"bubblesnet/edge-device/sense-go/video"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
-	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
-	"gobot.io/x/gobot/platforms/raspi"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"os"
@@ -32,51 +28,6 @@ var BubblesnetGitHash = ""
 
 var lastDistance = float64(0.0)
 
-func runDistanceWatcher() {
-	log.Info("runDistanceWatcher")
-	if globals.RunningOnUnsupportedHardware() {
-		return
-	}
-	// Use BCM pin numbering
-	// Echo pin
-	// Trigger pin
-	h := hc.NewHCSR04(20, 21)
-
-	for true {
-		distance := h.MeasureDistance()
-		nanos := distance * 58000.00
-		seconds := nanos / 1000000000.0
-		mydistance := (float64)(17150.00 * seconds)
-		direction := ""
-		if mydistance > lastDistance {
-			direction = "up"
-		} else if mydistance < lastDistance {
-			direction = "down"
-		}
-		lastDistance = mydistance
-		//		log.Debugf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := messaging.NewDistanceSensorMessage("height_sensor", "plant_height", mydistance, "cm", direction, mydistance, mydistance/2.54)
-		bytearray, err := json.Marshal(dm)
-		if err == nil {
-			log.Debugf("sending distance msg %s?", string(bytearray))
-			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			_, err := globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("runDistanceWatcher ERROR %v", err)
-			} else {
-//				log.Debugf("%v", sensor_reply)
-			}
-		} else {
-			globals.ReportDeviceFailed("hcsr04")
-			log.Errorf("rundistancewatcher error = %v", err)
-			break
-		}
-		if globals.RunningOnUnsupportedHardware() {
-			return
-		}
-		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
-	}
-}
 
 func runLocalStateWatcher() {
 	log.Info("runLocalStateWatcher")
@@ -398,13 +349,7 @@ func main() {
 
 	log.Info("ezo")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
-		log.Info("Starting Atlas EZO driver")
-		ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
-		err = ezoDriver.Start()
-		if err != nil {
-			globals.ReportDeviceFailed("ezoph")
-			log.Errorf("ezo start error %v", err)
-		}
+		StartEzoDriver()
 	} else {
 		log.Infof("No root ph sensor configured")
 	}
@@ -451,19 +396,14 @@ func main() {
 	}
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
-		log.Info("RootPhSensor should be connected to this device, starting EZO reader")
-		go func() {
-			if err = readPh(false); err != nil {
-				log.Errorf("readPh %+v", err)
-			}
-		}()
+		StartEzo()
 	} else {
 		log.Warnf("No ezoph configured - skipping pH monitoring")
 	}
 	log.Infof("moduleShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
-		go runDistanceWatcher()
+		go RunDistanceWatcher()
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
@@ -519,51 +459,5 @@ func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInStation 
 	return false
 }
 
-var lastPh = float64(0.0)
 
-func readPh(once_only bool) error {
-	ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
-	err := ezoDriver.Start()
-	if err != nil {
-		log.Errorf("ezoDriver.Start returned ph device error %v", err)
-		return err
-	}
-	var e error = nil
-
-	for {
-		ph, err := ezoDriver.Ph()
-		if err != nil {
-			log.Errorf("readPh error %v", err)
-			e = err
-			break
-		} else {
-			direction := ""
-			if ph > lastPh {
-				direction = "up"
-			} else if ph < lastPh {
-				direction = "down"
-			}
-			lastPh = ph
-			phm := messaging.NewGenericSensorMessage("root_ph_sensor", "root_ph", ph, "", direction)
-			bytearray, err := json.Marshal(phm)
-			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			if globals.Client != nil {
-				_, err = globals.Client.StoreAndForward(context.Background(), &message)
-				if err != nil {
-					log.Errorf("RunADCPoller ERROR %v", err)
-				} else {
-					//				log.Infof("sensor_reply %v", sensor_reply)
-				}
-			} else {
-				e = errors.New("GRPC client is not connected!")
-			}
-		}
-		if once_only {
-			break
-		}
-		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
-	}
-	log.Debugf("returning %v from readph", e)
-	return e
-}
 

@@ -61,6 +61,7 @@
           }
         }
       ],
+      "current_stage": "idle",
       "tamper": {
         "xmove": 0,
         "ymove": 0,
@@ -475,6 +476,7 @@
           }
         }
       ],
+      "current_stage": "idle",
       "tamper": {
         "xmove": 0,
         "ymove": 0,

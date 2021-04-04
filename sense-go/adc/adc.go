@@ -31,8 +31,11 @@ type ADCSensorMessage struct {
 }
 */
 
+func ReadAllChannels(index int, adcMessage *ADCMessage) (err error ) {
+	return readAllChannels(ads1115s[index],daps[index], adcMessage)
+}
 
-func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( error ) {
+func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( err error ) {
 	log.Debugf("readAllChannels on address 0x%x", config.address)
 	var err1 error
 	adcMessage.Address = config.address
@@ -60,8 +63,10 @@ var last0 = []float64 {
 var last1 = []float64 {
 	0.0,0.0,0.0,0.0,
 }
+
+var ads1115s [2]*i2c.ADS1x15Driver
+
 func RunADCPoller() (error) {
-	var ads1115s [2]*i2c.ADS1x15Driver
 
 	adcAdaptor := raspi.NewAdaptor() // optional bus/address
 
@@ -85,7 +90,8 @@ func RunADCPoller() (error) {
 
 	for {
 		adcMessage := new(ADCMessage)
-		err := readAllChannels(ads1115s[0], a0, adcMessage)
+//		err := readAllChannels(ads1115s[0], a0, adcMessage)
+		err := ReadAllChannels(0, adcMessage)
 		if err != nil {
 			log.Errorf("loopforever error %v", err)
 			break
@@ -120,7 +126,8 @@ func RunADCPoller() (error) {
 		}
 
 		adcMessage = new(ADCMessage)
-		err = readAllChannels(ads1115s[1], a1, adcMessage)
+//		err = readAllChannels(ads1115s[1], a1, adcMessage)
+		err = ReadAllChannels(1, adcMessage)
 		if err != nil {
 			log.Errorf("loopforever error %v", err)
 			break

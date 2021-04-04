@@ -3,7 +3,6 @@
 package adc
 
 import (
-	"gobot.io/x/gobot/drivers/i2c"
 	"testing"
 )
 
@@ -23,9 +22,8 @@ func TestRunADCPoller(t *testing.T) {
 	}
 }
 
-func Test_readAllChannels(t *testing.T) {
+func Test_ReadAllChannels(t *testing.T) {
 	type args struct {
-		ads1115    *i2c.ADS1x15Driver
 		config     AdapterConfig
 		adcMessage *ADCMessage
 	}
@@ -38,7 +36,7 @@ func Test_readAllChannels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := readAllChannels(tt.args.ads1115, tt.args.config, tt.args.adcMessage); (err != nil) != tt.wantErr {
+			if err := ReadAllChannels(0, tt.args.adcMessage); (err != nil) != tt.wantErr {
 				t.Errorf("readAllChannels() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -63,8 +61,6 @@ func TestRunADCPoller1(t *testing.T) {
 
 func Test_readAllChannels1(t *testing.T) {
 	type args struct {
-		ads1115    *i2c.ADS1x15Driver
-		config     AdapterConfig
 		adcMessage *ADCMessage
 	}
 	tests := []struct {
@@ -76,7 +72,7 @@ func Test_readAllChannels1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := readAllChannels(tt.args.ads1115, tt.args.config, tt.args.adcMessage); (err != nil) != tt.wantErr {
+			if err := ReadAllChannels(1, tt.args.adcMessage); (err != nil) != tt.wantErr {
 				t.Errorf("readAllChannels() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

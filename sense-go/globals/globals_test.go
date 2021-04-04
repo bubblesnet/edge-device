@@ -135,6 +135,7 @@ func TestReadFromPersistentStore(t *testing.T) {
 			args: args{ storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 	}
+	MyStation.CurrentStage = "idle"
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ReadFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.site, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {

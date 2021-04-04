@@ -20,6 +20,7 @@ type ChannelValue struct {
 
 type Channels [4]ChannelValue
 
+
 var	a0 = AdapterConfig{
 	bus_id:  1,
 	address: 0x48,
@@ -49,6 +50,7 @@ var a1 = AdapterConfig{
 			rate: 8},
 	},
 }
+var daps = []AdapterConfig{ a0, a1}
 
 type ADCMessage struct {
 	BusId         int      `json:"bus_id"`

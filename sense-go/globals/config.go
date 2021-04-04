@@ -63,7 +63,7 @@ type Station struct {
 	Relay          	bool `json:"relay,omitempty,omitempty"`
 	EdgeDevices		[]EdgeDevice `json:"edge_devices,omitempty"`
 	StageSchedules  []StageSchedule  `json:"stage_schedules,omitempty"`
-	CurrentStage	string `json:"current_stage,omitempty"`
+	CurrentStage	string `json:"current_stage"`
 	LightOnHour     int  `json:"light_on_hour,omitempty"`
 	TamperSpec		Tamper           `json:"tamper,omitempty"`
 }

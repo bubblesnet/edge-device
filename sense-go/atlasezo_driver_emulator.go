@@ -46,6 +46,7 @@ func connection() (err error) {
 	return nil
 }
 
+
 func NewAtlasEZODriver(c i2c.Connector, options ...func(i2c.Config)) *AtlasEZODriver {
 	driver := AtlasEZODriver{
 		name: "test",
