@@ -51,6 +51,24 @@ func TestTurnAllOff(t *testing.T) {
 	}
 }
 
+func TestSendSwitchStatusChangeEvent(t *testing.T) {
+	type args struct {
+		switchName string
+		on bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{name: "happy", args: args{switchName: "heater", on: true}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			PowerstripSvc.SendSwitchStatusChangeEvent(tt.args.switchName, tt.args.on)
+		})
+	}
+}
+
 func TestTurnAllOn(t *testing.T) {
 	type args struct {
 		timeout time.Duration

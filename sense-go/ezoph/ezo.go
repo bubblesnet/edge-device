@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package main
+package ezoph
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -24,10 +24,10 @@ func StartEzoDriver() {
 	}
 }
 
-func StartEzo() {
+func StartEzo(once_only bool) {
 	log.Info("RootPhSensor should be connected to this device, starting EZO reader")
 	go func() {
-		if err := ReadPh(false); err != nil {
+		if err := ReadPh(once_only); err != nil {
 			log.Errorf("ReadPh %+v", err)
 		}
 	}()

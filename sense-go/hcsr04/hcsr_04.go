@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package main
+package hcsr04
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -12,8 +12,9 @@ import (
 	"golang.org/x/net/context"
 	"time"
 )
+var lastDistance = float64(0.0)
 
-func RunDistanceWatcher() {
+func RunDistanceWatcher(once_only bool) {
 	log.Info("runDistanceWatcher")
 	if globals.RunningOnUnsupportedHardware() {
 		return
@@ -52,10 +53,11 @@ func RunDistanceWatcher() {
 			log.Errorf("rundistancewatcher error = %v", err)
 			break
 		}
-		if globals.RunningOnUnsupportedHardware() {
+		if once_only {
 			return
 		}
-		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
+		//		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
+		time.Sleep(time.Duration(60) * time.Second)
 	}
 }
 

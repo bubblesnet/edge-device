@@ -10,6 +10,13 @@ func init_config() {
 	MyDeviceID = 70000007
 }
 
+func TestSlugs(t *testing.T) {
+	RunningOnUnsupportedHardware()
+	Sequence = 180000
+	for i := 0; i < 20500; i++ {
+		GetSequence()
+	}
+}
 func TestConfigureLogging(t *testing.T) {
 	type args struct {
 		site          Site
@@ -154,10 +161,11 @@ func TestReportDeviceFailed(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
-		{name: "happy", args: args{devicename:"testdevice"},},
+		{name: "happy", args: args{devicename: "testdevice"}},
+		{name: "devicefailed", args: args{devicename: "testdevice"},},
 	}
+	DevicesFailed = []string{}
 	for _, tt := range tests {
-		DevicesFailed = []string{}
 		t.Run(tt.name, func(t *testing.T) {
 			ReportDeviceFailed(tt.args.devicename)
 			if len(DevicesFailed) == 0 {

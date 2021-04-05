@@ -6,7 +6,6 @@ import (
 	"runtime"
 )
 
-
 // These are shadows of vars in main
 var BubblesnetVersionMajorString string
 var BubblesnetVersionMinorString=""
@@ -16,6 +15,8 @@ var BubblesnetBuildTimestamp=""
 var BubblesnetGitHash=""
 
 var ContainerName = "sense-go"
+
+var PersistentStoreMountPoint = "/config"	// Can be changed for units
 
 var DevicesFailed []string
 

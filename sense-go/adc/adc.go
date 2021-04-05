@@ -66,14 +66,14 @@ var last1 = []float64 {
 
 var ads1115s [2]*i2c.ADS1x15Driver
 
-func RunADCPoller() (error) {
+func RunADCPoller(onceOnly bool) (err error) {
 
 	adcAdaptor := raspi.NewAdaptor() // optional bus/address
 
 	ads1115s[0] = i2c.NewADS1115Driver(adcAdaptor,
 		i2c.WithBus(a0.bus_id),
 		i2c.WithAddress(a0.address))
-	err := ads1115s[0].Start()
+	err = ads1115s[0].Start()
 	if err != nil {
 		log.Errorf("error starting interface %v", err )
 		return err
@@ -158,6 +158,9 @@ func RunADCPoller() (error) {
 //					log.Infof("sensor_reply %v", sensor_reply)
 				}
 			}
+		}
+		if onceOnly {
+			return nil
 		}
 		//		readAllChannels(ads1115s[1],a1)
 		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)

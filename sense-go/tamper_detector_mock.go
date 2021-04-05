@@ -2,5 +2,5 @@
 
 package main
 
-func RunTamperDetector() {
+func RunTamperDetector(onceOnly bool) {
 }

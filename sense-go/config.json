@@ -3,10 +3,10 @@
   "userid": 90000009,
   "controller_hostname": "localhost",
   "controller_api_port": 3003,
+  "log_level": "silly,debug,info,warn,fatal,notice,error,alert",
   "automatic_control": false,
   "stations": [
     {
-      "current_stage": "idle",
       "stationid": 8,
       "enclosure_type": "CABINET",
       "stage_schedules": [
@@ -62,6 +62,7 @@
           }
         }
       ],
+      "current_stage": "idle",
       "tamper": {
         "xmove": 0,
         "ymove": 0,
@@ -69,7 +70,6 @@
       }
     },
     {
-      "current_stage": "idle",
       "stationid": 1,
       "height_sensor": true,
       "humidifier": true,
@@ -477,6 +477,7 @@
           }
         }
       ],
+      "current_stage": "idle",
       "tamper": {
         "xmove": 0,
         "ymove": 0,

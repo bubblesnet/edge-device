@@ -1,10 +1,10 @@
 // +build darwin windows,amd64 linux,amd64
 
-package main
+package ezoph
 
 func StartEzoDriver() {
 }
-func StartEzo() {
+func StartEzo(onceOnly bool) {
 }
 
 func ReadPh(once_only bool) error {

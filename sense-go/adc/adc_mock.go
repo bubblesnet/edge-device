@@ -3,7 +3,7 @@
 
 package adc
 
-func RunADCPoller() (err error) {
+func RunADCPoller(onceOnly bool) (err error) {
 	return nil
 }
 

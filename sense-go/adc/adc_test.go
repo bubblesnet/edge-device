@@ -52,7 +52,7 @@ func TestRunADCPoller1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := RunADCPoller(); (err != nil) != tt.wantErr {
+			if err := RunADCPoller(true); (err != nil) != tt.wantErr {
 				t.Errorf("RunADCPoller() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
