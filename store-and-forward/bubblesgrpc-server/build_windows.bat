@@ -1,7 +1,8 @@
 set GOPATH=%GOPATH%;c:\Users\rodley\documents\go;c:\Users\rodley\go
 echo %GOPATH%
-set GOOS=windows
-set GOARCH=amd64
+set GOOS=linux
+set GOARCH=arm
+set GOARM=7
 set CGO_ENABLED="1"
 set GITHASH=""
 set TIMESTAMP=""

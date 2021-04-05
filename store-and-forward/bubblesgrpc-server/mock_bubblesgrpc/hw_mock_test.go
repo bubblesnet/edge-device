@@ -56,10 +56,10 @@ func TestAcknowledgeStoreAndForward(t *testing.T) {
 		gomock.Any(),
 		&rpcMsg{msg: req},
 	).Return(&bubblesgrpc.SensorReply{Message: "Mocked Interface"}, nil)
-	testStoreAndForward(t, mockSensorStoreAndForwardClient)
+	doStoreAndForward(t, mockSensorStoreAndForwardClient)
 }
 
-func testStoreAndForward(t *testing.T, client bubblesgrpc.SensorStoreAndForwardClient) {
+func doStoreAndForward(t *testing.T, client bubblesgrpc.SensorStoreAndForwardClient) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	r, err := client.StoreAndForward(ctx, &bubblesgrpc.SensorRequest{TypeId: "unit_test"})
