@@ -1,7 +1,7 @@
 // +build darwin windows,amd64 linux,amd64
 
 
-package adc
+package a2dconverter
 
 func RunADCPoller(onceOnly bool) (err error) {
 	return nil

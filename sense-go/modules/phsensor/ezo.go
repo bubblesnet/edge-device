@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package ezoph
+package phsensor
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"

@@ -1,14 +1,15 @@
 package main
 
 import (
-	"bubblesnet/edge-device/sense-go/adc"
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
-	"bubblesnet/edge-device/sense-go/ezoph"
 	"bubblesnet/edge-device/sense-go/globals"
-	"bubblesnet/edge-device/sense-go/hcsr04"
-	"bubblesnet/edge-device/sense-go/powerstrip"
-	"bubblesnet/edge-device/sense-go/rpio"
-	"bubblesnet/edge-device/sense-go/video"
+	"bubblesnet/edge-device/sense-go/modules/a2dconverter"
+	"bubblesnet/edge-device/sense-go/modules/accelerometer"
+	"bubblesnet/edge-device/sense-go/modules/camera"
+	"bubblesnet/edge-device/sense-go/modules/phsensor"
+	"bubblesnet/edge-device/sense-go/modules/distancesensor"
+	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
+	"bubblesnet/edge-device/sense-go/modules/rpio"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/log"
@@ -118,7 +119,7 @@ func processCommand(msg *stomp.Message) (resub bool, err error ) {
 			log.Infof("No camera configured, skipping picture")
 		} else {
 			log.Infof("switch calling takeAPicture")
-			video.TakeAPicture()
+			camera.TakeAPicture()
 		}
 		break
 	case "switch":
@@ -146,10 +147,10 @@ func processCommand(msg *stomp.Message) (resub bool, err error ) {
 				}
 			} else if switchMessage.On == true {
 				log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
-				powerstrip.PowerstripSvc.TurnOnOutletByName(switchMessage.SwitchName, true)
+				gpiorelay.PowerstripSvc.TurnOnOutletByName(switchMessage.SwitchName, true)
 			} else {
 				log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
-				powerstrip.PowerstripSvc.TurnOffOutletByName(switchMessage.SwitchName, true)
+				gpiorelay.PowerstripSvc.TurnOffOutletByName(switchMessage.SwitchName, true)
 			}
 			break
 		}
@@ -276,13 +277,13 @@ func initGlobals() {
 		globals.MySite.UserID = 90000009
 		d := globals.EdgeDevice{ DeviceID: globals.MyDeviceID }
 		globals.MyDevice = &d
-		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
+//		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
 	}
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
 		return
 	}
 	globals.MySite.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
-	fmt.Printf("done getting config from server %v\n\n", globals.MySite)
+//	fmt.Printf("done getting config from server %v\n\n", globals.MySite)
 	globals.ConfigureLogging(globals.MySite, "sense-go")
 
 	//	globals.MySite.Station.HeightSensor = true
@@ -296,22 +297,22 @@ func initGlobals() {
 	// log.Panic("panic") // this will panic
 	log.Alert("alert")
 
-	log.Infof("globals.Configuration = %v", globals.MySite)
-	log.Infof("stageSchedule = %v", globals.CurrentStageSchedule)
+//	log.Infof("globals.Configuration = %v", globals.MySite)
+//	log.Infof("stageSchedule = %v", globals.CurrentStageSchedule)
 }
 
 func setupGPIO() {
 	rpio.OpenRpio()
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
-		powerstrip.PowerstripSvc.InitRpioPins()
+		gpiorelay.PowerstripSvc.InitRpioPins()
 		if globals.MySite.AutomaticControl {
-			powerstrip.PowerstripSvc.TurnAllOff(1)	// turn all OFF first since initalizeOutlets doesnt
+			gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
 			initializeOutletsForAutomation()
 		} else {
-			powerstrip.PowerstripSvc.TurnAllOff(1)
+			gpiorelay.PowerstripSvc.TurnAllOff(1)
 		}
-		powerstrip.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl",globals.MySite.AutomaticControl)
+		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl",globals.MySite.AutomaticControl)
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
 	}
@@ -320,7 +321,7 @@ func setupGPIO() {
 func setupPhMonitor() {
 	log.Info("ezo")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
-		ezoph.StartEzoDriver()
+		phsensor.StartEzoDriver()
 	} else {
 		log.Infof("No root ph sensor configured")
 	}
@@ -352,7 +353,7 @@ func startGoRoutines(onceOnly bool) {
 	log.Info("movement")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
 		log.Info("MovementSensor should be connected to this device, starting")
-		go RunTamperDetector(onceOnly)
+		go accelerometer.RunTamperDetector(onceOnly)
 	} else {
 		log.Warnf("No adxl345 Configured - skipping tamper detection")
 	}
@@ -360,7 +361,7 @@ func startGoRoutines(onceOnly bool) {
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
 		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
 		go func() {
-			err := adc.RunADCPoller(onceOnly)
+			err := a2dconverter.RunADCPoller(onceOnly)
 			if err != nil {
 				log.Errorf("rpio.close %+v", err)
 			}
@@ -370,14 +371,14 @@ func startGoRoutines(onceOnly bool) {
 	}
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
-		ezoph.StartEzo(onceOnly)
+		phsensor.StartEzo(onceOnly)
 	} else {
 		log.Warnf("No ezoph configured - skipping pH monitoring")
 	}
 	log.Infof("moduleShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
 		log.Info("HeightSensor should be connected to this device, starting HSCR04")
-		go hcsr04.RunDistanceWatcher(onceOnly)
+		go distancesensor.RunDistanceWatcher(onceOnly)
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}

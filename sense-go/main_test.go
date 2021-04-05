@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bubblesnet/edge-device/sense-go/ezoph"
 	"bubblesnet/edge-device/sense-go/globals"
-	"bubblesnet/edge-device/sense-go/hcsr04"
+	"bubblesnet/edge-device/sense-go/modules/accelerometer"
+	"bubblesnet/edge-device/sense-go/modules/phsensor"
+	"bubblesnet/edge-device/sense-go/modules/distancesensor"
 	"errors"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
@@ -12,7 +13,7 @@ import (
 
 func init() {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadFromPersistentStore(".", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
 		log.Errorf("ReadFromPersistentStore() error = %v", err)
 	}
 
@@ -152,7 +153,7 @@ func testLight(t *testing.T) {
 
 func Test_moduleShouldBeHere(t *testing.T) {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadFromPersistentStore(".", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
 		log.Errorf("ReadFromPersistentStore() error = %v", err)
 	}
 	type args struct {
@@ -249,7 +250,7 @@ func Test_readPh(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ezoph.ReadPh(true); (err != nil) != tt.wantErr {
+			if err := phsensor.ReadPh(true); (err != nil) != tt.wantErr {
 				t.Errorf("ReadPh() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -277,7 +278,7 @@ func Test_runDistanceWatcher(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hcsr04.RunDistanceWatcher(true)
+			distancesensor.RunDistanceWatcher(true)
 		})
 	}
 }
@@ -303,7 +304,7 @@ func Test_runTamperDetector(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			RunTamperDetector(true)
+			accelerometer.RunTamperDetector(true)
 		})
 	}
 }
@@ -357,7 +358,7 @@ func Test_countACOutlets(t *testing.T) {
 
 func Test_isMySwitch(t *testing.T) {
 	globals.MyDeviceID = 70000007
-	if err := globals.ReadFromPersistentStore(".", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
 		t.Errorf("ReadFromPersistentStore() error = %v", err)
 	}
 	type args struct {
@@ -395,7 +396,7 @@ func Test_initializeOutletsForAutomation(t *testing.T) {
 }
 
 func Test_initGlobals(t *testing.T) {
-	globals.PersistentStoreMountPoint = "."
+	globals.PersistentStoreMountPoint = "./testdata"
 	tests := []struct {
 		name string
 	}{
@@ -469,7 +470,7 @@ func Test_startGoRoutines(t *testing.T) {
 
 func Test_testableSubmain(t *testing.T) {
 	globals.MyDeviceID = 70000007
-	globals.PersistentStoreMountPoint = "."
+	globals.PersistentStoreMountPoint = "./testdata"
 	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
 		t.Errorf("ReadFromPersistentStore() error = %v", err)
 	}

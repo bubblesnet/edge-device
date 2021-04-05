@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package powerstrip
+package gpiorelay
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -27,7 +27,7 @@ func NewPowerstripService() PowerstripService {
 	return &singletonPowerstrip
 }
 
-func (r *RealPowerStrip )SendSwitchStatusChangeEvent(switch_name string, on bool) {
+func (r *RealPowerStrip)SendSwitchStatusChangeEvent(switch_name string, on bool) {
 	log.Infof("Reporting switch %s status %v", switch_name, on)
 	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
 	bytearray, err := json.Marshal(dm)
@@ -44,7 +44,7 @@ func (r *RealPowerStrip )SendSwitchStatusChangeEvent(switch_name string, on bool
 	}
 }
 
-func (r *RealPowerStrip )InitRpioPins() {
+func (r *RealPowerStrip)InitRpioPins() {
 	log.Infof("InitRpioPins")
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		log.Infof("initing BCM%d controlling the device named %s", globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name )
@@ -58,7 +58,7 @@ func (r *RealPowerStrip )InitRpioPins() {
 	}
 }
 
-func (r *RealPowerStrip )TurnAllOn(timeout time.Duration) {
+func (r *RealPowerStrip)TurnAllOn(timeout time.Duration) {
 	log.Info("Toggling all pins ON")
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		log.Infof("TurnAllOn Turning on outlet %s", globals.MyDevice.ACOutlets[i].Name)
@@ -70,7 +70,7 @@ func (r *RealPowerStrip )TurnAllOn(timeout time.Duration) {
 	}
 }
 
-func (r *RealPowerStrip )TurnOffOutletByName( name string, force bool ) {
+func (r *RealPowerStrip)TurnOffOutletByName( name string, force bool ) {
 	if !force && !singletonPowerstrip.isOutletOn(name) {
 //		log.Infof(" %s already OFF!!", name)
 //		SendSwitchStatusChangeEvent(name,false)
@@ -87,7 +87,7 @@ func (r *RealPowerStrip )TurnOffOutletByName( name string, force bool ) {
 	log.Errorf("error: couldn't find outlet named %s", name )
 }
 
-func (r *RealPowerStrip )isOutletOn( name string ) bool {
+func (r *RealPowerStrip)isOutletOn( name string ) bool {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
 			return globals.MyDevice.ACOutlets[i].PowerOn
@@ -96,7 +96,7 @@ func (r *RealPowerStrip )isOutletOn( name string ) bool {
 	return false
 }
 
-func (r *RealPowerStrip )TurnOnOutletByName( name string, force bool ) {
+func (r *RealPowerStrip)TurnOnOutletByName( name string, force bool ) {
 	if !force && singletonPowerstrip.isOutletOn(name) {
 //		log.Debugf("Already ON!!!!")
 //		SendSwitchStatusChangeEvent(name,true)
@@ -113,7 +113,7 @@ func (r *RealPowerStrip )TurnOnOutletByName( name string, force bool ) {
 	log.Errorf("error: couldn't find outlet named %s", name )
 }
 
-func (r *RealPowerStrip )TurnAllOff(timeout time.Duration) {
+func (r *RealPowerStrip)TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		fmt.Printf("TurnAllOff Turning off outlet %s\n", globals.MyDevice.ACOutlets[i].Name)
@@ -127,7 +127,7 @@ func (r *RealPowerStrip )TurnAllOff(timeout time.Duration) {
 	}
 }
 
-func (r *RealPowerStrip )TurnOnOutlet( index int ) {
+func (r *RealPowerStrip)TurnOnOutlet( index int ) {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Index == index {
 			globals.MyDevice.ACOutlets[i].PowerOn = true
@@ -142,7 +142,7 @@ func (r *RealPowerStrip )TurnOnOutlet( index int ) {
 	}
 }
 
-func (r *RealPowerStrip )TurnOffOutlet( index int ) {
+func (r *RealPowerStrip)TurnOffOutlet( index int ) {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Index == index {
 			globals.MyDevice.ACOutlets[i].PowerOn = false
@@ -157,7 +157,7 @@ func (r *RealPowerStrip )TurnOffOutlet( index int ) {
 	}
 }
 
-func (r *RealPowerStrip )runPinToggler(isTest bool) {
+func (r *RealPowerStrip)runPinToggler(isTest bool) {
 	log.Infof("pins %v", pins)
 	for i := 0; i < 8; i++ {
 		log.Debugf("setting up pin[%d] %v", i, pins[i])

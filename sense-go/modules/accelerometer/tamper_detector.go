@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package main
+package accelerometer
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"

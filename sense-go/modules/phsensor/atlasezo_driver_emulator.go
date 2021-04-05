@@ -1,6 +1,6 @@
 // +build darwin windows,amd64 linux,amd64
 
-package ezoph
+package phsensor
 
 import (
 	"fmt"

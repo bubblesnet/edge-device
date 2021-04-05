@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package ezoph
+package phsensor
 
 import (
 	"github.com/go-playground/log"

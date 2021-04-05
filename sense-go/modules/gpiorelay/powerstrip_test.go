@@ -1,8 +1,8 @@
-package powerstrip
+package gpiorelay
 
 import (
-	"bubblesnet/edge-device/sense-go/rpio"
 	"bubblesnet/edge-device/sense-go/globals"
+	"bubblesnet/edge-device/sense-go/modules/rpio"
 	"fmt"
 	"testing"
 	"time"

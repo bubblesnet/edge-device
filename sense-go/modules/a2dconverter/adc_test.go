@@ -1,6 +1,6 @@
 // +build linux,arm windows,amd64
 
-package adc
+package a2dconverter
 
 import (
 	"testing"

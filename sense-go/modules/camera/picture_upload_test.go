@@ -1,6 +1,6 @@
 // +build darwin windows linux,arm
 
-package video
+package camera
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"

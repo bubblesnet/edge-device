@@ -1,4 +1,4 @@
-package adc
+package a2dconverter
 
 type ChannelConfig struct {
 	gain int
@@ -50,7 +50,7 @@ var a1 = AdapterConfig{
 			rate: 8},
 	},
 }
-var daps = []AdapterConfig{ a0, a1}
+var daps = []AdapterConfig{a0, a1}
 
 type ADCMessage struct {
 	BusId         int      `json:"bus_id"`

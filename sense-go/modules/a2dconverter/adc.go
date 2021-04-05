@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package adc
+package a2dconverter
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -32,7 +32,7 @@ type ADCSensorMessage struct {
 */
 
 func ReadAllChannels(index int, adcMessage *ADCMessage) (err error ) {
-	return readAllChannels(ads1115s[index],daps[index], adcMessage)
+	return readAllChannels(ads1115s[index], daps[index], adcMessage)
 }
 
 func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( err error ) {

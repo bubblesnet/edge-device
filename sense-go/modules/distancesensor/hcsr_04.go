@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package hcsr04
+package distancesensor
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"

@@ -1,4 +1,4 @@
-package powerstrip
+package gpiorelay
 
 import (
 	"time"

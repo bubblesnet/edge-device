@@ -18,7 +18,7 @@ func initTests(t *testing.T) (err error){
 	storeMountPoint := "/config"
 	fmt.Printf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
 	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
-		storeMountPoint = "."
+		storeMountPoint = "./testdata"
 		databaseFilename = "./testmessages.db"
 	} else {
 		fmt.Printf("WTF!!!")
