@@ -17,7 +17,7 @@ var logLevel = "warn,error,fatal,debug,info"
 
 func ConfigureTestLogging( LogLevel string, _ string, tester *testing.T) {
 	t = tester
-	ConfigureLogging(LogLevel,".")
+	ConfigureLogging(LogLevel,"./testdata")
 }
 
 // Errorf logs an error log entry with formatting

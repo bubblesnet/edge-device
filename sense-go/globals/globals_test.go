@@ -1,7 +1,9 @@
 package globals
 
 import (
+	"fmt"
 	"github.com/go-playground/log"
+	"os"
 	"runtime"
 	"testing"
 )
@@ -10,6 +12,13 @@ func init_config() {
 	MyDeviceID = 70000007
 }
 
+func TestSlugs(t *testing.T) {
+	RunningOnUnsupportedHardware()
+	Sequence = 180000
+	for i := 0; i < 20500; i++ {
+		GetSequence()
+	}
+}
 func TestConfigureLogging(t *testing.T) {
 	type args struct {
 		site          Site
@@ -101,7 +110,7 @@ func Test_getConfigFromServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := GetConfigFromServer(".","", "config.json"); (err != nil) != tt.wantErr {
+			if err := GetConfigFromServer("../testdata","", "config.json"); (err != nil) != tt.wantErr {
 				t.Errorf("getConfigFromServer() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			nextGlobalMisConfig()
@@ -112,6 +121,8 @@ func Test_getConfigFromServer(t *testing.T) {
 func TestReadFromPersistentStore(t *testing.T) {
 	init_config()
 
+	currentWorkingDirectory, _ := os.Getwd()
+	fmt.Printf("cwd = %s\n", currentWorkingDirectory)
 	type args struct {
 		storeMountPoint      string
 		relativePath         string
@@ -129,12 +140,13 @@ func TestReadFromPersistentStore(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "Read valid config file with plausible data",
-			args: args{ storeMountPoint: ".", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
+			args: args{ storeMountPoint: "../testdata", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: false},
 		{name: "Read non-existent config file",
 			args: args{ storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 	}
+	MyStation.CurrentStage = "idle"
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ReadFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.site, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {
@@ -153,10 +165,11 @@ func TestReportDeviceFailed(t *testing.T) {
 		args args
 	}{
 		// TODO: Add test cases.
-		{name: "happy", args: args{devicename:"testdevice"},},
+		{name: "happy", args: args{devicename: "testdevice"}},
+		{name: "devicefailed", args: args{devicename: "testdevice"},},
 	}
+	DevicesFailed = []string{}
 	for _, tt := range tests {
-		DevicesFailed = []string{}
 		t.Run(tt.name, func(t *testing.T) {
 			ReportDeviceFailed(tt.args.devicename)
 			if len(DevicesFailed) == 0 {

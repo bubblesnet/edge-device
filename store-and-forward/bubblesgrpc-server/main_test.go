@@ -18,7 +18,7 @@ func initTests(t *testing.T) (err error){
 	storeMountPoint := "/config"
 	fmt.Printf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
 	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
-		storeMountPoint = "."
+		storeMountPoint = "./testdata"
 		databaseFilename = "./testmessages.db"
 	} else {
 		fmt.Printf("WTF!!!")
@@ -40,7 +40,7 @@ func initTests(t *testing.T) (err error){
 	return nil
 }
 
-func Test_forwardMessages(t *testing.T) {
+func xxxx_forwardMessages(t *testing.T) {
 	if err := initTests(t); err != nil {
 		t.Errorf("error %v", err)
 		return
@@ -53,8 +53,7 @@ func Test_forwardMessages(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
-		{name: "forwardMessages", args: args{bucketName: "StateBucket"}, wantErr: false},
+		{name: "forwardMessages", args: args{bucketName: "StateBucket"}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

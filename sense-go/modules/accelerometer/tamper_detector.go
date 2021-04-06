@@ -1,4 +1,6 @@
-package main
+// +build linux,arm
+
+package accelerometer
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -15,7 +17,7 @@ import (
 	"time"
 )
 
-func RunTamperDetector() {
+func RunTamperDetector(onceOnly bool) {
 	log.Info("runTamperDetector")
 	adxl345Adaptor := raspi.NewAdaptor()
 	adxl345 := i2c.NewADXL345Driver(adxl345Adaptor)
@@ -73,6 +75,10 @@ func RunTamperDetector() {
 	if err != nil {
 		globals.ReportDeviceFailed("adxl345")
 		log.Errorf("adxl345 robot start error %v", err)
+	}
+
+	if onceOnly {
+		robot.Stop()
 	}
 }
 

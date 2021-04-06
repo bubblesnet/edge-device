@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package main
+package phsensor
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"

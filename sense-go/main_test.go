@@ -2,316 +2,22 @@ package main
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
+	"bubblesnet/edge-device/sense-go/modules/accelerometer"
+	"bubblesnet/edge-device/sense-go/modules/phsensor"
+	"bubblesnet/edge-device/sense-go/modules/distancesensor"
+	"errors"
 	"github.com/go-playground/log"
-	"gobot.io/x/gobot"
-	"gobot.io/x/gobot/drivers/i2c"
-	"reflect"
+	"github.com/go-stomp/stomp"
 	"testing"
 )
 
-func TestAtlasEZODriver_Connection(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
+func init() {
+	globals.MyDeviceID = 70000008
+	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+		log.Errorf("ReadFromPersistentStore() error = %v", err)
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   gobot.Connection
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			if got := d.Connection(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Connection() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestAtlasEZODriver_Halt(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			if err := d.Halt(); (err != nil) != tt.wantErr {
-				t.Errorf("Halt() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
 }
-
-func TestAtlasEZODriver_Name(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			if got := d.Name(); got != tt.want {
-				t.Errorf("Name() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestAtlasEZODriver_Ph(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantPH  float64
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			gotPH, err := d.Ph()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Ph() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotPH != tt.wantPH {
-				t.Errorf("Ph() gotPH = %v, want %v", gotPH, tt.wantPH)
-			}
-		})
-	}
-}
-
-func TestAtlasEZODriver_SetName(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	type args struct {
-		n string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			log.Infof("d = %v", d)
-		})
-	}
-}
-
-func TestAtlasEZODriver_Start(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			if err := d.Start(); (err != nil) != tt.wantErr {
-				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestAtlasEZODriver_initialization(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			if err := d.initialization(); (err != nil) != tt.wantErr {
-				t.Errorf("initialization() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestAtlasEZODriver_rawPh(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantPH  float64
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			gotPH, err := d.rawPh()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("rawPh() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotPH != tt.wantPH {
-				t.Errorf("rawPh() gotPH = %v, want %v", gotPH, tt.wantPH)
-			}
-		})
-	}
-}
-
-func TestAtlasEZODriver_read(t *testing.T) {
-	type fields struct {
-		name       string
-		connector  i2c.Connector
-		connection i2c.Connection
-		Config     i2c.Config
-		tpc        *bmp280CalibrationCoefficients
-	}
-	type args struct {
-		address byte
-		n       int
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []byte
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &AtlasEZODriver{
-				name:       tt.fields.name,
-				connector:  tt.fields.connector,
-				connection: tt.fields.connection,
-				Config:     tt.fields.Config,
-				tpc:        tt.fields.tpc,
-			}
-			got, err := d.read(tt.args.address, tt.args.n)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("read() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("read() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestControlHeat(t *testing.T) {
 	tests := []struct {
 		name string
@@ -443,70 +149,35 @@ func testLight(t *testing.T) {
 		}
 	}
 }
-func TestNewAtlasEZODriver(t *testing.T) {
-	type args struct {
-		c       i2c.Connector
-		options []func(i2c.Config)
-	}
-	tests := []struct {
-		name string
-		args args
-		want *AtlasEZODriver
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewAtlasEZODriver(tt.args.c, tt.args.options...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAtlasEZODriver() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func Test_clen(t *testing.T) {
-	type args struct {
-		n []byte
-	}
-	tests := []struct {
-		name string
-		args args
-		want int
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := clen(tt.args.n); got != tt.want {
-				t.Errorf("clen() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func Test_deviceShouldBeHere(t *testing.T) {
+func Test_moduleShouldBeHere(t *testing.T) {
+	globals.MyDeviceID = 70000008
+	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+		log.Errorf("ReadFromPersistentStore() error = %v", err)
+	}
 	type args struct {
 		containerName   string
 		mydeviceid      int64
 		deviceInStation bool
-		deviceType      string
+		moduleType      string
 	}
 	tests := []struct {
 		name                string
 		args                args
 		wantShouldBePresent bool
 	}{
-		{ name: "happy", args: args{ containerName: "sense-go", mydeviceid: 70000007, deviceInStation: true, deviceType: "test"}},
+		{ name: "happy", wantShouldBePresent: true, args: args{ containerName: "sense-python", mydeviceid: 70000008, deviceInStation: true, moduleType: "bme280"}},
+		{ name: "unhappy", wantShouldBePresent: false, args: args{ containerName: "sense-python", mydeviceid: 70000006, deviceInStation: true, moduleType: "bme280"}},
 	}
 		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.deviceType); gotShouldBePresent != tt.wantShouldBePresent {
-				t.Errorf("moduleShouldBeHere() = %v, want %v", gotShouldBePresent, tt.wantShouldBePresent)
+			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
+				t.Errorf("moduleShouldBeHere(%v) = %v, want %v", tt.args, gotShouldBePresent, tt.wantShouldBePresent)
 			}
 		})
 	}
 }
-
 
 func Test_inRange(t *testing.T) {
 	type args struct {
@@ -557,6 +228,7 @@ func Test_isRelayAttached(t *testing.T) {
 }
 
 func Test_makeControlDecisions(t *testing.T) {
+	globals.MySite.AutomaticControl = true
 	tests := []struct {
 		name string
 	}{
@@ -574,12 +246,12 @@ func Test_readPh(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
-		{name: "happy", wantErr: true},
+		{name: "happy", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := readPh(true); (err != nil) != tt.wantErr {
-				t.Errorf("readPh() error = %v, wantErr %v", err, tt.wantErr)
+			if err := phsensor.ReadPh(true); (err != nil) != tt.wantErr {
+				t.Errorf("ReadPh() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -606,7 +278,7 @@ func Test_runDistanceWatcher(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runDistanceWatcher()
+			distancesensor.RunDistanceWatcher(true)
 		})
 	}
 }
@@ -632,7 +304,7 @@ func Test_runTamperDetector(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			RunTamperDetector()
+			accelerometer.RunTamperDetector(true)
 		})
 	}
 }
@@ -646,6 +318,246 @@ func Test_setEnvironmentalControlString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setEnvironmentalControlString()
+		})
+	}
+}
+
+
+func Test_getNowMillis(t *testing.T) {
+
+	tests := []struct {
+		name string
+		want int64
+	}{
+		{name:"happy", want: 1000000},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getNowMillis(); got <= 1000000 {
+				t.Errorf("getNowMillis() = %v, want >= %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_countACOutlets(t *testing.T) {
+	tests := []struct {
+		name string
+		want int
+	}{
+{name: "happy", want: 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := countACOutlets(); got != tt.want {
+				t.Errorf("countACOutlets() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_isMySwitch(t *testing.T) {
+	globals.MyDeviceID = 70000007
+	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+		t.Errorf("ReadFromPersistentStore() error = %v", err)
+	}
+	type args struct {
+		switchName string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{ name: "nonsense", want: false, args: args{switchName: "blah"}},
+		{ name: "auto", want: true, args: args{switchName: "automaticControl"}},
+		{ name: "heater", want: true, args: args{switchName: "heater"}},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isMySwitch(tt.args.switchName); got != tt.want {
+				t.Errorf("isMySwitch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_initializeOutletsForAutomation(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{ name: "happy"},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			initializeOutletsForAutomation()
+		})
+	}
+}
+
+func Test_initGlobals(t *testing.T) {
+	globals.PersistentStoreMountPoint = "./testdata"
+	tests := []struct {
+		name string
+	}{
+		{ name: "happy"},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			initGlobals()
+		})
+	}
+}
+
+func Test_setupGPIO(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{ name: "happy"},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupGPIO()
+		})
+	}
+}
+
+func Test_setupPhMonitor(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{ name: "happy"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupPhMonitor()
+		})
+	}
+}
+
+func Test_countGoRoutines(t *testing.T) {
+	tests := []struct {
+		name      string
+		wantCount int
+	}{
+		{ name: "happy", wantCount: 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotCount := countGoRoutines(); gotCount <= tt.wantCount {
+				t.Errorf("countGoRoutines() = %v, want %v", gotCount, tt.wantCount)
+			}
+		})
+	}
+}
+
+func Test_startGoRoutines(t *testing.T) {
+	type args struct {
+		once_only bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{ name: "happy", args: args{ once_only: true}},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			startGoRoutines(tt.args.once_only)
+		})
+	}
+}
+
+func Test_testableSubmain(t *testing.T) {
+	globals.MyDeviceID = 70000007
+	globals.PersistentStoreMountPoint = "./testdata"
+	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
+		t.Errorf("ReadFromPersistentStore() error = %v", err)
+	}
+	type args struct {
+		isUnitTest bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{ name: "happy", args: args{isUnitTest: true}},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testableSubmain(tt.args.isUnitTest)
+		})
+	}
+}
+
+func Test_processCommand(t *testing.T) {
+	var uninitMessage stomp.Message
+
+	emptyBody := "{}"
+	emptyMessage := stomp.Message {
+		Body: []byte(emptyBody),
+	}
+	myswitchOnBody := "{ \"command\": \"switch\", \"switch_name\": \"heater\", \"on\": true }"
+	myswitchOnMessage := stomp.Message {
+		Body: []byte(myswitchOnBody),
+	}
+	myswitchOffBody := "{ \"command\": \"switch\", \"switch_name\": \"heater\", \"on\": false }"
+	myswitchOffMessage := stomp.Message {
+		Body: []byte(myswitchOffBody),
+	}
+	pictureBody := "{ \"command\": \"picture\" }"
+	pictureMessage := stomp.Message {
+		Body: []byte(pictureBody),
+	}
+
+	notMyswitchBody := "{ \"command\": \"switch\", \"switch_name\": \"blahblah\", \"on\": true }"
+	notMyswitchMessage := stomp.Message {
+		Body: []byte(notMyswitchBody),
+	}
+	autoSwitchBody := "{ \"command\": \"switch\", \"switch_name\": \"automaticControl\", \"on\": true }"
+	autoSwitchMessage := stomp.Message {
+		Body: []byte(autoSwitchBody),
+	}
+
+	messageWithError := stomp.Message {
+		Body: []byte(myswitchOnBody),
+		Err: errors.New("test error handling"),
+	}
+	messageWithTimeout := stomp.Message {
+		Body: []byte(myswitchOnBody),
+		Err: errors.New("timeout"),
+	}
+
+	type args struct {
+		msg *stomp.Message
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantResub bool
+		wantErr   bool
+	}{
+		{ name: "nil_message", args: args{msg: nil}, wantResub: false, wantErr: false},
+		{ name: "messageWithError", args: args{msg: &messageWithError}, wantResub: true, wantErr: true},
+		{ name: "messageTimeout", args: args{msg: &messageWithTimeout}, wantResub: true, wantErr: true},
+		{ name: "uninit_message", args: args{msg: &uninitMessage}, wantResub: false, wantErr: true},
+		{ name: "emptyMessage", args: args{msg: &emptyMessage}, wantResub: false, wantErr: false},
+		{ name: "myswitchOnMessage", args: args{msg: &myswitchOnMessage}, wantResub: false, wantErr: false},
+		{ name: "myswitchOffMessage", args: args{msg: &myswitchOffMessage}, wantResub: false, wantErr: false},
+		{ name: "notMyswitchMessage", args: args{msg: &notMyswitchMessage}, wantResub: false, wantErr: false},
+		{ name: "autoSwitchMessage", args: args{msg: &autoSwitchMessage}, wantResub: false, wantErr: false},
+		{ name: "pictureMessage", args: args{msg: &pictureMessage}, wantResub: false, wantErr: false},
+	}
+		for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResub, err := processCommand(tt.args.msg)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("processCommand() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotResub != tt.wantResub {
+				t.Errorf("processCommand() gotResub = %v, want %v", gotResub, tt.wantResub)
+			}
 		})
 	}
 }

@@ -1,6 +1,6 @@
 // +build linux,arm
 
-package adc
+package a2dconverter
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -31,8 +31,11 @@ type ADCSensorMessage struct {
 }
 */
 
+func ReadAllChannels(index int, adcMessage *ADCMessage) (err error ) {
+	return readAllChannels(ads1115s[index], daps[index], adcMessage)
+}
 
-func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( error ) {
+func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( err error ) {
 	log.Debugf("readAllChannels on address 0x%x", config.address)
 	var err1 error
 	adcMessage.Address = config.address
@@ -60,15 +63,17 @@ var last0 = []float64 {
 var last1 = []float64 {
 	0.0,0.0,0.0,0.0,
 }
-func RunADCPoller() (error) {
-	var ads1115s [2]*i2c.ADS1x15Driver
+
+var ads1115s [2]*i2c.ADS1x15Driver
+
+func RunADCPoller(onceOnly bool) (err error) {
 
 	adcAdaptor := raspi.NewAdaptor() // optional bus/address
 
 	ads1115s[0] = i2c.NewADS1115Driver(adcAdaptor,
 		i2c.WithBus(a0.bus_id),
 		i2c.WithAddress(a0.address))
-	err := ads1115s[0].Start()
+	err = ads1115s[0].Start()
 	if err != nil {
 		log.Errorf("error starting interface %v", err )
 		return err
@@ -85,7 +90,8 @@ func RunADCPoller() (error) {
 
 	for {
 		adcMessage := new(ADCMessage)
-		err := readAllChannels(ads1115s[0], a0, adcMessage)
+//		err := readAllChannels(ads1115s[0], a0, adcMessage)
+		err := ReadAllChannels(0, adcMessage)
 		if err != nil {
 			log.Errorf("loopforever error %v", err)
 			break
@@ -120,7 +126,8 @@ func RunADCPoller() (error) {
 		}
 
 		adcMessage = new(ADCMessage)
-		err = readAllChannels(ads1115s[1], a1, adcMessage)
+//		err = readAllChannels(ads1115s[1], a1, adcMessage)
+		err = ReadAllChannels(1, adcMessage)
 		if err != nil {
 			log.Errorf("loopforever error %v", err)
 			break
@@ -151,6 +158,9 @@ func RunADCPoller() (error) {
 //					log.Infof("sensor_reply %v", sensor_reply)
 				}
 			}
+		}
+		if onceOnly {
+			return nil
 		}
 		//		readAllChannels(ads1115s[1],a1)
 		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)

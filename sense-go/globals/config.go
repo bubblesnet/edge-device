@@ -63,7 +63,7 @@ type Station struct {
 	Relay          	bool `json:"relay,omitempty,omitempty"`
 	EdgeDevices		[]EdgeDevice `json:"edge_devices,omitempty"`
 	StageSchedules  []StageSchedule  `json:"stage_schedules,omitempty"`
-	CurrentStage	string `json:"current_stage,omitempty"`
+	CurrentStage	string `json:"current_stage"`
 	LightOnHour     int  `json:"light_on_hour,omitempty"`
 	TamperSpec		Tamper           `json:"tamper,omitempty"`
 }
@@ -196,20 +196,20 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 		return err
 	}
 	str := string(file)
-	log.Infof(str)
+//	log.Infof(str)
 	err = json.Unmarshal([]byte(file), site)
 	if err != nil {
 		fmt.Printf("Error unmarshalling %v\n\n", err )
 		fmt.Printf("filestr = %s\n", str )
 		return err
 	}
-	fmt.Printf("data = %v", *site)
+//	fmt.Printf("data = %v\n", *site)
 	found := false
 	for i := 0; i < len(site.Stations) && !found; i++ {
 		for j := 0; j < len(site.Stations[i].EdgeDevices) && !found; j++ {
-			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
+//			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
 			if MyDeviceID == site.Stations[i].EdgeDevices[j].DeviceID {
-				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
+//				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
 				MyStation = &site.Stations[i]
 				MyDevice = &site.Stations[i].EdgeDevices[j]
 				found = true
@@ -219,7 +219,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	if MyStation == nil {
 		return errors.New(fmt.Sprintf("DeviceID %d not found in %v", MyDeviceID, site.Stations))
 	}
-	fmt.Printf("MyStation = %v\n", MyStation)
+//	fmt.Printf("MyStation = %v\n", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
@@ -368,15 +368,15 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		fmt.Printf("readall error %v\n", err)
 		return err
 	}
-	fmt.Printf("response %s\n", string(body))
+//	fmt.Printf("response %s\n", string(body))
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %v\n", err)
 		return errors.New("err on site")
 	}
 	MySite.Stations = newconfig.Stations
-	js, _ := json.Marshal(MySite)
-	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
+//	js, _ := json.Marshal(MySite)
+//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
 	if err = validateConfigured(); err != nil {
 		return err
 	}
@@ -386,7 +386,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	if len(relativePath) == 0 {
 		filepath = fmt.Sprintf("%s/%s", storeMountPoint,fileName)
 	}
-	fmt.Printf("writing site to file %s\n\n",filepath)
+//	fmt.Printf("writing site to file %s\n\n",filepath)
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
 		log.Errorf("error save site file %v", err)

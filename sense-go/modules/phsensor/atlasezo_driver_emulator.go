@@ -1,6 +1,6 @@
 // +build darwin windows,amd64 linux,amd64
 
-package main
+package phsensor
 
 import (
 	"fmt"
@@ -45,6 +45,7 @@ type AtlasEZODriver struct {
 func connection() (err error) {
 	return nil
 }
+
 
 func NewAtlasEZODriver(c i2c.Connector, options ...func(i2c.Config)) *AtlasEZODriver {
 	driver := AtlasEZODriver{

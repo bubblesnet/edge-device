@@ -25,7 +25,7 @@ import (
 	"time"
 
 	bubblesgrpc "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
-	hwmock "bubblesnet/edge-device/store-and-forward/mock_bubblesgrpc"
+	hwmock "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/mock_bubblesgrpc"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/proto"
 )
@@ -51,18 +51,18 @@ func TestAcknowledgeStoreAndForward(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSensorStoreAndForwardClient := hwmock.NewMockSensorStoreAndForwardClient(ctrl)
-	req := &bubblesgrpc.SensorRequest{Name: "unit_test"}
+	req := &bubblesgrpc.SensorRequest{TypeId: "unit_test"}
 	mockSensorStoreAndForwardClient.EXPECT().StoreAndForward(
 		gomock.Any(),
 		&rpcMsg{msg: req},
 	).Return(&bubblesgrpc.SensorReply{Message: "Mocked Interface"}, nil)
-	testStoreAndForward(t, mockSensorStoreAndForwardClient)
+	doStoreAndForward(t, mockSensorStoreAndForwardClient)
 }
 
-func testStoreAndForward(t *testing.T, client bubblesgrpc.SensorStoreAndForwardClient) {
+func doStoreAndForward(t *testing.T, client bubblesgrpc.SensorStoreAndForwardClient) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := client.StoreAndForward(ctx, &bubblesgrpc.SensorRequest{Name: "unit_test"})
+	r, err := client.StoreAndForward(ctx, &bubblesgrpc.SensorRequest{TypeId: "unit_test"})
 	if err != nil || r.Message != "Mocked Interface" {
 		t.Errorf("mocking failed")
 	}

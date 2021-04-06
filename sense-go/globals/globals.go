@@ -16,6 +16,8 @@ var BubblesnetGitHash=""
 
 var ContainerName = "sense-go"
 
+var PersistentStoreMountPoint = "/config"	// Can be changed for units
+
 var DevicesFailed []string
 
 var MySite = Site{}
