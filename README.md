@@ -12,5 +12,4 @@
 
 ![Your Repository's Stats](https://github-readme-stats.vercel.app/api?username=bubblesnet&show_icons=true)
 
-
 A collection of containers that communicate via gRPC to get edge device data to the cloud.
