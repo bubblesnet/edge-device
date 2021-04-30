@@ -6,17 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/log"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-
 /**
 Top-level object in the data hierarchy.  A site is identified by the user/owner
 and contains multiple stations.
- */
+*/
 type Site struct {
 	SiteID             int64     `json:"siteid"`
 	UserID             int64     `json:"userid"`
@@ -30,42 +30,42 @@ type Site struct {
 /**
 A station is a grow-unit, typically either a cabinet or a tent.  A station
 contains multiple edge devices, typically Raspberry Pi.
- */
+*/
 type Station struct {
-	StationID              int64 `json:"stationid"`
-	HeightSensor           bool  `json:"height_sensor,omitempty"`
-	Humidifier             bool  `json:"humidifier,omitempty"`
-	HumiditySensor         bool  `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool   `json:"humidity_sensor_external,omitempty"`
-	Heater                 bool   `json:"heater,omitempty"`
-	ThermometerTop         bool   `json:"thermometer_top,omitempty"`
-	ThermometerMiddle      bool   `json:"thermometer_middle,omitempty"`
-	ThermometerBottom      bool   `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal    bool   `json:"thermometer_external,omitempty"`
-	ThermometerWater       bool   `json:"thermometer_water,omitempty"`
-	WaterPump              bool   `json:"waterPump,omitempty"`
-	AirPump                bool   `json:"airPump,omitempty"`
-	LightSensor            bool   `json:"light_sensor_internal,omitempty"`
-	StationDoorSensor      bool   `json:"station_door_sensor,omitempty"`
-	OuterDoorSensor        bool   `json:"outer_door_sensor,omitempty"`
-	MovementSensor         bool   `json:"movement_sensor,omitempty"`
-	PressureSensor         bool   `json:"pressure_sensors,omitempty"`
-	RootPhSensor           bool   `json:"root_ph_sensor,omitempty"`
-	EnclosureType          string `json:"enclosure_type,omitempty"`
-	WaterLevelSensor       bool   `json:"water_level_sensor,omitempty"`
-	IntakeFan              bool   `json:"intakeFan,omitempty"`
-	ExhaustFan             bool   `json:"exhaustFan,omitempty"`
-	HeatLamp               bool   `json:"heatLamp,omitempty"`
-	HeatingPad             bool   `json:"heatingPad,omitempty"`
-	LightBloom 		bool `json:"lightBloom,omitempty"`
-	LightVegetative bool `json:"lightVegetative,omitempty"`
-	LightGerminate 	bool `json:"lightGerminate,omitempty"`
-	Relay          	bool `json:"relay,omitempty,omitempty"`
-	EdgeDevices		[]EdgeDevice `json:"edge_devices,omitempty"`
-	StageSchedules  []StageSchedule  `json:"stage_schedules,omitempty"`
-	CurrentStage	string `json:"current_stage"`
-	LightOnHour     int  `json:"light_on_hour,omitempty"`
-	TamperSpec		Tamper           `json:"tamper,omitempty"`
+	StationID              int64           `json:"stationid"`
+	HeightSensor           bool            `json:"height_sensor,omitempty"`
+	Humidifier             bool            `json:"humidifier,omitempty"`
+	HumiditySensor         bool            `json:"humidity_sensor_internal,omitempty"`
+	ExternalHumiditySensor bool            `json:"humidity_sensor_external,omitempty"`
+	Heater                 bool            `json:"heater,omitempty"`
+	ThermometerTop         bool            `json:"thermometer_top,omitempty"`
+	ThermometerMiddle      bool            `json:"thermometer_middle,omitempty"`
+	ThermometerBottom      bool            `json:"thermometer_bottom,omitempty"`
+	ThermometerExternal    bool            `json:"thermometer_external,omitempty"`
+	ThermometerWater       bool            `json:"thermometer_water,omitempty"`
+	WaterPump              bool            `json:"waterPump,omitempty"`
+	AirPump                bool            `json:"airPump,omitempty"`
+	LightSensor            bool            `json:"light_sensor_internal,omitempty"`
+	StationDoorSensor      bool            `json:"station_door_sensor,omitempty"`
+	OuterDoorSensor        bool            `json:"outer_door_sensor,omitempty"`
+	MovementSensor         bool            `json:"movement_sensor,omitempty"`
+	PressureSensor         bool            `json:"pressure_sensors,omitempty"`
+	RootPhSensor           bool            `json:"root_ph_sensor,omitempty"`
+	EnclosureType          string          `json:"enclosure_type,omitempty"`
+	WaterLevelSensor       bool            `json:"water_level_sensor,omitempty"`
+	IntakeFan              bool            `json:"intakeFan,omitempty"`
+	ExhaustFan             bool            `json:"exhaustFan,omitempty"`
+	HeatLamp               bool            `json:"heatLamp,omitempty"`
+	HeatingPad             bool            `json:"heatingPad,omitempty"`
+	LightBloom             bool            `json:"lightBloom,omitempty"`
+	LightVegetative        bool            `json:"lightVegetative,omitempty"`
+	LightGerminate         bool            `json:"lightGerminate,omitempty"`
+	Relay                  bool            `json:"relay,omitempty,omitempty"`
+	EdgeDevices            []EdgeDevice    `json:"edge_devices,omitempty"`
+	StageSchedules         []StageSchedule `json:"stage_schedules,omitempty"`
+	CurrentStage           string          `json:"current_stage"`
+	LightOnHour            int             `json:"light_on_hour,omitempty"`
+	TamperSpec             Tamper          `json:"tamper,omitempty"`
 }
 
 /**
@@ -76,15 +76,15 @@ always maintained, and a stream of event and environmental sensor messages are s
 the time-series database.
 */
 type EdgeDevice struct {
-	DeviceID	int64  `json:"deviceid"`
-	DeviceType	string	`json:"devicetypename,omitempty"`
-	ExternalID 	string `json:"externalid,omitempty"`
-	IPAddress 	string `json:"ipaddress,omitempty"`
-	MacAddress 	string `json:"macaddress,omitempty"`
-	DeviceModules []DeviceModule `json:"modules,omitempty"`
-	Camera 		PiCam	`json:"camera,omitempty"`
-	TimeBetweenSensorPollingInSeconds int64 `json:"time_between_sensor_polling_in_seconds,omitempty"`
-	ACOutlets  []ACOutlet      `json:"ac_outlets,omitempty"`
+	DeviceID                          int64          `json:"deviceid"`
+	DeviceType                        string         `json:"devicetypename,omitempty"`
+	ExternalID                        string         `json:"externalid,omitempty"`
+	IPAddress                         string         `json:"ipaddress,omitempty"`
+	MacAddress                        string         `json:"macaddress,omitempty"`
+	DeviceModules                     []DeviceModule `json:"modules,omitempty"`
+	Camera                            PiCam          `json:"camera,omitempty"`
+	TimeBetweenSensorPollingInSeconds int64          `json:"time_between_sensor_polling_in_seconds,omitempty"`
+	ACOutlets                         []ACOutlet     `json:"ac_outlets,omitempty"`
 }
 
 /**
@@ -93,32 +93,32 @@ generates one or more types of measurements.  An AttachedDevice can have multipl
 DeviceModules.
 */
 type DeviceModule struct {
-	ModuleID	int64	`json:"moduleid"`
-	ContainerName	string        `json:"container_name,omitempty"`
-	ModuleName  string `json:"module_name,omitempty"`
-	ModuleType	string `json:"module_type,omitempty"`
-	Protocol	string             `json:"protocol,omitempty"`
-	Address		string              `json:"address,omitempty"`
-	InternalAddress string `json:"internal_address"`
+	ModuleID        int64    `json:"moduleid"`
+	ContainerName   string   `json:"container_name,omitempty"`
+	ModuleName      string   `json:"module_name,omitempty"`
+	ModuleType      string   `json:"module_type,omitempty"`
+	Protocol        string   `json:"protocol,omitempty"`
+	Address         string   `json:"address,omitempty"`
+	InternalAddress string   `json:"internal_address"`
 	IncludedSensors []Sensor `json:"included_sensors"`
 }
 
 type Sensor struct {
-	SensorID 	int64 `json:"sensorid"`
-	SensorName	string	`json:"sensor_name"`
-	MeasurementName	string `json:"measurement_name"`
+	SensorID        int64  `json:"sensorid"`
+	SensorName      string `json:"sensor_name"`
+	MeasurementName string `json:"measurement_name"`
 }
 
 type AttachedDevice struct {
-	DeviceID		int64          `json:"deviceid"`
-	DeviceType		string           `json:"device_type,omitempty"`
-	DeviceModules 	[]DeviceModule `json:"included_modules,omitempty"`
-	ACOutlets  		[]ACOutlet      `json:"ac_outlets,omitempty"`
+	DeviceID      int64          `json:"deviceid"`
+	DeviceType    string         `json:"device_type,omitempty"`
+	DeviceModules []DeviceModule `json:"included_modules,omitempty"`
+	ACOutlets     []ACOutlet     `json:"ac_outlets,omitempty"`
 }
 
 type EnvironmentalTarget struct {
 	Temperature float32 `json:"temperature,omitempty"`
-	Humidity 	float32 `json:"humidity,omitempty"`
+	Humidity    float32 `json:"humidity,omitempty"`
 }
 
 type StageSchedule struct {
@@ -131,15 +131,15 @@ type ControlState struct {
 }
 
 type PiCam struct {
-	PiCamera	bool	`json:"picamera"`
-	ResolutionX	int		`json:"resolutionX"`
-	ResolutionY	int		`json:"resolutionY"`
+	PiCamera    bool `json:"picamera"`
+	ResolutionX int  `json:"resolutionX"`
+	ResolutionY int  `json:"resolutionY"`
 }
 
 type Tamper struct {
-	Xmove float64	`json:"xmove"`
-	Ymove float64	`json:"ymove"`
-	Zmove float64	`json:"zmove"`
+	Xmove float64 `json:"xmove"`
+	Ymove float64 `json:"ymove"`
+	Zmove float64 `json:"zmove"`
 }
 
 /*
@@ -160,16 +160,16 @@ type Configuration1 struct {
 	TamperSpec                        Tamper           `json:"tamper"`
 }
 
- */
+*/
 
 type ACOutlet struct {
-	Name 		string `json:"name,omitempty"`
-	Index 		int `json:"index,omitempty"`
-	PowerOn 	bool `json:"on,omitempty"`
-	BCMPinNumber int `json:"bcm_pin_number,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Index        int    `json:"index,omitempty"`
+	PowerOn      bool   `json:"on,omitempty"`
+	BCMPinNumber int    `json:"bcm_pin_number,omitempty"`
 }
 
-func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string,) (id int64, err error) {
+func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string) (id int64, err error) {
 	log.Debug("ReadMyDeviceId")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
@@ -179,7 +179,7 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 	file, _ := ioutil.ReadFile(fullpath)
 	idstring := strings.TrimSpace(string(file))
 
-	id, err = strconv.ParseInt(idstring,10, 64)
+	id, err = strconv.ParseInt(idstring, 10, 64)
 	return id, err
 }
 
@@ -192,24 +192,24 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	fmt.Printf("readConfig from %s\n", fullpath)
 	file, err := ioutil.ReadFile(fullpath)
 	if err != nil {
-		fmt.Printf("Read config from %s failed %v", fullpath, err )
+		fmt.Printf("Read config from %s failed %v", fullpath, err)
 		return err
 	}
 	str := string(file)
-//	log.Infof(str)
+	//	log.Infof(str)
 	err = json.Unmarshal([]byte(file), site)
 	if err != nil {
-		fmt.Printf("Error unmarshalling %v\n\n", err )
-		fmt.Printf("filestr = %s\n", str )
+		fmt.Printf("Error unmarshalling %v\n\n", err)
+		fmt.Printf("filestr = %s\n", str)
 		return err
 	}
-//	fmt.Printf("data = %v\n", *site)
+	//	fmt.Printf("data = %v\n", *site)
 	found := false
 	for i := 0; i < len(site.Stations) && !found; i++ {
 		for j := 0; j < len(site.Stations[i].EdgeDevices) && !found; j++ {
-//			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
+			//			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
 			if MyDeviceID == site.Stations[i].EdgeDevices[j].DeviceID {
-//				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
+				//				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
 				MyStation = &site.Stations[i]
 				MyDevice = &site.Stations[i].EdgeDevices[j]
 				found = true
@@ -219,7 +219,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	if MyStation == nil {
 		return errors.New(fmt.Sprintf("DeviceID %d not found in %v", MyDeviceID, site.Stations))
 	}
-//	fmt.Printf("MyStation = %v\n", MyStation)
+	//	fmt.Printf("MyStation = %v\n", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
@@ -257,89 +257,95 @@ func (c *CustomHandler) Log(e log.Entry) {
 	b.WriteString(e.Message)
 
 	for _, f := range e.Fields {
-		fmt.Fprintf(b, " %s=%v", f.Key, f.Value)
+		_, _ = fmt.Fprintf(b, " %s=%v", f.Key, f.Value)
 	}
 	fmt.Println(b.String())
 }
 
-func ConfigureLogging( site Site, containerName string) {
+func ConfigureLogging(site Site, containerName string) {
 	cLog := new(CustomHandler)
 
-	if strings.Contains(site.LogLevel,"error") {
+	if strings.Contains(site.LogLevel, "error") {
 		log.AddHandler(cLog, log.ErrorLevel)
 	}
-	if strings.Contains(site.LogLevel,"warn") {
+	if strings.Contains(site.LogLevel, "warn") {
 		log.AddHandler(cLog, log.WarnLevel)
 	}
-	if strings.Contains(site.LogLevel,"debug") {
+	if strings.Contains(site.LogLevel, "debug") {
 		log.AddHandler(cLog, log.DebugLevel)
 	}
-	if strings.Contains(site.LogLevel,"info") {
+	if strings.Contains(site.LogLevel, "info") {
 		log.AddHandler(cLog, log.InfoLevel)
 	}
-	if strings.Contains(site.LogLevel,"notice") {
+	if strings.Contains(site.LogLevel, "notice") {
 		log.AddHandler(cLog, log.NoticeLevel)
 	}
-	if strings.Contains(site.LogLevel,"panic") {
+	if strings.Contains(site.LogLevel, "panic") {
 		log.AddHandler(cLog, log.PanicLevel)
 	}
 
 }
 
-func validateConfigurable() (err error) {
+func ValidateConfigurable() (err error) {
 	if t, ok := interface{}(MySite).(Site); ok == false {
-		fmt.Printf(" context %s should be %T, is %T\n", "MySite", t, MySite)
+		fmt.Printf("ValidateConfigurable mysite.site context %s should be %T, is %T\n", "MySite", t, MySite)
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf(" context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
+		fmt.Printf("ValidateConfigurable MySite.ControllerHostName context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
-		fmt.Printf(" context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
+		fmt.Printf("ValidateConfigurable MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MyDevice).(*EdgeDevice); ok == false || t == nil {
-		fmt.Printf(" context %s should be %T, is %T value %v\n", "MyDevice", t, MyDevice, t)
+		fmt.Printf("ValidateConfigurable EdgeDevice context %s should be %T, is %T value %v\n", "MyDevice", t, MyDevice, t)
 		log.Errorf(" context %s should be %T, is %T", "MyDevice", t, MyDevice)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MyDevice.DeviceID).(int64); ok == false || t <= 0 {
-		fmt.Printf(" context %s should be %T, is %T value %d\n", "MyDevice.DeviceID", t, MyDevice.DeviceID, t)
+		fmt.Printf("ValidateConfigurable MyDevice.DeviceID context %s should be %T, is %T value %d\n", "MyDevice.DeviceID", t, MyDevice.DeviceID, t)
 		log.Errorf(" context %s should be %T, is %T", "MyDevice.DeviceID", t, MyDevice.DeviceID)
 		return errors.New("bad global")
 	}
 	return nil
 }
-func validateConfigured() (err error) {
-	if err := validateConfigurable(); err != nil {
-		log.Errorf("validateConfigured error %v", err )
+func ValidateConfigured() (err error) {
+	if err := ValidateConfigurable(); err != nil {
+		log.Errorf("ValidateConfigured error %v", err)
 		return err
 	}
 	if t, ok := interface{}(MySite).(Site); ok == false {
-		fmt.Printf(" context %s should be %T, is %T\n", "MySite", t, MySite)
+		fmt.Printf("ValidateConfigured (MySite).(Site context %s should be %T, is %T\n", "MySite", t, MySite)
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf(" context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
+		fmt.Printf("ValidateConfigured MySite.ControllerHostName context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
-		fmt.Printf(" context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
+		fmt.Printf("ValidateConfigured MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
 		return errors.New("bad global")
 	}
+	if t, ok := interface{}(MyStation).(Station); ok == false {
+		fmt.Printf("ValidateConfigured (MyStation).(Station context %s should be %T, is %T\n", "*globals.Station", t, MyStation)
+		log.Errorf(" context %s should be %T, is %T", "*globals.Station", t, MyStation)
+		return errors.New("bad global")
+	}
+
 	return nil
 }
 
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
-	if err = validateConfigurable(); err != nil {
-		log.Errorf("GetConfigFromServer error %v", err )
+	if err = ValidateConfigurable(); err != nil {
+		log.Errorf("GetConfigFromServer error %v", err)
 		return err
 	}
 	if t, ok := interface{}(storeMountPoint).(string); ok == false {
@@ -362,35 +368,37 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		fmt.Printf("post error %v\n", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("readall error %v\n", err)
 		return err
 	}
-//	fmt.Printf("response %s\n", string(body))
+	//	fmt.Printf("response %s\n", string(body))
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %v\n", err)
 		return errors.New("err on site")
 	}
 	MySite.Stations = newconfig.Stations
-//	js, _ := json.Marshal(MySite)
-//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
-	if err = validateConfigured(); err != nil {
+	//	js, _ := json.Marshal(MySite)
+	//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
+	if err = ValidateConfigured(); err != nil {
 		return err
 	}
 
 	bytes, err := json.MarshalIndent(MySite, "", "  ")
-	filepath := fmt.Sprintf("%s/%s/%s", storeMountPoint,relativePath,fileName)
+	filepath := fmt.Sprintf("%s/%s/%s", storeMountPoint, relativePath, fileName)
 	if len(relativePath) == 0 {
-		filepath = fmt.Sprintf("%s/%s", storeMountPoint,fileName)
+		filepath = fmt.Sprintf("%s/%s", storeMountPoint, fileName)
 	}
-//	fmt.Printf("writing site to file %s\n\n",filepath)
+	//	fmt.Printf("writing site to file %s\n\n",filepath)
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
 		log.Errorf("error save site file %v", err)
-		return(err)
+		return (err)
 	}
 
 	fmt.Printf("received site\n\n")
