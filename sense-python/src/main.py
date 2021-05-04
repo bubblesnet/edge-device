@@ -80,12 +80,22 @@ def read_deviceid(filename):
         return (deviceid)
 
 
+def validate_config():
+    b = 'stations' in my_site
+    if not b:
+        return False
+
+    return True
+
+
 def read_config(fullpath):
     global my_site, my_station, my_device
     deviceid = my_site['deviceid']
     with open(fullpath) as f:
         my_site = json.load(f)
         my_site['deviceid'] = deviceid
+        if not validate_config():
+            return False
         for station in my_site['stations']:
             if 'edge_devices' not in station:
                 continue
@@ -94,7 +104,7 @@ def read_config(fullpath):
                     my_device = device
                     my_station = station
                     my_site['time_between_sensor_polling_in_seconds'] = 15
-
+        return True
 
 def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
     global lastTemp
@@ -330,7 +340,12 @@ if __name__ == "__main__":
     logging.debug("Starting sense-python")
     my_site['deviceid'] = read_deviceid('/config/deviceid')
     logging.info("deviceid from file is %d" % my_site['deviceid'])
-    read_config('/config/config.json')
+    b = read_config('/config/config.json')
+    if not b:
+        logging.error('invalid config.json - not validating')
+        time.sleep(60)
+        exit(1)
+
     bme280_names()
     LightAddress = get_address('bh1750')
 

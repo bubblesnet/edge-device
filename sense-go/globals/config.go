@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 /**
@@ -184,7 +185,7 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 }
 
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, site *Site, currentStageSchedule *StageSchedule) error {
-	log.Debug("readConfig")
+	log.Debug("ReadFromPersistentStore")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
 		fullpath = storeMountPoint + "/" + fileName
@@ -314,30 +315,109 @@ func ValidateConfigurable() (err error) {
 	}
 	return nil
 }
-func ValidateConfigured() (err error) {
+func ValidateConfigured(situation string) (err error) {
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %v", err)
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
 		return err
 	}
 	if t, ok := interface{}(MySite).(Site); ok == false {
-		fmt.Printf("ValidateConfigured (MySite).(Site context %s should be %T, is %T\n", "MySite", t, MySite)
+		fmt.Printf("ValidateConfigured (%s) (MySite).(Site context %s should be %T, is %T\n", situation, "MySite", t, MySite)
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
-		return errors.New("bad global")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("nil or empty MySite")
+	}
+	if MySite.SiteID < 0 {
+		fmt.Printf("<0 bad MySite.SiteID\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("<0 bad MySite.SiteID")
+	}
+	if MySite.UserID <= 0 {
+		fmt.Printf("<0 MySite.UserID\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("<0 MySite.UserID")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf("ValidateConfigured MySite.ControllerHostName context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
+		fmt.Printf("ValidateConfigured (%s) MySite.ControllerHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
-		return errors.New("bad global")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("nil or wrong type MySite.ControllerHostName")
+	}
+	if MySite.ControllerHostName == "localhost" {
+		fmt.Printf("MySite.ControllerHostName cannot be localhost\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("MySite.ControllerHostName cannot be localhost")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
-		fmt.Printf("ValidateConfigured MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
+		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", situation, "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
-		return errors.New("bad global")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("nil or wrong type ")
 	}
-	if t, ok := interface{}(MyStation).(Station); ok == false {
-		fmt.Printf("ValidateConfigured (MyStation).(Station context %s should be %T, is %T\n", "*globals.Station", t, MyStation)
+	if len(MySite.Stations) <= 0 {
+		fmt.Printf("0 length MySite.Stations\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("0 length MySite.Stations")
+	}
+	if t, ok := interface{}(MyStation).(*Station); ok == false {
+		fmt.Printf("ValidateConfigured (%s) (MyStation).(Station context %s should be %T, is %T\n", situation, "*globals.Station", t, MyStation)
 		log.Errorf(" context %s should be %T, is %T", "*globals.Station", t, MyStation)
-		return errors.New("bad global")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("nil or wrong type MyStation")
+	}
+	if MyStation.StationID < 0 {
+		fmt.Printf("<0 MyStation.StationID\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("bad MyStation.StationID")
+	}
+	if MyStation.EnclosureType != "CABINET" && MyStation.EnclosureType != "TENT" {
+		fmt.Printf("bad enclosuretype %s\n", MyStation.EnclosureType )
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New(fmt.Sprintf("bad MyStation.EnclosureType %s",MyStation.EnclosureType))
+
+	}
+	if len(MyStation.StageSchedules) <= 0 {
+		fmt.Printf("0 length MyStation.StageSchedules\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("0 length MyStation.StageSchedules")
+
+	}
+	if t, ok := interface{}(MyStation.CurrentStage).(string); ok == false || len(t) <= 0 {
+		fmt.Printf("nil, or empty MyStation.CurrentStage\n")
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("nil, or empty MyStation.CurrentStage")
+
+	}
+	if MyStation.TamperSpec.Xmove  <= 0.0 {
+		fmt.Printf("bad TamperSpec.Xmove %f\n", MyStation.TamperSpec.Xmove)
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New(fmt.Sprintf("bad TamperSpec.Xmove %f", MyStation.TamperSpec.Xmove))
+	}
+	if MyStation.TamperSpec.Ymove  <= 0.0 {
+		fmt.Printf("bad TamperSpec.Ymove %f\n", MyStation.TamperSpec.Ymove)
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New(fmt.Sprintf("bad TamperSpec.Ymove %f", MyStation.TamperSpec.Ymove))
+	}
+	if MyStation.TamperSpec.Zmove  <= 0.0 {
+		fmt.Printf("bad TamperSpec.Zmove %f\n", MyStation.TamperSpec.Zmove)
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New(fmt.Sprintf("bad TamperSpec.Zmove %f",MyStation.TamperSpec.Zmove))
 	}
 
 	return nil
@@ -376,16 +456,20 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		fmt.Printf("readall error %v\n", err)
 		return err
 	}
-	//	fmt.Printf("response %s\n", string(body))
+	fmt.Printf("\n\nresponse %s\n\n\n", string(body))
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %v\n", err)
 		return errors.New("err on site")
 	}
+
+	if newconfig.Stations == nil {
+		log.Fatalf("stations is nil!!!")
+	}
 	MySite.Stations = newconfig.Stations
 	//	js, _ := json.Marshal(MySite)
 	//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
-	if err = ValidateConfigured(); err != nil {
+	if err = ValidateConfigured("getConfigFromServer"); err != nil {
 		return err
 	}
 
@@ -398,7 +482,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
 		log.Errorf("error save site file %v", err)
-		return (err)
+		return err
 	}
 
 	fmt.Printf("received site\n\n")

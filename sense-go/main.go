@@ -278,7 +278,8 @@ func initGlobals() {
 		//		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
 	}
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
-		return
+		fmt.Printf("Exiting because of bad configuration\n")
+		os.Exit(1)
 	}
 	globals.MySite.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
 	//	fmt.Printf("done getting config from server %v\n\n", globals.MySite)
@@ -318,7 +319,7 @@ func setupGPIO() {
 
 func setupPhMonitor() {
 	log.Infof("ezo mydevice %v, mystation %v", globals.MyDevice, globals.MyStation)
-	globals.ValidateConfigured()
+	globals.ValidateConfigured("setupPhMonitor")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		phsensor.StartEzoDriver()
 	} else {
