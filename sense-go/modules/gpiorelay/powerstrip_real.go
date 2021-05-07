@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/log"
-	"github.com/stianeikeland/go-rpio"
+	"github.com/stianeikeland/go-rpio/v4"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -23,6 +23,23 @@ type RealPowerStrip struct {
 
 var singletonPowerstrip = RealPowerStrip{Real: true}
 
+
+func DoATest(pinnum int) {
+	fmt.Printf("DoATest %d\n", pinnum)
+	if err := rpio.Open(); err != nil {
+		fmt.Printf("error on pin %d %v\n", pinnum,err)
+		return
+	}
+	pin:= rpio.Pin(pinnum)
+	pin.Output()
+	for i := 0; i < 10; i++  {
+		fmt.Printf("set %d lo \n", pinnum)
+		pin.Low()
+		time.Sleep(5 * time.Second)
+		fmt.Printf("set %d hi \n", pinnum)
+		pin.High()
+	}
+}
 func NewPowerstripService() PowerstripService {
 	return &singletonPowerstrip
 }
@@ -46,15 +63,16 @@ func (r *RealPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool
 
 func (r *RealPowerStrip) InitRpioPins() {
 	log.Infof("InitRpioPins")
-	for i := 0; i < len(globals.MyDevice.ACOutlets) && (i < 8); i++ {
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		log.Infof("initing BCM%d controlling the device named %s", globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name)
-		pins[i] = rpio.Pin(globals.MyDevice.ACOutlets[i].BCMPinNumber)
-		log.Infof("pins[i] = %v", pins[i])
+		pins[globals.MyDevice.ACOutlets[i].Index] = rpio.Pin(globals.MyDevice.ACOutlets[i].BCMPinNumber)
+		log.Infof("pins[%d] = %v", globals.MyDevice.ACOutlets[i].Index,pins[globals.MyDevice.ACOutlets[i].Index])
 		if globals.RunningOnUnsupportedHardware() {
 			log.Infof("Skipping pin output because we're running on windows")
 			continue
 		}
-		pins[i].Output()
+		log.Debugf("Setting BCM%d to output mode",globals.MyDevice.ACOutlets[i].BCMPinNumber)
+		pins[globals.MyDevice.ACOutlets[i].Index].Output()
 	}
 }
 
@@ -79,6 +97,7 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 	log.Infof("TurnOffOutletByName %s", name)
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
+			log.Infof("offbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
 			singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, false)
 			return
@@ -105,6 +124,7 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 	log.Infof("turnOnOutletByName %s force %v", name, force)
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
+			log.Infof("onbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
 			singletonPowerstrip.TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, true)
 			return
@@ -128,36 +148,43 @@ func (r *RealPowerStrip) TurnAllOff(timeout time.Duration) {
 }
 
 func (r *RealPowerStrip) TurnOnOutlet(index int) {
-	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+	pins[index].Low()
+/*	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Index == index {
 			globals.MyDevice.ACOutlets[i].PowerOn = true
 			if globals.RunningOnUnsupportedHardware() {
 				log.Infof("Skipping pin LOW because we're running on windows")
 				continue
 			}
-			log.Debugf("TurnOn setting pin LOW for outlet %s", globals.MyDevice.ACOutlets[i].Name)
+			log.Debugf("TurnOn setting index %d BCM%d LOW for outlet %s", globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name)
 			pins[index].Low()
 			break
 		}
 	}
+
+ */
 }
 
 func (r *RealPowerStrip) TurnOffOutlet(index int) {
-	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+	pins[index].High()
+
+/*	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Index == index {
 			globals.MyDevice.ACOutlets[i].PowerOn = false
 			if globals.RunningOnUnsupportedHardware() {
 				log.Infof("Skipping pin HIGH because we're running on windows")
 				continue
 			}
-			log.Debugf("TurnOff setting pin HIGH for outlet %s", globals.MyDevice.ACOutlets[i].Name)
+			log.Debugf("TurnOff setting index %d BCM%d LOW for outlet %s", globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name)
 			pins[index].High()
 			break
 		}
 	}
+
+ */
 }
 
-func (r *RealPowerStrip) runPinToggler(isTest bool) {
+func (r *RealPowerStrip) RunPinToggler(isTest bool) {
 	log.Infof("pins %v", pins)
 	for i := 0; i < 8; i++ {
 		log.Debugf("setting up pin[%d] %v", i, pins[i])

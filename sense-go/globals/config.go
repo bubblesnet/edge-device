@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// Site
 /**
 Top-level object in the data hierarchy.  A site is identified by the user/owner
 and contains multiple stations.
@@ -28,6 +29,7 @@ type Site struct {
 	Stations           []Station `json:"stations,omitempty"`
 }
 
+// Station
 /**
 A station is a grow-unit, typically either a cabinet or a tent.  A station
 contains multiple edge devices, typically Raspberry Pi.
@@ -69,6 +71,7 @@ type Station struct {
 	TamperSpec             Tamper          `json:"tamper,omitempty"`
 }
 
+// EdgeDevice
 /**
 An EdgeDevice is a single-board-computer that, with the other
 AttachedDevices in the Station, implements the intelligence of the Station
@@ -88,6 +91,7 @@ type EdgeDevice struct {
 	ACOutlets                         []ACOutlet     `json:"ac_outlets,omitempty"`
 }
 
+// DeviceModule
 /**
 A DeviceModule is typically an add-on board attached to the edge device that
 generates one or more types of measurements.  An AttachedDevice can have multiple
@@ -143,26 +147,6 @@ type Tamper struct {
 	Zmove float64 `json:"zmove"`
 }
 
-/*
-type Configuration1 struct {
-	ControllerHostName                string           `json:"controller_hostname"`
-	ControllerAPIPort                 int              `json:"controller_api_port"`
-	UserID                            int64            `json:"userid"`
-	DeviceID                          int64            `json:"deviceid"`
-	Stage                             string           `json:"stage,omitempty"`
-	LightOnHour                       int              `json:"light_on_hour,omitempty"`
-	StageSchedules                    []StageSchedule  `json:"stage_schedules,omitempty"`
-	Camera                            PiCam            `json:"camera,omitempty"`
-	DeviceSettings                    Station          `json:"device_settings"`
-	LogLevel                          string           `json:"log_level,omitempty"`
-	AttachedDevices                   []AttachedDevice `json:"edge_devices"`
-	AutomaticControl                  bool             `json:"automatic_control"`
-	TimeBetweenSensorPollingInSeconds int64            `json:"time_between_sensor_polling_in_seconds"`
-	TamperSpec                        Tamper           `json:"tamper"`
-}
-
-*/
-
 type ACOutlet struct {
 	Name         string `json:"name,omitempty"`
 	Index        int    `json:"index,omitempty"`
@@ -204,35 +188,50 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 		fmt.Printf("filestr = %s\n", str)
 		return err
 	}
-	//	fmt.Printf("data = %v\n", *site)
-	found := false
-	for i := 0; i < len(site.Stations) && !found; i++ {
-		for j := 0; j < len(site.Stations[i].EdgeDevices) && !found; j++ {
-			//			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
-			if MyDeviceID == site.Stations[i].EdgeDevices[j].DeviceID {
-				//				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[i].EdgeDevices[j])
-				MyStation = &site.Stations[i]
-				MyDevice = &site.Stations[i].EdgeDevices[j]
-				found = true
-			}
+	success := setMyStation(MySite)
+	if !success {
+		if len(site.Stations) == 0 {
+			fmt.Printf("NO STATIONS IN THIS SITE!! %v\n", site)
+		} else {
+			fmt.Printf("MyStation not found???\n")
 		}
-	}
-	if MyStation == nil {
 		return errors.New(fmt.Sprintf("DeviceID %d not found in %v", MyDeviceID, site.Stations))
 	}
+	fmt.Printf("my station is set to %v\n", MyStation)
 	//	fmt.Printf("MyStation = %v\n", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
-			log.Infof("Current stage is %s - schedule is %v", MyStation.CurrentStage, currentStageSchedule)
+			fmt.Printf("Current stage is %s - schedule is %v", MyStation.CurrentStage, currentStageSchedule)
 			return nil
 		}
 	}
 	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.CurrentStage)
+
+	fmt.Printf("%s\n",errstr)
 	log.Error(errstr)
 	return errors.New(errstr)
 }
 
+func setMyStation(site Site) (success bool){
+	//	fmt.Printf("data = %v\n", *site)
+	found := false
+	fmt.Printf("searching %d stations\n", len(site.Stations))
+	for stationIndex := 0; stationIndex < len(site.Stations) && !found; stationIndex++ {
+		fmt.Printf("searching %d devices\n", len(site.Stations[stationIndex].EdgeDevices))
+		for deviceIndex := 0; deviceIndex < len(site.Stations[stationIndex].EdgeDevices) && !found; deviceIndex++ {
+			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
+			if MyDeviceID == site.Stations[stationIndex].EdgeDevices[deviceIndex].DeviceID {
+				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
+				MyStation = &site.Stations[stationIndex]
+				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
+				return true
+			}
+		}
+	}
+	fmt.Printf("Could not set MyStation and MyDevice!!\n")
+	return false
+}
 // CustomHandler is your custom handler
 type CustomHandler struct {
 	// whatever properties you need
@@ -374,8 +373,13 @@ func ValidateConfigured(situation string) (err error) {
 		time.Sleep(60*time.Second)
 		return errors.New("nil or wrong type MyStation")
 	}
-	if MyStation.StationID < 0 {
-		fmt.Printf("<0 MyStation.StationID\n")
+	if MyStation == nil || MyStation.StationID < 0 {
+		if MyStation == nil {
+			fmt.Printf("nil MyStation\n")
+
+		} else {
+			fmt.Printf("<0 MyStation.StationID\n")
+		}
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		time.Sleep(60*time.Second)
 		return errors.New("bad MyStation.StationID")
@@ -418,6 +422,15 @@ func ValidateConfigured(situation string) (err error) {
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		time.Sleep(60*time.Second)
 		return errors.New(fmt.Sprintf("bad TamperSpec.Zmove %f",MyStation.TamperSpec.Zmove))
+	}
+
+	// is there at least ONE device in the station?
+	if t, ok := interface{}(MyStation.EdgeDevices).([]EdgeDevice); ok == false {
+		fmt.Printf("ValidateConfigured (%s) (MyStation).(EdgeDevices context %s should be %T, is %T\n", situation, "[]EdgeDevice]", t, MyStation)
+		log.Errorf(" context %s should be %T, is %T", "[]EdgeDevice", t, MyStation.EdgeDevices)
+		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
+		time.Sleep(60*time.Second)
+		return errors.New("no edge devices configured in mystation")
 	}
 
 	return nil
@@ -464,9 +477,15 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	}
 
 	if newconfig.Stations == nil {
+		fmt.Printf("No stations\n")
 		log.Fatalf("stations is nil!!!")
 	}
 	MySite.Stations = newconfig.Stations
+	success := setMyStation(MySite)
+	if !success {
+		fmt.Printf("No station\n")
+		return errors.New("NO station!!")
+	}
 	//	js, _ := json.Marshal(MySite)
 	//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
 	if err = ValidateConfigured("getConfigFromServer"); err != nil {

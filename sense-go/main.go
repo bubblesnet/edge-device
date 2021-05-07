@@ -270,6 +270,7 @@ func initGlobals() {
 	}
 	fmt.Printf("Read deviceid %d\n", globals.MyDeviceID)
 	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		fmt.Printf("ReadFromPersistentStore failed - using default config\n")
 		globals.MySite.ControllerHostName = "192.168.21.237"
 		globals.MySite.ControllerAPIPort = 3003
 		globals.MySite.UserID = 90000009
@@ -278,7 +279,8 @@ func initGlobals() {
 		//		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
 	}
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
-		fmt.Printf("Exiting because of bad configuration\n")
+		fmt.Printf("Exiting because of bad configuration - sleeping for 60 seconds to allow intervention\n")
+		time.Sleep(60*time.Second)
 		os.Exit(1)
 	}
 	globals.MySite.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
@@ -302,6 +304,10 @@ func initGlobals() {
 
 func setupGPIO() {
 	rpio.OpenRpio()
+/*	defer func() {
+		rpio.CloseRpio()
+	}() */
+
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
 		gpiorelay.PowerstripSvc.InitRpioPins()
@@ -382,7 +388,6 @@ func startGoRoutines(onceOnly bool) {
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
-
 }
 
 func main() {
@@ -410,6 +415,7 @@ func testableSubmain(isUnitTest bool) {
 	defer cancel()
 
 	setupGPIO()
+
 	setupPhMonitor()
 	numGoRoutines := countGoRoutines()
 	var wg sync.WaitGroup

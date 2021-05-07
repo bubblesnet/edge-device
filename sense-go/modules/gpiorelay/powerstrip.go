@@ -16,7 +16,7 @@ type PowerstripService interface {
 	TurnAllOff(timeout time.Duration)
 	TurnOnOutlet(index int)
 	TurnOffOutlet(index int)
-	runPinToggler(isTest bool)
+	RunPinToggler(isTest bool)
 }
 
 

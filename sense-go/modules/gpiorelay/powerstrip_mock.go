@@ -47,5 +47,5 @@ func (m *MockPowerStrip)TurnOnOutlet( index int ) {
 func (m *MockPowerStrip)TurnOffOutlet( index int ) {
 }
 
-func (m *MockPowerStrip)runPinToggler(isTest bool) {
+func (m *MockPowerStrip)RunPinToggler(isTest bool) {
 }
