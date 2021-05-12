@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-// var pins = [...] rpio.Pin { rpio.Pin(17), rpio.Pin(27), rpio.Pin(22), rpio.Pin(5), rpio.Pin(6), rpio.Pin(13), rpio.Pin(19), rpio.Pin(26) }
 var pins [8]rpio.Pin
 
 type RealPowerStrip struct {
@@ -22,7 +21,6 @@ type RealPowerStrip struct {
 }
 
 var singletonPowerstrip = RealPowerStrip{Real: true}
-
 
 func DoATest(pinnum int) {
 	fmt.Printf("DoATest %d\n", pinnum)
@@ -149,39 +147,10 @@ func (r *RealPowerStrip) TurnAllOff(timeout time.Duration) {
 
 func (r *RealPowerStrip) TurnOnOutlet(index int) {
 	pins[index].Low()
-/*	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].Index == index {
-			globals.MyDevice.ACOutlets[i].PowerOn = true
-			if globals.RunningOnUnsupportedHardware() {
-				log.Infof("Skipping pin LOW because we're running on windows")
-				continue
-			}
-			log.Debugf("TurnOn setting index %d BCM%d LOW for outlet %s", globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name)
-			pins[index].Low()
-			break
-		}
-	}
-
- */
 }
 
 func (r *RealPowerStrip) TurnOffOutlet(index int) {
 	pins[index].High()
-
-/*	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].Index == index {
-			globals.MyDevice.ACOutlets[i].PowerOn = false
-			if globals.RunningOnUnsupportedHardware() {
-				log.Infof("Skipping pin HIGH because we're running on windows")
-				continue
-			}
-			log.Debugf("TurnOff setting index %d BCM%d LOW for outlet %s", globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name)
-			pins[index].High()
-			break
-		}
-	}
-
- */
 }
 
 func (r *RealPowerStrip) RunPinToggler(isTest bool) {

@@ -56,12 +56,14 @@ lastHumidity = 0.0
 lastPressure = 0.0
 lastLight = 0.0
 
-global temperature_sensor_name
 global humidity_sensor_name
 global pressure_sensor_name
+global temperature_sensor_name
 global temperature_measurement_name
 global humidity_measurement_name
 global pressure_measurement_name
+global light_sensor_name
+global light_measurement_name
 
 temperature_sensor_name = "UNKNOWN"
 humidity_sensor_name = "UNKNOWN"
@@ -69,6 +71,8 @@ pressure_sensor_name = "UNKNOWN"
 temperature_measurement_name = 'UNKNOWN'
 humidity_measurement_name = "UNKNOWN"
 pressure_measurement_name = "UNKNOWN"
+light_sensor_name = "UNKNOWN"
+light_measurement_name = "UNKNOWN"
 
 
 def read_deviceid(filename):
@@ -113,8 +117,11 @@ def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
         data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['units'] = 'C'
         msg['value'] = (data.temperature * 1.8) + 32.0
         msg[measurement_name] = msg['value']
+        msg['floatvalue'] = msg['value']
+        msg['value_name'] = measurement_name
         msg['direction'] = ''
         if data.temperature > lastTemp:
             msg['direction'] = "up"
@@ -127,7 +134,7 @@ def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
         msg['tempC'] = data.temperature
         msg['tempF'] = (data.temperature * 1.8) + 32.0
     except Exception as ee:
-        logging.debug("bme280 error %s" % e)
+        logging.debug("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
@@ -138,7 +145,10 @@ def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name):
         data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['units'] = '%'
+        msg['value_name'] = measurement_name
         msg['value'] = data.humidity
+        msg['floatvalue'] = msg['value']
         msg[measurement_name] = data.humidity
         direction = ""
         if data.humidity > lastHumidity:
@@ -162,7 +172,10 @@ def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name):
         data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['units'] = 'hPa'
+        msg['value_name'] = measurement_name
         msg['value'] = data.pressure
+        msg['floatvalue'] = msg['value']
         msg[measurement_name] = data.pressure
         direction = ""
         if data.pressure > lastPressure:
@@ -196,16 +209,33 @@ def is_our_device(module_type):
 
     return False
 
+def bh1750_names():
+    global my_site
+    global my_device
+    global light_sensor_name
+    global light_measurement_name
+
+    print(my_device)
+    for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == "bh1750":
+            for included_sensor in module['included_sensors']:
+                if 'light' in included_sensor['measurement_name']:
+                    light_sensor_name = included_sensor['sensor_name']
+                    light_measurement_name = included_sensor['measurement_name']
+
 
 def bme280_names():
     global my_site
     global my_device
-    global temperature_sensor_name
     global humidity_sensor_name
     global pressure_sensor_name
+    global temperature_sensor_name
     global temperature_measurement_name
     global humidity_measurement_name
     global pressure_measurement_name
+    global light_sensor_name
+    global light_measurement_name
+
     print(my_device)
     for module in my_device['modules']:
         if module['container_name'] == 'sense-python' and module['module_type'] == "bme280":
@@ -227,7 +257,10 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
     try:
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['value_name'] = measurement_name
+        msg['units'] = 'lux'
         msg['value'] = bh1750.readLight(LightAddress)
+        msg['floatvalue'] = msg['value']
         msg[measurement_name] = msg['value']
         direction = ""
         if msg['value'] > lastLight:
@@ -240,7 +273,6 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
         msg[direction_name] = direction
         lastLight = msg['value']
 
-        #        logging.debug("Read bh1750 light at 0x%x as %f" % (deviceAddressList['light'], msg['light']))
     except Exception as ee:
         logging.debug('BH1750 at 0x%2x failed to read %s' % (LightAddress, ee))
         logging.debug(traceback.format_exc())
@@ -261,6 +293,9 @@ def append_axl345_data(msg):
 
 def report_polled_sensor_parameters(i2cbus):
     global my_site
+    global light_sensor_name
+    global light_measurement_name
+
     #    logging.debug("reportPolledSensorParameters")
 
     if is_our_device('bh1750'):
@@ -268,7 +303,7 @@ def report_polled_sensor_parameters(i2cbus):
         # If reading the sensor hardware fails, pass the exception up here and
         # we'll skip sending the half-complete message
         try:
-            append_bh1750_data(msg, 'light_internal_sensor', 'light_internal')
+            append_bh1750_data(msg, light_sensor_name, light_measurement_name)
             send_message(msg)
         except Exception as ee:
             logging.error(e)
@@ -347,6 +382,7 @@ if __name__ == "__main__":
         exit(1)
 
     bme280_names()
+    bh1750_names()
     LightAddress = get_address('bh1750')
 
     # Create library object using our Bus I2C port

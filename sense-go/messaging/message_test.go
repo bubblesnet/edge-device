@@ -119,6 +119,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 				SensorName:        "test",
 				MeasurementName: 	"test_measurement",
 				Value:             99.99,
+				FloatValue:             99.99,
 				Units:             "Volts",
 				Direction: "up",
 			},

@@ -24,6 +24,7 @@ type ADCSensorMessage struct {
 	MeasurementName string `json:"measurement_name"`
 	ChannelNumber int `json:"channel_number,omitempty"`
 	Value float64 `json:"value,omitempty"`
+	FloatValue float64 `json:"floatvalue,omitempty"`
 	Units string	`json:"units"`
 	Direction string `json:"direction"`
 	Gain    int	`json:"gain,omitempty"`
@@ -38,7 +39,8 @@ type GenericSensorMessage struct {
 	MessageType string `json:"message_type"`
 	SensorName string `json:"sensor_name"`
 	MeasurementName string `json:"measurement_name"`
-	Value float64 `json:"value"`
+	Value float64 `json:"value,omitempty"`
+	FloatValue float64 `json:"floatvalue,omitempty"`
 	Units string	`json:"units"`
 	Direction string `json:"direction"`
 }
@@ -51,7 +53,8 @@ type DistanceSensorMessage struct {
 	MessageType string `json:"message_type"`
 	SensorName string `json:"sensor_name"`
 	MeasurementName string `json:"measurement_name"`
-	Value float64 `json:"value"`
+	Value float64 `json:"value,omitempty"`
+	FloatValue float64 `json:"floatvalue,omitempty"`
 	Units string `json:"units"`
 	Direction string `json:"direction"`
 	DistanceCm float64 `json:"distance_cm,omitempty"`
@@ -66,7 +69,8 @@ type PhMessage struct {
 	MessageType string `json:"message_type"`
 	SensorName string `json:"sensor_name"`
 	MeasurementName string `json:"measurement_name"`
-	Value float64 `json:"value"`
+	Value float64 `json:"value,omitempty"`
+	FloatValue float64 `json:"floatvalue,omitempty"`
 	Units string `json:"units"`
 	Direction string `json:"direction"`
 }
@@ -79,7 +83,8 @@ type TamperSensorMessage struct {
 	MessageType string `json:"message_type"`
 	SensorName string `json:"sensor_name"`
 	MeasurementName string `json:"measurement_name"`
-	Value float64 `json:"value"`
+	Value float64 `json:"value,omitempty"`
+	FloatValue float64 `json:"floatvalue,omitempty"`
 	Units string `json:"units"`
 	Direction string `json:"direction"`
 	XMove float64	`json:"xmove,omitempty"`
@@ -146,6 +151,7 @@ func NewGenericSensorMessage( sensor_name string, measurement_name string, value
 		SampleTimestamp: getNowMillis(),
 		MessageType:       "measurement",
 		Value:             value,
+		FloatValue:             value,
 		Units: units,
 		Direction: direction,
 	}
@@ -165,6 +171,7 @@ func NewADCSensorMessage( sensor_name string, measurement_name string, value flo
 		SensorName: sensor_name,
 		MeasurementName: measurement_name,
 		Value:             value,
+		FloatValue:             value,
 		Units: units,
 		Direction: direction,
 		ChannelNumber: channel,
@@ -187,6 +194,7 @@ func NewDistanceSensorMessage( sensor_name string, measurement_name string, valu
 		SensorName: sensor_name,
 		MeasurementName: measurement_name,
 		Value:             value,
+		FloatValue:	value,
 		Units: units,
 		Direction: direction,
 		DistanceCm: distanceCm,
@@ -208,6 +216,7 @@ func NewTamperSensorMessage( sensor_name string, value float64, units string, di
 		SensorName: sensor_name,
 		MeasurementName: "movement",
 		Value:             value,
+		FloatValue:             value,
 		Units: units,
 		Direction: direction,
 		XMove: moveX,

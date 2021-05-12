@@ -38,26 +38,27 @@ type Station struct {
 	StationID              int64           `json:"stationid"`
 	HeightSensor           bool            `json:"height_sensor,omitempty"`
 	Humidifier             bool            `json:"humidifier,omitempty"`
-	HumiditySensor         bool            `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool            `json:"humidity_sensor_external,omitempty"`
-	Heater                 bool            `json:"heater,omitempty"`
-	ThermometerTop         bool            `json:"thermometer_top,omitempty"`
-	ThermometerMiddle      bool            `json:"thermometer_middle,omitempty"`
-	ThermometerBottom      bool            `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal    bool            `json:"thermometer_external,omitempty"`
-	ThermometerWater       bool            `json:"thermometer_water,omitempty"`
-	WaterPump              bool            `json:"waterPump,omitempty"`
-	AirPump                bool            `json:"airPump,omitempty"`
-	LightSensor            bool            `json:"light_sensor_internal,omitempty"`
-	StationDoorSensor      bool            `json:"station_door_sensor,omitempty"`
-	OuterDoorSensor        bool            `json:"outer_door_sensor,omitempty"`
-	MovementSensor         bool            `json:"movement_sensor,omitempty"`
-	PressureSensor         bool            `json:"pressure_sensors,omitempty"`
-	RootPhSensor           bool            `json:"root_ph_sensor,omitempty"`
-	EnclosureType          string          `json:"enclosure_type,omitempty"`
-	WaterLevelSensor       bool            `json:"water_level_sensor,omitempty"`
-	IntakeFan              bool            `json:"intakeFan,omitempty"`
-	ExhaustFan             bool            `json:"exhaustFan,omitempty"`
+	HumiditySensor         bool   `json:"humidity_sensor_internal,omitempty"`
+	ExternalHumiditySensor bool   `json:"humidity_sensor_external,omitempty"`
+	Heater                 bool   `json:"heater,omitempty"`
+	ThermometerTop         bool   `json:"thermometer_top,omitempty"`
+	ThermometerMiddle      bool   `json:"thermometer_middle,omitempty"`
+	ThermometerBottom      bool   `json:"thermometer_bottom,omitempty"`
+	ThermometerExternal    bool   `json:"thermometer_external,omitempty"`
+	ThermometerWater       bool   `json:"thermometer_water,omitempty"`
+	WaterPump              bool   `json:"waterPump,omitempty"`
+	AirPump                bool   `json:"airPump,omitempty"`
+	LightSensorInternal    bool   `json:"light_sensor_internal,omitempty"`
+	LightSensorExternal    bool   `json:"light_sensor_external,omitempty"`
+	StationDoorSensor      bool   `json:"station_door_sensor,omitempty"`
+	OuterDoorSensor        bool   `json:"outer_door_sensor,omitempty"`
+	MovementSensor         bool   `json:"movement_sensor,omitempty"`
+	PressureSensor         bool   `json:"pressure_sensors,omitempty"`
+	RootPhSensor           bool   `json:"root_ph_sensor,omitempty"`
+	EnclosureType          string `json:"enclosure_type,omitempty"`
+	WaterLevelSensor       bool   `json:"water_level_sensor,omitempty"`
+	IntakeFan              bool   `json:"intakeFan,omitempty"`
+	ExhaustFan             bool   `json:"exhaustFan,omitempty"`
 	HeatLamp               bool            `json:"heatLamp,omitempty"`
 	HeatingPad             bool            `json:"heatingPad,omitempty"`
 	LightBloom             bool            `json:"lightBloom,omitempty"`

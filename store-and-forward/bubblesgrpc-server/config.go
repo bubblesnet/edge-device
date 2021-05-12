@@ -35,7 +35,7 @@ type Station struct {
 	StationID              int64 `json:"stationid"`
 	HeightSensor           bool  `json:"height_sensor,omitempty"`
 	Humidifier             bool  `json:"humidifier,omitempty"`
-	HumiditySensor         bool  `json:"humidity_sensor_internal,omitempty"`
+	HumiditySensor         bool   `json:"humidity_sensor_internal,omitempty"`
 	ExternalHumiditySensor bool   `json:"humidity_sensor_external,omitempty"`
 	Heater                 bool   `json:"heater,omitempty"`
 	ThermometerTop         bool   `json:"thermometer_top,omitempty"`
@@ -45,7 +45,8 @@ type Station struct {
 	ThermometerWater       bool   `json:"thermometer_water,omitempty"`
 	WaterPump              bool   `json:"waterPump,omitempty"`
 	AirPump                bool   `json:"airPump,omitempty"`
-	LightSensor            bool   `json:"light_sensor_internal,omitempty"`
+	LightSensorInternal    bool   `json:"light_sensor_internal,omitempty"`
+	LightSensorExternal    bool   `json:"light_sensor_external,omitempty"`
 	StationDoorSensor      bool   `json:"station_door_sensor,omitempty"`
 	OuterDoorSensor        bool   `json:"outer_door_sensor,omitempty"`
 	MovementSensor         bool   `json:"movement_sensor,omitempty"`

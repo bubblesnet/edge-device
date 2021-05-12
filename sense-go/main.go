@@ -210,6 +210,17 @@ func listenForCommands(isUnitTest bool) (err error) {
 	return nil
 }
 
+func initializeOutletsFromConfiguration() {
+	ps := gpiorelay.NewPowerstripService()
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].PowerOn {
+			ps.TurnOnOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
+		} else {
+			ps.TurnOffOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
+		}
+	}
+}
+
 func initializeOutletsForAutomation() {
 	ControlLight(true)
 	ControlHeat(true)
@@ -311,11 +322,11 @@ func setupGPIO() {
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
 		gpiorelay.PowerstripSvc.InitRpioPins()
+		gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
 		if globals.MySite.AutomaticControl {
-			gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
 			initializeOutletsForAutomation()
 		} else {
-			gpiorelay.PowerstripSvc.TurnAllOff(1)
+			initializeOutletsFromConfiguration()
 		}
 		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MySite.AutomaticControl)
 	} else {
