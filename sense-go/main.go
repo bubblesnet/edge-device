@@ -120,6 +120,9 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 			camera.TakeAPicture()
 		}
 		break
+	case "status":
+		gpiorelay.PowerstripSvc.ReportAll(200*time.Millisecond)
+		break
 	case "switch":
 		{
 			if countACOutlets() == 0 {

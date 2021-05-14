@@ -13,6 +13,7 @@ type PowerstripService interface {
 	TurnOffOutletByName(name string, force bool)
 	isOutletOn(name string) bool
 	TurnOnOutletByName(name string, force bool)
+	ReportAll(timeout time.Duration)
 	TurnAllOff(timeout time.Duration)
 	TurnOnOutlet(index int)
 	TurnOffOutlet(index int)

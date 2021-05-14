@@ -75,7 +75,9 @@ func ReadPh(once_only bool) error {
 		if once_only {
 			break
 		}
-		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
+//		x := globals.MyDevice.TimeBetweenSensorPollingInSeconds
+
+		time.Sleep(30*time.Second)
 	}
 	log.Debugf("returning %v from readph", e)
 	return e

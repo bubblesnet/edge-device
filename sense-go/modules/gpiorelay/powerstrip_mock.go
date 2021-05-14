@@ -37,6 +37,10 @@ func (m *MockPowerStrip)isOutletOn( name string ) bool {
 func (m *MockPowerStrip)TurnOnOutletByName( name string, force bool ) {
 }
 
+func (m *MockPowerStrip)ReportAll(timeout time.Duration) {
+	print("Reporting ALl")
+}
+
 func (m *MockPowerStrip)TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
 }

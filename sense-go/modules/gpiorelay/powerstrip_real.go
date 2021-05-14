@@ -78,6 +78,7 @@ func (r *RealPowerStrip) TurnAllOn(timeout time.Duration) {
 	log.Info("Toggling all pins ON")
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		log.Infof("TurnAllOn Turning on outlet %s", globals.MyDevice.ACOutlets[i].Name)
+		globals.MyDevice.ACOutlets[i].PowerOn = true
 		singletonPowerstrip.TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
 		singletonPowerstrip.SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name, true)
 		if timeout > 0 {
@@ -96,6 +97,7 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
 			log.Infof("offbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
+			globals.MyDevice.ACOutlets[i].PowerOn = false
 			singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, false)
 			return
@@ -123,6 +125,7 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
 			log.Infof("onbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
+			globals.MyDevice.ACOutlets[i].PowerOn = true
 			singletonPowerstrip.TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, true)
 			return
@@ -131,14 +134,26 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 	log.Errorf("error: couldn't find outlet named %s", name)
 }
 
+func (r *RealPowerStrip) ReportAll(timeout time.Duration) {
+	fmt.Printf("Reporting all switch statuses [%d]\n", len(globals.MyDevice.ACOutlets) )
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		fmt.Printf("ReportAll outlet %s\n", globals.MyDevice.ACOutlets[i].Name)
+		singletonPowerstrip.SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name, globals.MyDevice.ACOutlets[i].PowerOn)
+		if timeout > 0 {
+			time.Sleep(timeout)
+		}
+	}
+}
+
 func (r *RealPowerStrip) TurnAllOff(timeout time.Duration) {
 	print("Toggling pins OFF")
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		fmt.Printf("TurnAllOff Turning off outlet %s\n", globals.MyDevice.ACOutlets[i].Name)
+		globals.MyDevice.ACOutlets[i].PowerOn = false
 		singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
-		fmt.Printf("TurnAllOff 1 after\n")
+//		fmt.Printf("TurnAllOff 1 after\n")
 		singletonPowerstrip.SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name, false)
-		fmt.Printf("TurnAllOff 2 after\n")
+//		fmt.Printf("TurnAllOff 2 after\n")
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
 		}
