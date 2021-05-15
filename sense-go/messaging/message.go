@@ -94,6 +94,7 @@ type TamperSensorMessage struct {
 
 type SwitchStatusChangeMessage struct {
 	DeviceId int64`json:"deviceid"`
+	StationId int64`json:"stationid"`
 	ContainerName string `json:"container_name"`
 	ExecutableVersion string `json:"executable_version"`
 	EventTimestamp int64 `json:"event_timestamp,omitempty"`
@@ -112,6 +113,7 @@ type PictureTakenMessage struct {
 func NewSwitchStatusChangeMessage( switch_name string, on bool ) (pmsg *SwitchStatusChangeMessage){
 	msg := SwitchStatusChangeMessage{
 		DeviceId: globals.MyDevice.DeviceID,
+		StationId: globals.MyStation.StationID,
 		ContainerName:     globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,

@@ -122,6 +122,7 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 		break
 	case "status":
 		gpiorelay.PowerstripSvc.ReportAll(200*time.Millisecond)
+		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MySite.AutomaticControl)
 		break
 	case "switch":
 		{
