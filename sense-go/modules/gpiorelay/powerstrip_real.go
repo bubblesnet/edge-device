@@ -93,9 +93,9 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 		//		SendSwitchStatusChangeEvent(name,false)
 		return
 	}
-	log.Infof("TurnOffOutletByName %s", name)
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
+			log.Infof("TurnOffOutletByName %s", name)
 			log.Infof("offbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
 			globals.MyDevice.ACOutlets[i].PowerOn = false
 			singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
@@ -103,7 +103,7 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 			return
 		}
 	}
-	log.Errorf("error: couldn't find outlet named %s", name)
+//	log.Warnf("Not my switch %s", name)
 }
 
 func (r *RealPowerStrip) isOutletOn(name string) bool {
@@ -121,9 +121,9 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 		//		SendSwitchStatusChangeEvent(name,true)
 		return
 	}
-	log.Infof("turnOnOutletByName %s force %v", name, force)
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
+			log.Infof("turnOnOutletByName %s force %v", name, force)
 			log.Infof("onbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
 			globals.MyDevice.ACOutlets[i].PowerOn = true
 			singletonPowerstrip.TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
@@ -131,7 +131,7 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 			return
 		}
 	}
-	log.Errorf("error: couldn't find outlet named %s", name)
+//	log.Warnf("Not my switch %s", name)
 }
 
 func (r *RealPowerStrip) ReportAll(timeout time.Duration) {

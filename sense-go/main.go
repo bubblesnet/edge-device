@@ -149,10 +149,10 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 				}
 			} else if switchMessage.On == true {
 				log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
-				gpiorelay.PowerstripSvc.TurnOnOutletByName(switchMessage.SwitchName, true)
+				gpiorelay.NewPowerstripService().TurnOnOutletByName(switchMessage.SwitchName, true)
 			} else {
 				log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
-				gpiorelay.PowerstripSvc.TurnOffOutletByName(switchMessage.SwitchName, true)
+				gpiorelay.NewPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true)
 			}
 			break
 		}

@@ -22,28 +22,32 @@ func setEnvironmentalControlString() {
 }
 
 func ControlOxygenation(force bool) {
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlList - no relay attached")
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlOxygenation - no relay attached")
+		return
 	}
-	gpiorelay.PowerstripSvc.TurnOnOutletByName("airPump", force)
+	gpiorelay.NewPowerstripService().TurnOnOutletByName("airPump", force)
 }
 func ControlRootWater(force bool) {
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlList - no relay attached")
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlRootWater - no relay attached")
+		return
 	}
-	gpiorelay.PowerstripSvc.TurnOnOutletByName("waterPump", force)
+	gpiorelay.NewPowerstripService().TurnOnOutletByName("waterPump", force)
 }
 func ControlAirflow(force bool) {
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlList - no relay attached")
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlAirflow - no relay attached")
+		return
 	}
-	gpiorelay.PowerstripSvc.TurnOnOutletByName("exhaustFan", force)
-	gpiorelay.PowerstripSvc.TurnOnOutletByName("intakeFan", force)
+	gpiorelay.NewPowerstripService().TurnOnOutletByName("exhaustFan", force)
+	gpiorelay.NewPowerstripService().TurnOnOutletByName("intakeFan", force)
 }
 
 func ControlLight(force bool) {
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlList - no relay attached")
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlLight - no relay attached")
+		return
 	}
 		localTimeHours := time.Now().Hour()
 	offsetHours := 5
@@ -57,7 +61,7 @@ func ControlLight(force bool) {
 	if globals.MyStation.CurrentStage == "germination" || globals.MyStation.CurrentStage == "seedling" || globals.MyStation.CurrentStage == "vegetative" {
 		// If it's time for grow light veg to be on
 		if inRange(globals.MyStation.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			gpiorelay.PowerstripSvc.TurnOnOutletByName(globals.GROWLIGHTVEG, force)
+			gpiorelay.NewPowerstripService().TurnOnOutletByName(globals.GROWLIGHTVEG, force)
 			veglight = true
 		} else {
 			// If it's time for grow light veg to be off
@@ -95,8 +99,9 @@ func inRange( starthour int, numhours int, currenthours int ) bool {
 }
 
 func ControlHeat(force bool) {
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlList - no relay attached")
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlHeat - no relay attached")
+		return
 	}
 
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
@@ -123,9 +128,9 @@ func ControlHeat(force bool) {
 				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
 				force = true
 			}
-			gpiorelay.PowerstripSvc.TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
-			gpiorelay.PowerstripSvc.TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
-			gpiorelay.PowerstripSvc.TurnOnOutletByName(globals.HEATER, false)   // MAKE SURE HEAT IS ON
+			gpiorelay.NewPowerstripService().TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
+			gpiorelay.NewPowerstripService().TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
+			gpiorelay.NewPowerstripService().TurnOnOutletByName(globals.HEATER, false)   // MAKE SURE HEAT IS ON
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
 		} else { // JUST RIGHT
@@ -144,8 +149,9 @@ func ControlHeat(force bool) {
 }
 
 func ControlHumidity(force bool) {
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlList - no relay attached")
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("ControlHumidity - no relay attached")
+		return
 	}
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity + 5.0
 	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
@@ -167,7 +173,8 @@ func ControlHumidity(force bool) {
 				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
 				force = true
 			}
-			gpiorelay.PowerstripSvc.TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
+
+			gpiorelay.NewPowerstripService().TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
 			globals.LocalCurrentState.Humidifier = true
 		} else { // JUST RIGHT
 			if globals.Lasthumidity < lowLimit {
