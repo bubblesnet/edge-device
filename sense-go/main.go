@@ -388,7 +388,7 @@ func startGoRoutines(onceOnly bool) {
 			}
 		}()
 	} else {
-		log.Warnf("No ads1115s configured - skipping A to D conversion")
+		log.Warnf("No ads1115s configured - skipping A to D conversion because %v", globals.MyStation.WaterLevelSensor)
 	}
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
