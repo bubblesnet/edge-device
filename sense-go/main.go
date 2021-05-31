@@ -65,19 +65,6 @@ func countACOutlets() int {
 	return len(globals.MyDevice.ACOutlets)
 }
 
-func isMySwitch(switchName string) bool {
-	if switchName == "automaticControl" {
-		return true
-	}
-
-	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].Name == switchName {
-			return true
-		}
-	}
-	return false
-}
-
 func processCommand(msg *stomp.Message) (resub bool, err error) {
 	if msg == nil || msg.Err != nil {
 		if msg != nil && msg.Err != nil {
@@ -102,7 +89,10 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 		SwitchName string `json:"switch_name"`
 		On         bool   `json:"on"`
 	}
-
+	type StageMessage struct {
+		Command    string `json:"command"`
+		StageName string `json:"stage_name"`
+	}
 	header := MessageHeader{}
 	err = json.Unmarshal(msg.Body, &header)
 	if err != nil {
@@ -112,6 +102,16 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 	log.Infof("listenForCommands parsed body into %v", header)
 	log.Infof("header.Command === %s", header.Command)
 	switch header.Command {
+	case "stage":
+		log.Infof("Changing stage via message %s", msg.Body )
+		stageMessage := StageMessage{}
+		if err := json.Unmarshal(msg.Body, &stageMessage); err != nil {
+			log.Errorf("couldn't parse stage message %s, %v", msg.Body, err )
+			break
+		}
+		log.Infof("listenForCommands parsed body into SwitchMessage %v", stageMessage)
+		globals.MyStation.CurrentStage =  stageMessage.StageName
+		break
 	case "picture":
 		if globals.MyDevice.Camera.PiCamera == false {
 			log.Infof("No camera configured, skipping picture")
@@ -121,8 +121,9 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 		}
 		break
 	case "status":
+		fmt.Printf("\n\nReceived status message\n\n")
 		gpiorelay.PowerstripSvc.ReportAll(200*time.Millisecond)
-		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MySite.AutomaticControl)
+		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
 		break
 	case "switch":
 		{
@@ -137,22 +138,22 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 				log.Errorf("listenForCommands switch error %v", err)
 				break
 			}
-			if !isMySwitch(switchMessage.SwitchName) {
+			if !gpiorelay.PowerstripSvc.IsMySwitch(switchMessage.SwitchName) {
 				log.Infof("Not my switch %s", switchMessage.SwitchName)
 				break
 			}
 			if switchMessage.SwitchName == "automaticControl" {
 				log.Infof("listenForCommands setting %s to %v", switchMessage.SwitchName, switchMessage.On)
-				globals.MySite.AutomaticControl = switchMessage.On
-				if globals.MySite.AutomaticControl {
+				globals.MyStation.AutomaticControl = switchMessage.On
+				if globals.MyStation.AutomaticControl {
 					initializeOutletsForAutomation() // Make sure the switches conform to currently configured automation
 				}
 			} else if switchMessage.On == true {
 				log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
-				gpiorelay.NewPowerstripService().TurnOnOutletByName(switchMessage.SwitchName, true)
+				gpiorelay.GetPowerstripService().TurnOnOutletByName(switchMessage.SwitchName, true)
 			} else {
 				log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
-				gpiorelay.NewPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true)
+				gpiorelay.GetPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true)
 			}
 			break
 		}
@@ -215,7 +216,7 @@ func listenForCommands(isUnitTest bool) (err error) {
 }
 
 func initializeOutletsFromConfiguration() {
-	ps := gpiorelay.NewPowerstripService()
+	ps := gpiorelay.GetPowerstripService()
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].PowerOn {
 			ps.TurnOnOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
@@ -245,7 +246,7 @@ func makeControlDecisions(once_only bool) {
 			log.Debugf("LocalCurrentState = %v", globals.LocalCurrentState)
 			//			log.Debugf("globals.Configuration = %v", globals.MySite)
 		}
-		if globals.MySite.AutomaticControl {
+		if globals.MyStation.AutomaticControl {
 			ControlLight(false)
 			ControlHeat(false)
 			ControlHumidity(false)
@@ -255,7 +256,7 @@ func makeControlDecisions(once_only bool) {
 		}
 		time.Sleep(time.Second)
 		i++
-		if i == 60 {
+		if i >= 60 {
 			i = 0
 		}
 		if once_only {
@@ -270,6 +271,7 @@ func reportVersion() {
 }
 
 func initGlobals() {
+	log.Infof("initGlobals")
 	globals.BubblesnetVersionMajorString = BubblesnetVersionMajorString
 	globals.BubblesnetVersionMinorString = BubblesnetVersionMinorString
 	globals.BubblesnetVersionPatchString = BubblesnetVersionPatchString
@@ -283,10 +285,15 @@ func initGlobals() {
 		fmt.Printf("error read device %v\n", err)
 		return
 	}
-	fmt.Printf("Read deviceid %d\n", globals.MyDeviceID)
+	globals.MySite.ControllerHostName, err = globals.ReadMyServerHostname(globals.PersistentStoreMountPoint, "", "hostname")
+	if err != nil {
+		fmt.Printf("error read serverHostname %v\n", err)
+		return
+	}
+	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerHostName)
 	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
 		fmt.Printf("ReadFromPersistentStore failed - using default config\n")
-		globals.MySite.ControllerHostName = "192.168.21.237"
+//		globals.MySite.ControllerHostName = serverHostname
 		globals.MySite.ControllerAPIPort = 3003
 		globals.MySite.UserID = 90000009
 		d := globals.EdgeDevice{DeviceID: globals.MyDeviceID}
@@ -327,12 +334,12 @@ func setupGPIO() {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
 		gpiorelay.PowerstripSvc.InitRpioPins()
 		gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
-		if globals.MySite.AutomaticControl {
+		if globals.MyStation.AutomaticControl {
 			initializeOutletsForAutomation()
 		} else {
 			initializeOutletsFromConfiguration()
 		}
-		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MySite.AutomaticControl)
+		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
 	}

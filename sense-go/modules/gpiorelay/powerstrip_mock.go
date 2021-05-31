@@ -12,9 +12,11 @@ type MockPowerStrip struct {
 }
 
 var singletonPowerstrip = MockPowerStrip{Real: true}
-func NewPowerstripService() PowerstripService {
+func GetPowerstripService() PowerstripService {
 	return &singletonPowerstrip
 }
+
+func (r *RealPowerStrip) IsMySwitch(switchName string) bool {return true}
 
 func (m *MockPowerStrip)SendSwitchStatusChangeEvent(switch_name string, on bool) {
 	log.Infof("Reporting switch %s status %v", switch_name, on)
@@ -38,7 +40,7 @@ func (m *MockPowerStrip)TurnOnOutletByName( name string, force bool ) {
 }
 
 func (m *MockPowerStrip)ReportAll(timeout time.Duration) {
-	print("Reporting ALl")
+	print("Reporting ALL")
 }
 
 func (m *MockPowerStrip)TurnAllOff(timeout time.Duration) {

@@ -52,6 +52,7 @@ var LocalCurrentState = LocalState {
 const INLETFAN string = "inletFan"
 const WATERPUMP string = "waterPump"
 const GROWLIGHTVEG string = "lightVegetative"
+const GROWLIGHTBLOOM string = "lightBloom"
 const HEATPAD string = "lightBloom"
 const HEATLAMP string = "heatLamp"
 const AIRPUMP string = "airPump"

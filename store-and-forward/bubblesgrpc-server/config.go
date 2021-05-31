@@ -8,8 +8,10 @@ import (
 	"github.com/go-playground/log"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 
@@ -182,6 +184,35 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 
 	id, err = strconv.ParseInt(idstring,10, 64)
 	return id, err
+}
+
+func WaitForConfigFile(storeMountPoint string, relativePath string, fileName string) {
+	fmt.Printf("WaitForConfigFile %s %s %s\n",storeMountPoint,relativePath,fileName)
+	for index := 0; index <= 60; index++ {
+		if exists, err := ConfigFileExists(storeMountPoint, "", "config.json"); (exists==true) && (err == nil) {
+			fmt.Printf("apparently config.json exists\n")
+			return
+		}
+		if index == 60 {
+			fmt.Printf("waited too long for file %s to be downloaded. Probably no connection.  Exiting\n",fileName)
+			os.Exit(1)
+		}
+		fmt.Printf("Sleeping 60 seconds waiting for someone to bring us a /config/config.json\n")
+		time.Sleep(60 * time.Second)
+	}
+}
+
+func ConfigFileExists(storeMountPoint string, relativePath string, fileName string ) (exists bool, err error) {
+	fmt.Printf("ConfigFileExists\n")
+	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
+	if relativePath == "" {
+		fullpath = storeMountPoint + "/" + fileName
+	}
+	if _, err := os.Stat(fullpath); err != nil {
+		return false, err
+
+	}
+	return true,nil
 }
 
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, site *Site, currentStageSchedule *StageSchedule) error {

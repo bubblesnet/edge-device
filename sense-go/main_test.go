@@ -3,8 +3,8 @@ package main
 import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
-	"bubblesnet/edge-device/sense-go/modules/phsensor"
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
+	"bubblesnet/edge-device/sense-go/modules/phsensor"
 	"errors"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
@@ -228,7 +228,7 @@ func Test_isRelayAttached(t *testing.T) {
 }
 
 func Test_makeControlDecisions(t *testing.T) {
-	globals.MySite.AutomaticControl = true
+	globals.MyStation.AutomaticControl = true
 	tests := []struct {
 		name string
 	}{
@@ -375,8 +375,8 @@ func Test_isMySwitch(t *testing.T) {
 	}
 		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isMySwitch(tt.args.switchName); got != tt.want {
-				t.Errorf("isMySwitch() = %v, want %v", got, tt.want)
+			if got := IsMySwitch(tt.args.switchName); got != tt.want {
+				t.Errorf("IsMySwitch() = %v, want %v", got, tt.want)
 			}
 		})
 	}

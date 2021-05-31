@@ -38,7 +38,7 @@ func DoATest(pinnum int) {
 		pin.High()
 	}
 }
-func NewPowerstripService() PowerstripService {
+func GetPowerstripService() PowerstripService {
 	return &singletonPowerstrip
 }
 
@@ -93,6 +93,7 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 		//		SendSwitchStatusChangeEvent(name,false)
 		return
 	}
+
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
 			log.Infof("TurnOffOutletByName %s", name)
@@ -105,6 +106,20 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 	}
 //	log.Warnf("Not my switch %s", name)
 }
+
+func (r *RealPowerStrip) IsMySwitch(switchName string) bool {
+	if switchName == "automaticControl" {
+		return true
+	}
+
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].Name == switchName {
+			return true
+		}
+	}
+	return false
+}
+
 
 func (r *RealPowerStrip) isOutletOn(name string) bool {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {

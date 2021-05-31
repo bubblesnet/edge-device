@@ -158,13 +158,13 @@ func main() {
 		log.Errorf("handleVersioningFromLoader %+v", err )
 		os.Exit(222)
 	}
-	log.Infof("Bubblesnet %s.%s.%s build %s timestamp %s githash %s", BubblesnetVersionMajorString,
+	fmt.Printf("Bubblesnet %s.%s.%s build %s timestamp %s githash %s\n", BubblesnetVersionMajorString,
 		BubblesnetVersionMinorString, BubblesnetVersionPatchString, BubblesnetBuildNumberString,
 		BubblesnetBuildTimestamp, BubblesnetGitHash)
 
 	storeMountPoint := "/config"
 
-	fmt.Printf("GOOS = %s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("GOOS = %s, GOARCH=%s\n", runtime.GOOS, runtime.GOARCH)
 	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
 		storeMountPoint = "./testdata"
 		databaseFilename = "./messages.db"
@@ -177,7 +177,8 @@ func main() {
 	}
 	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 
-	_ = ReadFromPersistentStore(storeMountPoint, "", "config.json",&MySite,&stageSchedule)
+	WaitForConfigFile(storeMountPoint, "", "config.json")
+	err = ReadFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
 
 	fmt.Printf("MySite = %v", MySite)
 	fmt.Printf("stageSchedule = %v", stageSchedule)

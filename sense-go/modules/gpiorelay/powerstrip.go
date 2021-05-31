@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-var PowerstripSvc PowerstripService = NewPowerstripService()
+var PowerstripSvc PowerstripService = GetPowerstripService()
 
 type PowerstripService interface {
 	SendSwitchStatusChangeEvent(switch_name string, on bool)
@@ -18,6 +18,7 @@ type PowerstripService interface {
 	TurnOnOutlet(index int)
 	TurnOffOutlet(index int)
 	RunPinToggler(isTest bool)
+	IsMySwitch(switchName string) bool
 }
 
 

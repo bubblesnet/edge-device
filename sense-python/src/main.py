@@ -42,6 +42,7 @@ except ImportError:
 
 import bubblesgrpc_pb2
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
+from os.path import exists
 
 lastTemp = 0.0
 global my_site
@@ -73,6 +74,23 @@ humidity_measurement_name = "UNKNOWN"
 pressure_measurement_name = "UNKNOWN"
 light_sensor_name = "UNKNOWN"
 light_measurement_name = "UNKNOWN"
+
+
+def wait_for_config(filename):
+    logging.info('wait_for_config %s' % filename)
+    index = 0
+    while index <= 60:
+        if exists(filename):
+            logging.info('%s file exists' % filename)
+            return
+        logging.info("Sleeping while we wait for someone to create %s" % filename)
+        time.sleep(60)
+        index = index+1
+        if index == 60:
+            logging.error("config file never showed up, exiting")
+            exit(1)
+
+    return
 
 
 def read_deviceid(filename):
@@ -306,7 +324,7 @@ def report_polled_sensor_parameters(i2cbus):
             append_bh1750_data(msg, light_sensor_name, light_measurement_name)
             send_message(msg)
         except Exception as ee:
-            logging.error(e)
+            logging.error(ee)
 
     if is_our_device('bme280'):
         msg = {'message_type': 'measurement'}
@@ -375,6 +393,7 @@ if __name__ == "__main__":
     logging.debug("Starting sense-python")
     my_site['deviceid'] = read_deviceid('/config/deviceid')
     logging.info("deviceid from file is %d" % my_site['deviceid'])
+    wait_for_config('/config/config.json')
     b = read_config('/config/config.json')
     if not b:
         logging.error('invalid config.json - not validating')

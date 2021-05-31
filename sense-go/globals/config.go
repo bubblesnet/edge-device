@@ -25,7 +25,6 @@ type Site struct {
 	ControllerHostName string    `json:"controller_hostname"`
 	ControllerAPIPort  int       `json:"controller_api_port"`
 	LogLevel           string    `json:"log_level,omitempty"`
-	AutomaticControl   bool      `json:"automatic_control"`
 	Stations           []Station `json:"stations,omitempty"`
 }
 
@@ -36,6 +35,7 @@ contains multiple edge devices, typically Raspberry Pi.
 */
 type Station struct {
 	StationID              int64           `json:"stationid"`
+	AutomaticControl	   bool	  `json: "automatic_control, omitempty"`
 	HeightSensor           bool            `json:"height_sensor,omitempty"`
 	Humidifier             bool            `json:"humidifier,omitempty"`
 	HumiditySensor         bool   `json:"humidity_sensor_internal,omitempty"`
@@ -161,12 +161,25 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 	if relativePath == "" {
 		fullpath = storeMountPoint + "/" + fileName
 	}
-	fmt.Printf("readConfig from %s", fullpath)
+	fmt.Printf("readConfig from %s\n", fullpath)
 	file, _ := ioutil.ReadFile(fullpath)
 	idstring := strings.TrimSpace(string(file))
 
 	id, err = strconv.ParseInt(idstring, 10, 64)
 	return id, err
+}
+
+func ReadMyServerHostname(storeMountPoint string, relativePath string, fileName string) (serverHostname string, err error) {
+	log.Debug("ReadMyServerHostname")
+	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
+	if relativePath == "" {
+		fullpath = storeMountPoint + "/" + fileName
+	}
+	fmt.Printf("ReadMyServerHostname from %s\n", fullpath)
+	file, _ := ioutil.ReadFile(fullpath)
+	serverHostname = strings.TrimSpace(string(file))
+
+	return serverHostname, err
 }
 
 func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, site *Site, currentStageSchedule *StageSchedule) error {
@@ -438,6 +451,7 @@ func ValidateConfigured(situation string) (err error) {
 }
 
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
+	fmt.Printf("\n\nGetConfigFromServer\n")
 	if err = ValidateConfigurable(); err != nil {
 		log.Errorf("GetConfigFromServer error %v", err)
 		return err
@@ -470,7 +484,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		fmt.Printf("readall error %v\n", err)
 		return err
 	}
-	fmt.Printf("\n\nresponse %s\n\n\n", string(body))
+	fmt.Printf("\n\nconfig response from server %s\n\n\n", string(body))
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %v\n", err)
