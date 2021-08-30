@@ -27,7 +27,7 @@ except ImportError:
 try:
     import grpc as grpcio
 except ImportError:
-    grpc = ""
+    grpcio = ""
 
 try:
     import smbus2
@@ -66,14 +66,6 @@ global pressure_measurement_name
 global light_sensor_name
 global light_measurement_name
 
-temperature_sensor_name = "UNKNOWN"
-humidity_sensor_name = "UNKNOWN"
-pressure_sensor_name = "UNKNOWN"
-temperature_measurement_name = 'UNKNOWN'
-humidity_measurement_name = "UNKNOWN"
-pressure_measurement_name = "UNKNOWN"
-light_sensor_name = "UNKNOWN"
-light_measurement_name = "UNKNOWN"
 
 
 def wait_for_config(filename):

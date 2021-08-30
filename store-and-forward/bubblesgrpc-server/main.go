@@ -26,6 +26,7 @@ import (
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
@@ -66,19 +67,39 @@ func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.S
 //	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
+		parseMessageForCurrentState(in.GetData())
 	}()
-//	_ = parseMessage(in.GetData())
 	return &pb.SensorReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Message: ""}, nil
+}
+
+func parseMessageForCurrentState( message string ) {
+	genericMessage := GenericSensorMessage{}
+	log.Infof("parsing %s", message)
+	err := json.Unmarshal([]byte(message), &genericMessage)
+	if err != nil {
+		return
+	}
+	log.Infof("GenericMessage.SensorName/MeasurementName = %s/%s", genericMessage.SensorName, genericMessage.MeasurementName)
+	switch genericMessage.MeasurementName {
+	case "temp_air_middle":
+		ExternalCurrentState.TempF = genericMessage.FloatValue
+		break
+	case "humidity_internal":
+		ExternalCurrentState.Humidity = genericMessage.FloatValue
+		break
+	}
 }
 
 // StoreAndForward implements bubblesgrpc.GetState
 func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
-	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
+//	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
 //	if in.GetSequence() %5 == 0 {
-		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
+//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
 //	} else {
-//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: currentstate.TempF, Humidity: currentstate.Humidity}, nil
-//	}
+		ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity)}
+//		log.Infof("GetState returning %v", ret)
+		return &ret, nil
+		//	}
 }
 
 //
@@ -127,7 +148,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 func postIt(message []byte) (err error){
 	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDeviceID)
-//	log.Debugf("Sending to %s", url)
+	log.Infof("Sending to %s", url)
 	resp, err := http.Post(url,
 		"application/json", bytes.NewBuffer(message))
 	if err != nil {

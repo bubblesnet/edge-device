@@ -60,6 +60,15 @@ const OUTLETFAN string = "exhaustFan"
 const HUMIDIFIER string = "humidifier"
 const HEATER string = "heater"
 
+const GERMINATION string = "germination"
+const SEEDLING string = "seedling"
+const VEGETATIVE string = "vegetative"
+const BLOOMING string = "blooming"
+const HARVEST string = "harvest"
+const CURING string = "curing"
+const DRYING string = "drying"
+const IDLE string = "idle"
+
 var CurrentStageSchedule StageSchedule
 
 var Lasttemp float32

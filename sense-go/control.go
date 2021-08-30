@@ -26,11 +26,17 @@ func ControlOxygenation(force bool) {
 		log.Debugf("ControlOxygenation - no relay attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == "idle" {
-		gpiorelay.GetPowerstripService().TurnOffOutletByName("airPump", false)
-		return
+	switch globals.MyStation.CurrentStage {
+	case globals.IDLE:
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.AIRPUMP, false)
+		break
+	case globals.GERMINATION:
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.AIRPUMP, false)
+		break
+	default:
+		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.AIRPUMP, force)
+		break
 	}
-	gpiorelay.GetPowerstripService().TurnOnOutletByName("airPump", force)
 }
 
 func ControlRootWater(force bool) {
@@ -38,11 +44,21 @@ func ControlRootWater(force bool) {
 		log.Debugf("ControlRootWater - no relay attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == "idle" {
-		gpiorelay.GetPowerstripService().TurnOffOutletByName("waterPump", false)
+	if globals.MyStation.CurrentStage == globals.IDLE {
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
 		return
 	}
-	gpiorelay.GetPowerstripService().TurnOnOutletByName("waterPump", force)
+	switch globals.MyStation.CurrentStage {
+	case globals.IDLE:
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
+		break
+	case globals.GERMINATION:
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
+		break
+	default:
+		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.WATERPUMP, force)
+		break
+	}
 
 }
 
@@ -51,14 +67,21 @@ func ControlAirflow(force bool) {
 		log.Debugf("ControlAirflow - no relay attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == "idle" {
-		log.Debugf("ControlAirflow - stage is idle, turning off")
-		gpiorelay.GetPowerstripService().TurnOffOutletByName("exhaustFan", false)
-		gpiorelay.GetPowerstripService().TurnOffOutletByName("intakeFan", false)
-		return
+
+	switch globals.MyStation.CurrentStage {
+	case globals.GERMINATION:
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.OUTLETFAN, false)
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.INLETFAN, false)
+		break
+	case globals.IDLE:
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.OUTLETFAN, false)
+		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.INLETFAN, false)
+		break
+	default:
+		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.OUTLETFAN, force)
+		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.INLETFAN, force)
+		break
 	}
-	gpiorelay.GetPowerstripService().TurnOnOutletByName("exhaustFan", force)
-	gpiorelay.GetPowerstripService().TurnOnOutletByName("intakeFan", force)
 }
 
 func ControlLight(force bool) {
@@ -66,8 +89,8 @@ func ControlLight(force bool) {
 		log.Debugf("ControlLight - no relay attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == "idle" {
-		log.Debugf("ControlList - stage is idle, turning off")
+	if globals.MyStation.CurrentStage == globals.IDLE {
+//		log.Debugf("ControlList - stage is idle, turning off")
 		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.GROWLIGHTVEG, false)
 		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.GROWLIGHTBLOOM, false)
 		return
@@ -126,10 +149,11 @@ func ControlHeat(force bool) {
 		log.Debugf("ControlHeat - no relay attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == "idle" {
+	log.Infof("ControlHeat - current stage is %s", globals.MyStation.CurrentStage)
+	if globals.MyStation.CurrentStage == globals.IDLE {
 		log.Debugf("ControlHeat - stage is idle, turning off")
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS OFF
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS OFF
+//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS OFF
+//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS OFF
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATER, false)   // MAKE SURE HEAT IS OFF
 		return
 	}
@@ -137,8 +161,9 @@ func ControlHeat(force bool) {
 	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
 	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
 
+//	log.Infof("checking temp %f for stage %s with highLimit %f, lowLimit %f", globals.ExternalCurrentState.TempF, globals.MyStation.CurrentStage, highLimit,lowLimit)
 	if globals.ExternalCurrentState.TempF == globals.TEMPNOTSET {
-//		log.Debugf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF))
+		log.Debugf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF)
 		return
 	}
 	if globals.ExternalCurrentState.TempF > highLimit { // TOO HOT
@@ -146,8 +171,8 @@ func ControlHeat(force bool) {
 			log.Infof("Temp just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.TempF)
 			force = true
 		}
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
+//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
+//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATER, force)   // MAKE SURE HEAT IS OFF
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
@@ -158,8 +183,8 @@ func ControlHeat(force bool) {
 				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
 				force = true
 			}
-			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
-			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
+//			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
+//			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
 			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATER, false)   // MAKE SURE HEAT IS ON
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
@@ -183,8 +208,8 @@ func ControlHumidity(force bool) {
 		log.Debugf("ControlHumidity - no relay attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == "idle" {
-		log.Debugf("ControlHumidity - stage is idle, turning off")
+	if globals.MyStation.CurrentStage == globals.IDLE {
+//		log.Debugf("ControlHumidity - stage is idle, turning off")
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HUMIDIFIER, false) // MAKE SURE HUMIDIFIER IS OFF
 		return
 	}

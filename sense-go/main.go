@@ -236,12 +236,21 @@ func initializeOutletsForAutomation() {
 }
 
 func makeControlDecisions(once_only bool) {
-	log.Info("makeControlDecisions")
+	log.Info("makeControlDecisions endless loop with once_only set to %v", once_only)
 	i := 0
 
 	for {
-		//		gsm := bubblesgrpc.GetStateRequest{}
-		//		grpc. (gsm)
+		gsm := pb.GetStateRequest{}
+		gsm.Sequence = globals.GetSequence()
+		gr, err := globals.Client.GetState(context.Background(), &gsm)
+		if err != nil {
+			log.Errorf("getState got error %v", err)
+		} else {
+			globals.ExternalCurrentState.TempF = gr.TempF
+			globals.ExternalCurrentState.Humidity = gr.Humidity
+		}
+		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
+
 		if i%60 == 0 {
 			log.Debugf("LocalCurrentState = %v", globals.LocalCurrentState)
 			//			log.Debugf("globals.Configuration = %v", globals.MySite)
@@ -263,6 +272,7 @@ func makeControlDecisions(once_only bool) {
 			break
 		}
 	}
+	log.Infof("makeControlDecisions returning")
 }
 
 func reportVersion() {
@@ -290,21 +300,18 @@ func initGlobals() {
 		fmt.Printf("error read serverHostname %v\n", err)
 		return
 	}
+	// Read the configuration file
 	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerHostName)
-	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		fmt.Printf("ReadFromPersistentStore failed - using default config\n")
-//		globals.MySite.ControllerHostName = serverHostname
-		globals.MySite.ControllerAPIPort = 3003
-		globals.MySite.UserID = 90000009
-		d := globals.EdgeDevice{DeviceID: globals.MyDeviceID}
-		globals.MyDevice = &d
-		//		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
-	}
+	readConfigFromDisk()
+	// Get a NEW config file from server and save to disk
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
 		fmt.Printf("Exiting because of bad configuration - sleeping for 60 seconds to allow intervention\n")
 		time.Sleep(60*time.Second)
 		os.Exit(1)
 	}
+	// Reread the configuration file
+	readConfigFromDisk()
+
 	globals.MySite.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
 	//	fmt.Printf("done getting config from server %v\n\n", globals.MySite)
 	globals.ConfigureLogging(globals.MySite, "sense-go")
@@ -322,6 +329,30 @@ func initGlobals() {
 
 	//	log.Infof("globals.Configuration = %v", globals.MySite)
 	//	log.Infof("stageSchedule = %v", globals.CurrentStageSchedule)
+}
+
+func readConfigFromDisk() {
+	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		fmt.Printf("ReadFromPersistentStore failed - using default config\n")
+		//		globals.MySite.ControllerHostName = serverHostname
+		globals.MySite.ControllerAPIPort = 3003
+		nodeEnv := os.Getenv("NODE_ENV")
+		switch nodeEnv  {
+		case "PRODUCTION":
+			globals.MySite.ControllerAPIPort = 3001
+			break
+		case "DEV":
+			globals.MySite.ControllerAPIPort = 3003
+			break
+		case "TEST":
+			globals.MySite.ControllerAPIPort = 3002
+			break
+		}
+		globals.MySite.UserID = 90000009
+		d := globals.EdgeDevice{DeviceID: globals.MyDeviceID}
+		globals.MyDevice = &d
+		//		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
+	}
 }
 
 func setupGPIO() {
@@ -410,6 +441,20 @@ func startGoRoutines(onceOnly bool) {
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
+	if( globals.MyDevice.Camera.PiCamera == true ) {
+		go pictureTaker(onceOnly)
+	}
+}
+
+func pictureTaker( onceOnly bool ) {
+	for {
+		camera.TakeAPicture()
+		time.Sleep(30 * time.Second)
+		if( onceOnly ) {
+			break;
+		}
+	}
+
 }
 
 func main() {

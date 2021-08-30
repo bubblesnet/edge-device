@@ -128,13 +128,13 @@ globals.LocalCurrentState.GrowLightVeg
 "vegetative"
 */
 var stages = []string {
-"germination","seedling","vegetative","idle",
+globals.GERMINATION,globals.SEEDLING,globals.VEGETATIVE,globals.IDLE,
 }
 var growlightstates = []bool {
 	true,false,
 }
 func testLight(t *testing.T) {
-	globals.MyStation = &globals.Station{CurrentStage: "idle"}
+	globals.MyStation = &globals.Station{CurrentStage: globals.IDLE}
 	for i := 0; i < len(stages); i++  {
 		globals.MyStation.CurrentStage = stages[i]
 		for n := 1; n <= 24; n++ {
@@ -361,6 +361,7 @@ func Test_isMySwitch(t *testing.T) {
 	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
 		t.Errorf("ReadFromPersistentStore() error = %v", err)
 	}
+	/*
 	type args struct {
 		switchName string
 	}
@@ -380,6 +381,7 @@ func Test_isMySwitch(t *testing.T) {
 			}
 		})
 	}
+	 */
 }
 
 func Test_initializeOutletsForAutomation(t *testing.T) {
