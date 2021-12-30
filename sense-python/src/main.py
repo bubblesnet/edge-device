@@ -290,6 +290,7 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
 
 def append_adc_data(msg):
     msg['water_temperature'] = 0.0
+    msg['value'] = 0.0
 
 
 def append_gpio_data(msg):
@@ -299,6 +300,7 @@ def append_gpio_data(msg):
 
 def append_axl345_data(msg):
     msg['tamper_detector'] = False
+    msg['value'] = False
 
 
 def report_polled_sensor_parameters(i2cbus):
