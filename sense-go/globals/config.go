@@ -35,30 +35,30 @@ contains multiple edge devices, typically Raspberry Pi.
 */
 type Station struct {
 	StationID              int64           `json:"stationid"`
-	AutomaticControl	   bool	  `json: "automatic_control, omitempty"`
+	AutomaticControl       bool            `json: "automatic_control, omitempty"`
 	HeightSensor           bool            `json:"height_sensor,omitempty"`
 	Humidifier             bool            `json:"humidifier,omitempty"`
-	HumiditySensor         bool   `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool   `json:"humidity_sensor_external,omitempty"`
-	Heater                 bool   `json:"heater,omitempty"`
-	ThermometerTop         bool   `json:"thermometer_top,omitempty"`
-	ThermometerMiddle      bool   `json:"thermometer_middle,omitempty"`
-	ThermometerBottom      bool   `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal    bool   `json:"thermometer_external,omitempty"`
-	ThermometerWater       bool   `json:"thermometer_water,omitempty"`
-	WaterPump              bool   `json:"waterPump,omitempty"`
-	AirPump                bool   `json:"airPump,omitempty"`
-	LightSensorInternal    bool   `json:"light_sensor_internal,omitempty"`
-	LightSensorExternal    bool   `json:"light_sensor_external,omitempty"`
-	StationDoorSensor      bool   `json:"station_door_sensor,omitempty"`
-	OuterDoorSensor        bool   `json:"outer_door_sensor,omitempty"`
-	MovementSensor         bool   `json:"movement_sensor,omitempty"`
-	PressureSensor         bool   `json:"pressure_sensors,omitempty"`
-	RootPhSensor           bool   `json:"root_ph_sensor,omitempty"`
-	EnclosureType          string `json:"enclosure_type,omitempty"`
-	WaterLevelSensor       bool   `json:"water_level_sensor,omitempty"`
-	IntakeFan              bool   `json:"intakeFan,omitempty"`
-	ExhaustFan             bool   `json:"exhaustFan,omitempty"`
+	HumiditySensor         bool            `json:"humidity_sensor_internal,omitempty"`
+	ExternalHumiditySensor bool            `json:"humidity_sensor_external,omitempty"`
+	Heater                 bool            `json:"heater,omitempty"`
+	ThermometerTop         bool            `json:"thermometer_top,omitempty"`
+	ThermometerMiddle      bool            `json:"thermometer_middle,omitempty"`
+	ThermometerBottom      bool            `json:"thermometer_bottom,omitempty"`
+	ThermometerExternal    bool            `json:"thermometer_external,omitempty"`
+	ThermometerWater       bool            `json:"thermometer_water,omitempty"`
+	WaterPump              bool            `json:"waterPump,omitempty"`
+	AirPump                bool            `json:"airPump,omitempty"`
+	LightSensorInternal    bool            `json:"light_sensor_internal,omitempty"`
+	LightSensorExternal    bool            `json:"light_sensor_external,omitempty"`
+	StationDoorSensor      bool            `json:"station_door_sensor,omitempty"`
+	OuterDoorSensor        bool            `json:"outer_door_sensor,omitempty"`
+	MovementSensor         bool            `json:"movement_sensor,omitempty"`
+	PressureSensor         bool            `json:"pressure_sensors,omitempty"`
+	RootPhSensor           bool            `json:"root_ph_sensor,omitempty"`
+	EnclosureType          string          `json:"enclosure_type,omitempty"`
+	WaterLevelSensor       bool            `json:"water_level_sensor,omitempty"`
+	IntakeFan              bool            `json:"intakeFan,omitempty"`
+	ExhaustFan             bool            `json:"exhaustFan,omitempty"`
 	HeatLamp               bool            `json:"heatLamp,omitempty"`
 	HeatingPad             bool            `json:"heatingPad,omitempty"`
 	LightBloom             bool            `json:"lightBloom,omitempty"`
@@ -68,7 +68,7 @@ type Station struct {
 	EdgeDevices            []EdgeDevice    `json:"edge_devices,omitempty"`
 	StageSchedules         []StageSchedule `json:"stage_schedules,omitempty"`
 	CurrentStage           string          `json:"current_stage"`
-	LightOnHour            int             `json:"light_on_hour,omitempty"`
+	LightOnHour            int             `json:"light_on_hour"`
 	TamperSpec             Tamper          `json:"tamper,omitempty"`
 }
 
@@ -129,7 +129,7 @@ type EnvironmentalTarget struct {
 
 type StageSchedule struct {
 	Name                 string              `json:"name,omitempty"`
-	HoursOfLight         int                 `json:"hours_of_light,omitempty"`
+	HoursOfLight         int                 `json:"hours_of_light"`
 	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
 }
 
@@ -149,10 +149,10 @@ type Tamper struct {
 }
 
 type ACOutlet struct {
-	Name         string `json:"name,omitempty"`
-	Index        int    `json:"index,omitempty"`
-	PowerOn      bool   `json:"on,omitempty"`
-	BCMPinNumber int    `json:"bcm_pin_number,omitempty"`
+	Name         string `json:"name"`
+	Index        int    `json:"index"`
+	PowerOn      bool   `json:"on"`
+	BCMPinNumber int    `json:"bcm_pin_number"`
 }
 
 func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string) (id int64, err error) {
@@ -222,12 +222,12 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	}
 	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.CurrentStage)
 
-	fmt.Printf("%s\n",errstr)
+	fmt.Printf("%s\n", errstr)
 	log.Error(errstr)
 	return errors.New(errstr)
 }
 
-func setMyStation(site Site) (success bool){
+func setMyStation(site Site) (success bool) {
 	//	fmt.Printf("data = %v\n", *site)
 	found := false
 	fmt.Printf("searching %d stations\n", len(site.Stations))
@@ -246,6 +246,7 @@ func setMyStation(site Site) (success bool){
 	fmt.Printf("Could not set MyStation and MyDevice!!\n")
 	return false
 }
+
 // CustomHandler is your custom handler
 type CustomHandler struct {
 	// whatever properties you need
@@ -332,59 +333,59 @@ func ValidateConfigured(situation string) (err error) {
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %v", err)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return err
 	}
 	if t, ok := interface{}(MySite).(Site); ok == false {
 		fmt.Printf("ValidateConfigured (%s) (MySite).(Site context %s should be %T, is %T\n", situation, "MySite", t, MySite)
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("nil or empty MySite")
 	}
 	if MySite.SiteID < 0 {
 		fmt.Printf("<0 bad MySite.SiteID\n")
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("<0 bad MySite.SiteID")
 	}
 	if MySite.UserID <= 0 {
 		fmt.Printf("<0 MySite.UserID\n")
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("<0 MySite.UserID")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
 		fmt.Printf("ValidateConfigured (%s) MySite.ControllerHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("nil or wrong type MySite.ControllerHostName")
 	}
 	if MySite.ControllerHostName == "localhost" {
 		fmt.Printf("MySite.ControllerHostName cannot be localhost\n")
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("MySite.ControllerHostName cannot be localhost")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", situation, "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("nil or wrong type ")
 	}
 	if len(MySite.Stations) <= 0 {
 		fmt.Printf("0 length MySite.Stations\n")
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("0 length MySite.Stations")
 	}
 	if t, ok := interface{}(MyStation).(*Station); ok == false {
 		fmt.Printf("ValidateConfigured (%s) (MyStation).(Station context %s should be %T, is %T\n", situation, "*globals.Station", t, MyStation)
 		log.Errorf(" context %s should be %T, is %T", "*globals.Station", t, MyStation)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("nil or wrong type MyStation")
 	}
 	if MyStation == nil || MyStation.StationID < 0 {
@@ -395,47 +396,47 @@ func ValidateConfigured(situation string) (err error) {
 			fmt.Printf("<0 MyStation.StationID\n")
 		}
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("bad MyStation.StationID")
 	}
 	if MyStation.EnclosureType != "CABINET" && MyStation.EnclosureType != "TENT" {
-		fmt.Printf("bad enclosuretype %s\n", MyStation.EnclosureType )
+		fmt.Printf("bad enclosuretype %s\n", MyStation.EnclosureType)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
-		return errors.New(fmt.Sprintf("bad MyStation.EnclosureType %s",MyStation.EnclosureType))
+		time.Sleep(60 * time.Second)
+		return errors.New(fmt.Sprintf("bad MyStation.EnclosureType %s", MyStation.EnclosureType))
 
 	}
 	if len(MyStation.StageSchedules) <= 0 {
 		fmt.Printf("0 length MyStation.StageSchedules\n")
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("0 length MyStation.StageSchedules")
 
 	}
 	if t, ok := interface{}(MyStation.CurrentStage).(string); ok == false || len(t) <= 0 {
 		fmt.Printf("nil, or empty MyStation.CurrentStage\n")
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("nil, or empty MyStation.CurrentStage")
 
 	}
-	if MyStation.TamperSpec.Xmove  <= 0.0 {
+	if MyStation.TamperSpec.Xmove <= 0.0 {
 		fmt.Printf("bad TamperSpec.Xmove %f\n", MyStation.TamperSpec.Xmove)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New(fmt.Sprintf("bad TamperSpec.Xmove %f", MyStation.TamperSpec.Xmove))
 	}
-	if MyStation.TamperSpec.Ymove  <= 0.0 {
+	if MyStation.TamperSpec.Ymove <= 0.0 {
 		fmt.Printf("bad TamperSpec.Ymove %f\n", MyStation.TamperSpec.Ymove)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New(fmt.Sprintf("bad TamperSpec.Ymove %f", MyStation.TamperSpec.Ymove))
 	}
-	if MyStation.TamperSpec.Zmove  <= 0.0 {
+	if MyStation.TamperSpec.Zmove <= 0.0 {
 		fmt.Printf("bad TamperSpec.Zmove %f\n", MyStation.TamperSpec.Zmove)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
-		return errors.New(fmt.Sprintf("bad TamperSpec.Zmove %f",MyStation.TamperSpec.Zmove))
+		time.Sleep(60 * time.Second)
+		return errors.New(fmt.Sprintf("bad TamperSpec.Zmove %f", MyStation.TamperSpec.Zmove))
 	}
 
 	// is there at least ONE device in the station?
@@ -443,7 +444,7 @@ func ValidateConfigured(situation string) (err error) {
 		fmt.Printf("ValidateConfigured (%s) (MyStation).(EdgeDevices context %s should be %T, is %T\n", situation, "[]EdgeDevice]", t, MyStation)
 		log.Errorf(" context %s should be %T, is %T", "[]EdgeDevice", t, MyStation.EdgeDevices)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		return errors.New("no edge devices configured in mystation")
 	}
 
