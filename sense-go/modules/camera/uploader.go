@@ -50,8 +50,8 @@ func uploadFile(name string) (err error) {
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		log.Errorf("uploadFile 2 fatal %v", err)
-		log.Fatal(err)
+		log.Errorf("uploadFile %s 2 fatal %v", name, err)
+		return err
 	} else {
 		var bodyContent []byte
 		log.Infof("File upload returned %d", resp.StatusCode)
@@ -122,4 +122,3 @@ func newfileUploadRequest(uri string, params map[string]string, paramName string
 	request.Header.Add("Content-Type", writer.FormDataContentType())
 	return request, err
 }
-
