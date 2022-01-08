@@ -31,7 +31,7 @@ func SendPictureTakenEvent() {
 }
 
 func uploadFile(name string) (err error) {
-	log.Infof("uploadFile %s", name)
+	//	log.Infof("uploadFile %s", name)
 	path, _ := os.Getwd()
 	path += "/" + name
 	extraParams := map[string]string{
@@ -41,7 +41,7 @@ func uploadFile(name string) (err error) {
 	}
 	url := fmt.Sprintf("http://%s:%d/api/video/%8.8d/%8.8d/upload", globals.MySite.ControllerHostName,
 		globals.MySite.ControllerAPIPort, globals.MySite.UserID, globals.MyDevice.DeviceID)
-	log.Debugf("Uploading to api at %s", url)
+	//	log.Debugf("Uploading to api at %s", url)
 	request, err := newfileUploadRequest(url, extraParams, "filename", name)
 	if err != nil {
 		log.Errorf("uploadFile 1 fatal %v", err)

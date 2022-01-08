@@ -78,7 +78,6 @@ func parseMessageForCurrentState(message string) {
 	if err != nil {
 		return
 	}
-	log.Infof("GenericMessage.SensorName/MeasurementName = %s/%s", genericMessage.SensorName, genericMessage.MeasurementName)
 	switch genericMessage.MeasurementName {
 	case "temp_air_middle":
 		ExternalCurrentState.TempF = genericMessage.FloatValue
@@ -87,6 +86,12 @@ func parseMessageForCurrentState(message string) {
 	case "humidity_internal":
 		ExternalCurrentState.Humidity = genericMessage.FloatValue
 		log.Infof("new humidity_internal %f", genericMessage.Value)
+		break
+	case "":
+		log.Warnf("Empty state message sent to store-and-forward %v", genericMessage)
+		break
+	default:
+		log.Infof("GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
 		break
 	}
 }

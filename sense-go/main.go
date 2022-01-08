@@ -249,7 +249,7 @@ func makeControlDecisions(once_only bool) {
 			globals.ExternalCurrentState.TempF = gr.TempF
 			globals.ExternalCurrentState.Humidity = gr.Humidity
 		}
-		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
+		//		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
 
 		if globals.MyStation.AutomaticControl {
 			ControlLight(false)
@@ -437,7 +437,7 @@ func startGoRoutines(onceOnly bool) {
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
-	if (globals.MyDevice.Camera.PiCamera == true) {
+	if globals.MyDevice.Camera.PiCamera == true {
 		go pictureTaker(onceOnly)
 	}
 }
@@ -446,8 +446,8 @@ func pictureTaker(onceOnly bool) {
 	for {
 		camera.TakeAPicture()
 		time.Sleep(30 * time.Second)
-		if (onceOnly) {
-			break;
+		if onceOnly {
+			break
 		}
 	}
 
