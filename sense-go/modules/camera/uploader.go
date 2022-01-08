@@ -54,11 +54,11 @@ func uploadFile(name string) (err error) {
 		return err
 	} else {
 		var bodyContent []byte
-		log.Infof("File upload returned %d", resp.StatusCode)
-		log.Infof("AND %v", resp.Header)
+		//		log.Infof("File upload returned %d", resp.StatusCode)
+		//		log.Infof("AND %v", resp.Header)
 		resp.Body.Read(bodyContent)
 		resp.Body.Close()
-		log.Infof("AND %v", bodyContent)
+		//		log.Infof("AND %v", bodyContent)
 	}
 	return nil
 }

@@ -39,13 +39,12 @@ import (
 	"time"
 )
 
-
 var BubblesnetVersionMajorString string
-var BubblesnetVersionMinorString=""
-var BubblesnetVersionPatchString=""
-var BubblesnetBuildNumberString=""
-var BubblesnetBuildTimestamp=""
-var BubblesnetGitHash=""
+var BubblesnetVersionMinorString = ""
+var BubblesnetVersionPatchString = ""
+var BubblesnetBuildNumberString = ""
+var BubblesnetBuildTimestamp = ""
+var BubblesnetGitHash = ""
 
 const (
 	port              = ":50051"
@@ -53,7 +52,8 @@ const (
 	stateBucketName   = "StateBucket"
 	modeReadwrite     = 0600
 )
-var databaseFilename  = "/data/messages.db"
+
+var databaseFilename = "/data/messages.db"
 
 var writeableDb *bolt.DB
 
@@ -64,7 +64,7 @@ type server struct {
 
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
-//	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	//	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
 		parseMessageForCurrentState(in.GetData())
@@ -72,9 +72,8 @@ func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.S
 	return &pb.SensorReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Message: ""}, nil
 }
 
-func parseMessageForCurrentState( message string ) {
+func parseMessageForCurrentState(message string) {
 	genericMessage := GenericSensorMessage{}
-	log.Infof("parsing %s", message)
 	err := json.Unmarshal([]byte(message), &genericMessage)
 	if err != nil {
 		return
@@ -83,47 +82,49 @@ func parseMessageForCurrentState( message string ) {
 	switch genericMessage.MeasurementName {
 	case "temp_air_middle":
 		ExternalCurrentState.TempF = genericMessage.FloatValue
+		log.Infof("new temp_air_middle %f", genericMessage.Value)
 		break
 	case "humidity_internal":
 		ExternalCurrentState.Humidity = genericMessage.FloatValue
+		log.Infof("new humidity_internal %f", genericMessage.Value)
 		break
 	}
 }
 
 // StoreAndForward implements bubblesgrpc.GetState
 func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
-//	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
-//	if in.GetSequence() %5 == 0 {
-//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
-//	} else {
-		ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity)}
-//		log.Infof("GetState returning %v", ret)
-		return &ret, nil
-		//	}
+	//	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	//	if in.GetSequence() %5 == 0 {
+	//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
+	//	} else {
+	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity)}
+	//		log.Infof("GetState returning %v", ret)
+	return &ret, nil
+	//	}
 }
 
 //
 func (s *server) GetRecordList(_ context.Context, in *pb.GetRecordListRequest) (*pb.GetRecordListReply, error) {
-	log.Debug( fmt.Sprintf("GetRecordList Received: sequence %v - %s", in.GetSequence(), in.GetData()))
-	jsn,_ := getStateAsJson(stateBucketName,2020,2,15)
+	log.Debug(fmt.Sprintf("GetRecordList Received: sequence %v - %s", in.GetSequence(), in.GetData()))
+	jsn, _ := getStateAsJson(stateBucketName, 2020, 2, 15)
 	return &pb.GetRecordListReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Data: jsn}, nil
 }
 
 func forwardMessages(bucketName string, oneOnly bool) (err error) {
 	log.Debugf("forwardMessages %s", bucketName)
-	for ;;  {
+	for ; ; {
 		var forwarded []string
 
 		_ = writeableDb.View(func(tx *bolt.Tx) error {
 			// Assume bucket exists and has keys
-//			log.Debugf("getting b")
+			//			log.Debugf("getting b")
 			b := tx.Bucket([]byte(bucketName))
-//			log.Debugf("b = %v", b)
+			//			log.Debugf("b = %v", b)
 			c := b.Cursor()
 
 			for k, v := c.First(); k != nil; k, v = c.Next() {
 				// for k, v := c.First(); k != nil; k, v = c.Next() {
-//				log.Debugf("forwarding key=%s, value=%s from %s\n", k, string(v), bucketName)
+				//				log.Debugf("forwarding key=%s, value=%s from %s\n", k, string(v), bucketName)
 				_ = postIt(v)
 				forwarded = append(forwarded, string(k))
 				time.Sleep(250 * time.Millisecond)
@@ -133,7 +134,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 		for i := 0; i < len(forwarded); i++ {
 			if err := deleteFromBucket(bucketName, []byte(forwarded[i])); err != nil {
-				log.Errorf( "delete from bucket failed %v", err)
+				log.Errorf("delete from bucket failed %v", err)
 			}
 		}
 		// delete the forwarded messages
@@ -141,14 +142,14 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 		if oneOnly {
 			break
 		}
-		time.Sleep(3*time.Second)
+		time.Sleep(3 * time.Second)
 	}
 	return err
 }
 
-func postIt(message []byte) (err error){
+func postIt(message []byte) (err error) {
 	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDeviceID)
-	log.Infof("Sending to %s", url)
+	//	log.Infof("Sending to %s", url)
 	resp, err := http.Post(url,
 		"application/json", bytes.NewBuffer(message))
 	if err != nil {
@@ -161,12 +162,13 @@ func postIt(message []byte) (err error){
 		log.Errorf("readall error %v", err)
 		return err
 	}
-//	log.Debugf("response %s", string(body))
+	//	log.Debugf("response %s", string(body))
 	return nil
 }
 
 var stageSchedule StageSchedule
-func handleVersioningFromLoader() (err error ) {
+
+func handleVersioningFromLoader() (err error) {
 	BubblesnetBuildTimestamp = strings.ReplaceAll(BubblesnetBuildTimestamp, "'", "")
 	BubblesnetBuildTimestamp = strings.ReplaceAll(BubblesnetBuildTimestamp, "_", " ")
 	return nil
@@ -176,7 +178,7 @@ func main() {
 	log.ConfigureLogging("fatal,error,warn,info,debug,", ".")
 
 	if err := handleVersioningFromLoader(); err != nil {
-		log.Errorf("handleVersioningFromLoader %+v", err )
+		log.Errorf("handleVersioningFromLoader %+v", err)
 		os.Exit(222)
 	}
 	fmt.Printf("Bubblesnet %s.%s.%s build %s timestamp %s githash %s\n", BubblesnetVersionMajorString,
@@ -186,12 +188,12 @@ func main() {
 	storeMountPoint := "/config"
 
 	fmt.Printf("GOOS = %s, GOARCH=%s\n", runtime.GOOS, runtime.GOARCH)
-	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
 		storeMountPoint = "./testdata"
 		databaseFilename = "./messages.db"
 	}
 	var err error
-	MyDeviceID, err = ReadMyDeviceId("/config","", "deviceid")
+	MyDeviceID, err = ReadMyDeviceId("/config", "", "deviceid")
 	if err != nil {
 		fmt.Printf("error read device %v\n", err)
 		return
@@ -205,22 +207,22 @@ func main() {
 	fmt.Printf("stageSchedule = %v", stageSchedule)
 	initDb(databaseFilename)
 
-//	clearDatabase(stateBucketName)
-//	deletePriorTo(stateBucketName, 1581483579497)
+	//	clearDatabase(stateBucketName)
+	//	deletePriorTo(stateBucketName, 1581483579497)
 
 	go func() {
 		_ = forwardMessages(messageBucketName, false)
 	}()
-/*	go func() {
-		_ = forwardMessages(stateBucketName, false)
-	}()
-	go func() {
-		_ = saveStateDaemon(stateBucketName, false)
-	}()
+	/*	go func() {
+			_ = forwardMessages(stateBucketName, false)
+		}()
+		go func() {
+			_ = saveStateDaemon(stateBucketName, false)
+		}()
 
- */
+	*/
 
-//	go StartApiServer()
+	//	go StartApiServer()
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
