@@ -26,7 +26,6 @@ func TakeAPicture() {
 	s := raspicam.NewStill()
 	errCh := make(chan error)
 	go func() {
-		log.Infof("called err channel")
 		for x := range errCh {
 			log.Debugf("CAPTURE ERROR %v", x)
 		}
