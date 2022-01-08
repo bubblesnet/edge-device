@@ -90,7 +90,7 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 		On         bool   `json:"on"`
 	}
 	type StageMessage struct {
-		Command    string `json:"command"`
+		Command   string `json:"command"`
 		StageName string `json:"stage_name"`
 	}
 	header := MessageHeader{}
@@ -103,14 +103,14 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 	log.Infof("header.Command === %s", header.Command)
 	switch header.Command {
 	case "stage":
-		log.Infof("Changing stage via message %s", msg.Body )
+		log.Infof("Changing stage via message %s", msg.Body)
 		stageMessage := StageMessage{}
 		if err := json.Unmarshal(msg.Body, &stageMessage); err != nil {
-			log.Errorf("couldn't parse stage message %s, %v", msg.Body, err )
+			log.Errorf("couldn't parse stage message %s, %v", msg.Body, err)
 			break
 		}
 		log.Infof("listenForCommands parsed body into SwitchMessage %v", stageMessage)
-		globals.MyStation.CurrentStage =  stageMessage.StageName
+		globals.MyStation.CurrentStage = stageMessage.StageName
 		break
 	case "picture":
 		if globals.MyDevice.Camera.PiCamera == false {
@@ -122,7 +122,7 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 		break
 	case "status":
 		fmt.Printf("\n\nReceived status message\n\n")
-		gpiorelay.PowerstripSvc.ReportAll(200*time.Millisecond)
+		gpiorelay.PowerstripSvc.ReportAll(200 * time.Millisecond)
 		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
 		break
 	case "switch":
@@ -251,10 +251,6 @@ func makeControlDecisions(once_only bool) {
 		}
 		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
 
-		if i%60 == 0 {
-			log.Debugf("LocalCurrentState = %v", globals.LocalCurrentState)
-			//			log.Debugf("globals.Configuration = %v", globals.MySite)
-		}
 		if globals.MyStation.AutomaticControl {
 			ControlLight(false)
 			ControlHeat(false)
@@ -306,7 +302,7 @@ func initGlobals() {
 	// Get a NEW config file from server and save to disk
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
 		fmt.Printf("Exiting because of bad configuration - sleeping for 60 seconds to allow intervention\n")
-		time.Sleep(60*time.Second)
+		time.Sleep(60 * time.Second)
 		os.Exit(1)
 	}
 	// Reread the configuration file
@@ -337,7 +333,7 @@ func readConfigFromDisk() {
 		//		globals.MySite.ControllerHostName = serverHostname
 		globals.MySite.ControllerAPIPort = 3003
 		nodeEnv := os.Getenv("NODE_ENV")
-		switch nodeEnv  {
+		switch nodeEnv {
 		case "PRODUCTION":
 			globals.MySite.ControllerAPIPort = 3001
 			break
@@ -357,7 +353,7 @@ func readConfigFromDisk() {
 
 func setupGPIO() {
 	rpio.OpenRpio()
-/*	defer func() {
+	/*	defer func() {
 		rpio.CloseRpio()
 	}() */
 
@@ -441,16 +437,16 @@ func startGoRoutines(onceOnly bool) {
 	} else {
 		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
 	}
-	if( globals.MyDevice.Camera.PiCamera == true ) {
+	if (globals.MyDevice.Camera.PiCamera == true) {
 		go pictureTaker(onceOnly)
 	}
 }
 
-func pictureTaker( onceOnly bool ) {
+func pictureTaker(onceOnly bool) {
 	for {
 		camera.TakeAPicture()
 		time.Sleep(30 * time.Second)
-		if( onceOnly ) {
+		if (onceOnly) {
 			break;
 		}
 	}
