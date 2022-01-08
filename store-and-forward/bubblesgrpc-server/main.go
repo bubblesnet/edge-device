@@ -79,6 +79,13 @@ func parseMessageForCurrentState(message string) {
 		return
 	}
 	switch genericMessage.MeasurementName {
+	case "temp_water":
+		if genericMessage.FloatValue != ExternalCurrentState.WaterTempF {
+			log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTempF, genericMessage.FloatValue)
+		}
+		ExternalCurrentState.WaterTempF = genericMessage.FloatValue
+		break
+
 	case "temp_air_middle":
 		if genericMessage.FloatValue != ExternalCurrentState.TempF {
 			log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempF, genericMessage.FloatValue)

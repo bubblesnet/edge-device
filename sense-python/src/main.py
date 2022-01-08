@@ -67,7 +67,6 @@ global light_sensor_name
 global light_measurement_name
 
 
-
 def wait_for_config(filename):
     logging.info('wait_for_config %s' % filename)
     index = 0
@@ -119,6 +118,7 @@ def read_config(fullpath):
                     my_station = station
                     my_site['time_between_sensor_polling_in_seconds'] = 15
         return True
+
 
 def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
     global lastTemp
@@ -219,6 +219,7 @@ def is_our_device(module_type):
 
     return False
 
+
 def bh1750_names():
     global my_site
     global my_device
@@ -287,18 +288,34 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
         logging.debug('BH1750 at 0x%2x failed to read %s' % (LightAddress, ee))
         logging.debug(traceback.format_exc())
 
-
 def append_adc_data(msg):
-    msg['water_temperature'] = 0.0
+    msg['sensor_name'] = 'water_temperature_sensor'
+    msg['measurement_name'] = 'temp_water'
+    msg['value_name'] = 'temp_water'
+    msg['units'] = 'gallons'
     msg['value'] = 0.0
-
+    msg['floatvalue'] = 0.0
+    msg['water_temperature'] = 0.0
 
 def append_gpio_data(msg):
+    msg['sensor_name'] = 'water_temperature_sensor'
+    msg['measurement_name'] = 'temp_water'
+    msg['value_name'] = 'temp_water'
+    msg['units'] = 'gallons'
+    msg['value'] = 0.0
+    msg['floatvalue'] = 0.0
+    msg['water_temperature'] = 0.0
     msg['door_open'] = False
     msg['leak_detector'] = False
 
 
 def append_axl345_data(msg):
+    msg['sensor_name'] = 'tamper_detector'
+    msg['measurement_name'] = 'tamper'
+    msg['value_name'] = 'tamper'
+    msg['units'] = 'boolear'
+    msg['floatvalue'] = 0.0
+
     msg['tamper_detector'] = False
     msg['value'] = False
 
@@ -311,7 +328,9 @@ def report_polled_sensor_parameters(i2cbus):
     #    logging.debug("reportPolledSensorParameters")
 
     if is_our_device('bh1750'):
-        msg = {'message_type': 'measurement'}
+        msg = {
+            'message_type': 'measurement'
+        }
         # If reading the sensor hardware fails, pass the exception up here and
         # we'll skip sending the half-complete message
         try:
@@ -370,7 +389,7 @@ def send_message(msg):
     msg['sample_timestamp'] = int(millis)
     msg['deviceid'] = my_device['deviceid']
     msg['container_name'] = "sense-python"
-    msg['executable_version'] = "9.9.9 "
+    msg['executable_version'] = "9.9.10"
     json_bytes = str.encode(json.dumps(msg))
     logging.debug(json_bytes)
     message = bubblesgrpc_pb2.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)

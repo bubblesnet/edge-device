@@ -80,7 +80,7 @@ func createFormFile(w *multipart.Writer, fieldname string, filename string) (io.
 
 // Creates a new file upload http request with optional extra params
 func newfileUploadRequest(uri string, params map[string]string, paramName string, path string) (*http.Request, error) {
-	log.Infof("newfileUploadRequest %s", uri)
+	//	log.Infof("newfileUploadRequest %s", uri)
 	file, err := os.Open(path)
 	if err != nil {
 		log.Errorf("newfileUploadRequest 1 failed %v", err)
@@ -100,7 +100,7 @@ func newfileUploadRequest(uri string, params map[string]string, paramName string
 
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	log.Infof("CreateFormFile %s %s", paramName, fi.Name())
+	//	log.Infof("CreateFormFile %s %s", paramName, fi.Name())
 	part, err := createFormFile(writer, paramName, fi.Name())
 	if err != nil {
 		log.Errorf("newfileUploadRequest 4 failed %v", err)

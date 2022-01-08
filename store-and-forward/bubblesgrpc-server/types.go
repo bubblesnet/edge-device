@@ -6,6 +6,7 @@ const PRESSURENOTSET float64 = -100.5
 const LIGHTNOTSET float64 = -100.5
 
 type externalState struct {
+	WaterTempF       float64 `json:"tempF,omitemp"`
 	TempF            float64 `json:"tempF,omitempty"`
 	Humidity         float64 `json:"humidity,omitempty"`
 	PressureInternal float64 `json:"pressure_internal,omitempty"`
@@ -13,6 +14,7 @@ type externalState struct {
 }
 
 var ExternalCurrentState = externalState{
+	WaterTempF:       TEMPNOTSET,
 	TempF:            TEMPNOTSET,
 	Humidity:         HUMIDITYNOTSET,
 	LightInternal:    LIGHTNOTSET,
