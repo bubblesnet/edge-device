@@ -79,6 +79,13 @@ func parseMessageForCurrentState(message string) {
 		return
 	}
 	switch genericMessage.MeasurementName {
+	case "plant_height":
+		if genericMessage.FloatValue != ExternalCurrentState.PlantHeightIn {
+			log.Infof("plant_height changed from %f to %f", ExternalCurrentState.PlantHeightIn, genericMessage.FloatValue)
+		}
+		ExternalCurrentState.PlantHeightIn = genericMessage.FloatValue
+		break
+
 	case "temp_water":
 		if genericMessage.FloatValue != ExternalCurrentState.WaterTempF {
 			log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTempF, genericMessage.FloatValue)
@@ -114,7 +121,7 @@ func parseMessageForCurrentState(message string) {
 		log.Warnf("Empty state message sent from %s to store-and-forward %v", genericMessage.ContainerName, genericMessage)
 		break
 	default:
-		log.Infof("Unused GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
+		log.Infof("Unused from %s GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.ContainerName, genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
 		break
 	}
 }
