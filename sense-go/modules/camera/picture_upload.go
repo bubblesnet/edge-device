@@ -33,8 +33,11 @@ func TakeAPicture() {
 	}()
 	log.Debugf("Capturing image...")
 	raspicam.Capture(s, f, errCh)
-	log.Debugf("skipping uploading %s", f.Name())
-	uploadFile(f.Name())
+	log.Debugf("Uploading %s", f.Name())
+	err = uploadFile(f.Name())
+	if err != nil {
+		log.Errorf("os.Upload failed for %s", f.Name())
+	}
 	err = os.Remove(f.Name())
 	if err != nil {
 		log.Errorf("os.Remove failed for %s", f.Name())
@@ -42,7 +45,3 @@ func TakeAPicture() {
 	SendPictureTakenEvent()
 
 }
-
-
-
-
