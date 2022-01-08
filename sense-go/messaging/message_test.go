@@ -9,14 +9,14 @@ import (
 func TestNewADCSensorMessage(t *testing.T) {
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 90000009}
 	type args struct {
-		sensor_name string
+		sensor_name      string
 		measurement_name string
-		value       float64
-		units       string
-		direction 	string
-		channel     int
-		gain        int
-		rate        int
+		value            float64
+		units            string
+		direction        string
+		channel          int
+		gain             int
+		rate             int
 	}
 	tests := []struct {
 		name     string
@@ -26,16 +26,16 @@ func TestNewADCSensorMessage(t *testing.T) {
 		{name: "happy",
 			args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "up", channel: 0, gain: 1, rate: 2},
 			wantPmsg: &ADCSensorMessage{
-				DeviceId: globals.MyDevice.DeviceID,
-				SampleTimestamp: getNowMillis(),
+				DeviceId:          globals.MyDevice.DeviceID,
+				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
-				MeasurementName:	"",
+				MeasurementName:   "",
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
 				Value:             99.99,
-				Units:	"Volts",
-				Direction: "up",
+				Units:             "Volts",
+				Direction:         "up",
 				ChannelNumber:     0,
 				Rate:              2,
 				Gain:              1,
@@ -44,10 +44,10 @@ func TestNewADCSensorMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotPmsg := NewADCSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.channel, tt.args.gain, tt.args.rate);
+			gotPmsg := NewADCSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.channel, tt.args.gain, tt.args.rate)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewADCSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewADCSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
 			}
 		})
 	}
@@ -55,13 +55,13 @@ func TestNewADCSensorMessage(t *testing.T) {
 
 func TestNewDistanceSensorMessage(t *testing.T) {
 	type args struct {
-		sensor_name string
+		sensor_name      string
 		measurement_name string
-		value       float64
-		units       string
-		direction 	string
-		distanceCm  float64
-		distanceIn  float64
+		value            float64
+		units            string
+		direction        string
+		distanceCm       float64
+		distanceIn       float64
 	}
 	tests := []struct {
 		name     string
@@ -70,18 +70,18 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 	}{
 		{args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts", direction: "up", distanceIn: 2.2, distanceCm: 2.1},
 			wantPmsg: &DistanceSensorMessage{
-				DeviceId: globals.MyDevice.DeviceID,
+				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
-				MeasurementName:	"test_measurement",
+				MeasurementName:   "test_measurement",
 				Value:             99.99,
 				Units:             "Volts",
-				Direction: "up",
-				DistanceCm: 2.1,
-				DistanceIn: 2.2,
+				Direction:         "up",
+				DistanceCm:        2.1,
+				DistanceIn:        2.2,
 			},
 		},
 	}
@@ -90,7 +90,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 			gotPmsg := NewDistanceSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.distanceCm, tt.args.distanceIn)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewDistanceSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewDistanceSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
 			}
 		})
 	}
@@ -98,30 +98,30 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 
 func TestNewGenericSensorMessage(t *testing.T) {
 	type args struct {
-		sensor_name string
+		sensor_name      string
 		measurement_name string
-		value       float64
-		units       string
-		direction 	string
+		value            float64
+		units            string
+		direction        string
 	}
 	tests := []struct {
 		name     string
 		args     args
 		wantPmsg *GenericSensorMessage
 	}{
-		{name: "happy", args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts",direction: "up",},
-			wantPmsg: &GenericSensorMessage {
-				DeviceId: globals.MyDevice.DeviceID,
+		{name: "happy", args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts", direction: "up"},
+			wantPmsg: &GenericSensorMessage{
+				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
-				MeasurementName: 	"test_measurement",
+				MeasurementName:   "test_measurement",
 				Value:             99.99,
-				FloatValue:             99.99,
+				FloatValue:        99.99,
 				Units:             "Volts",
-				Direction: "up",
+				Direction:         "up",
 			},
 		},
 	}
@@ -131,7 +131,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 			gotPmsg := NewGenericSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewGenericSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewGenericSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
 			}
 		})
 	}
@@ -139,14 +139,14 @@ func TestNewGenericSensorMessage(t *testing.T) {
 
 func TestNewTamperSensorMessage(t *testing.T) {
 	type args struct {
-		sensor_name string
+		sensor_name      string
 		measurement_name string
-		value       float64
-		units       string
-		direction 	string
-		moveX       float64
-		moveY       float64
-		moveZ       float64
+		value            float64
+		units            string
+		direction        string
+		moveX            float64
+		moveY            float64
+		moveZ            float64
 	}
 	tests := []struct {
 		name     string
@@ -155,19 +155,19 @@ func TestNewTamperSensorMessage(t *testing.T) {
 	}{
 		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "", measurement_name: "movement", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
 			wantPmsg: &TamperSensorMessage{
-				DeviceId: globals.MyDevice.DeviceID,
+				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",
 				MessageType:       "measurement",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
-				MeasurementName: "movement",
+				MeasurementName:   "movement",
 				Value:             99.99,
 				Units:             "Volts",
-				Direction: "",
-				XMove: 1.1,
-				YMove: 2.2,
-				ZMove: 3.3,
+				Direction:         "",
+				XMove:             1.1,
+				YMove:             2.2,
+				ZMove:             3.3,
 			},
 		},
 	}
@@ -177,7 +177,7 @@ func TestNewTamperSensorMessage(t *testing.T) {
 			gotPmsg := NewTamperSensorMessage(tt.args.sensor_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.moveX, tt.args.moveY, tt.args.moveZ)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewTamperSensorMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewTamperSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
 			}
 		})
 	}
@@ -193,7 +193,7 @@ func Test_getNowMillis(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getNowMillis(); got != tt.want {
-				t.Errorf("getNowMillis() = %v, want %v", got, tt.want)
+				t.Errorf("getNowMillis() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

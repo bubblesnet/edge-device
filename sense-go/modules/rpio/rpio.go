@@ -12,7 +12,7 @@ func OpenRpio() {
 	log.Info("Calling rpio.open")
 	err := rpio.Open()
 	if err != nil {
-		log.Errorf("open rpio error %v", err )
+		log.Errorf("open rpio error %#v", err)
 	}
 }
 

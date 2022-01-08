@@ -191,32 +191,32 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	fmt.Printf("readConfig from %s\n", fullpath)
 	file, err := ioutil.ReadFile(fullpath)
 	if err != nil {
-		fmt.Printf("Read config from %s failed %v", fullpath, err)
+		fmt.Printf("Read config from %s failed %#v", fullpath, err)
 		return err
 	}
 	str := string(file)
 	//	log.Infof(str)
 	err = json.Unmarshal([]byte(file), site)
 	if err != nil {
-		fmt.Printf("Error unmarshalling %v\n\n", err)
+		fmt.Printf("Error unmarshalling %#v\n\n", err)
 		fmt.Printf("filestr = %s\n", str)
 		return err
 	}
 	success := setMyStation(MySite)
 	if !success {
 		if len(site.Stations) == 0 {
-			fmt.Printf("NO STATIONS IN THIS SITE!! %v\n", site)
+			fmt.Printf("NO STATIONS IN THIS SITE!! %#v\n", site)
 		} else {
 			fmt.Printf("MyStation not found???\n")
 		}
-		return errors.New(fmt.Sprintf("DeviceID %d not found in %v", MyDeviceID, site.Stations))
+		return errors.New(fmt.Sprintf("DeviceID %d not found in %#v", MyDeviceID, site.Stations))
 	}
-	fmt.Printf("my station is set to %v\n", MyStation)
-	//	fmt.Printf("MyStation = %v\n", MyStation)
+	fmt.Printf("my station is set to %#v\n", MyStation)
+	//	fmt.Printf("MyStation = %#v\n", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
-			fmt.Printf("Current stage is %s - schedule is %v", MyStation.CurrentStage, currentStageSchedule)
+			fmt.Printf("Current stage is %s - schedule is %#v", MyStation.CurrentStage, currentStageSchedule)
 			return nil
 		}
 	}
@@ -228,15 +228,15 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 }
 
 func setMyStation(site Site) (success bool) {
-	//	fmt.Printf("data = %v\n", *site)
+	//	fmt.Printf("data = %#v\n", *site)
 	found := false
 	fmt.Printf("searching %d stations\n", len(site.Stations))
 	for stationIndex := 0; stationIndex < len(site.Stations) && !found; stationIndex++ {
 		fmt.Printf("searching %d devices\n", len(site.Stations[stationIndex].EdgeDevices))
 		for deviceIndex := 0; deviceIndex < len(site.Stations[stationIndex].EdgeDevices) && !found; deviceIndex++ {
-			fmt.Printf("Comparing deviceid %d with %v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
+			fmt.Printf("Comparing deviceid %d with %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 			if MyDeviceID == site.Stations[stationIndex].EdgeDevices[deviceIndex].DeviceID {
-				fmt.Printf("My deviceid %d matches %v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
+				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 				MyStation = &site.Stations[stationIndex]
 				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
 				return true
@@ -272,7 +272,7 @@ func (c *CustomHandler) Log(e log.Entry) {
 	b.WriteString(e.Message)
 
 	for _, f := range e.Fields {
-		_, _ = fmt.Fprintf(b, " %s=%v", f.Key, f.Value)
+		_, _ = fmt.Fprintf(b, " %s=%#v", f.Key, f.Value)
 	}
 	fmt.Println(b.String())
 }
@@ -318,7 +318,7 @@ func ValidateConfigurable() (err error) {
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MyDevice).(*EdgeDevice); ok == false || t == nil {
-		fmt.Printf("ValidateConfigurable EdgeDevice context %s should be %T, is %T value %v\n", "MyDevice", t, MyDevice, t)
+		fmt.Printf("ValidateConfigurable EdgeDevice context %s should be %T, is %T value %#v\n", "MyDevice", t, MyDevice, t)
 		log.Errorf(" context %s should be %T, is %T", "MyDevice", t, MyDevice)
 		return errors.New("bad global")
 	}
@@ -331,7 +331,7 @@ func ValidateConfigurable() (err error) {
 }
 func ValidateConfigured(situation string) (err error) {
 	if err := ValidateConfigurable(); err != nil {
-		log.Errorf("ValidateConfigured error %v", err)
+		log.Errorf("ValidateConfigured error %#v", err)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		time.Sleep(60 * time.Second)
 		return err
@@ -454,19 +454,19 @@ func ValidateConfigured(situation string) (err error) {
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	fmt.Printf("\n\nGetConfigFromServer\n")
 	if err = ValidateConfigurable(); err != nil {
-		log.Errorf("GetConfigFromServer error %v", err)
+		log.Errorf("GetConfigFromServer error %#v", err)
 		return err
 	}
 	if t, ok := interface{}(storeMountPoint).(string); ok == false {
-		log.Errorf(" arg %s should be %v, is %v", "storeMountPoint", t, storeMountPoint)
+		log.Errorf(" arg %s should be %#v, is %#v", "storeMountPoint", t, storeMountPoint)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(relativePath).(string); ok == false {
-		log.Errorf(" arg %s should be %v, is %v", "relativePath", t, relativePath)
+		log.Errorf(" arg %s should be %#v, is %#v", "relativePath", t, relativePath)
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(fileName).(string); ok == false {
-		log.Errorf(" arg %s should be %v, is %v", "fileName", t, fileName)
+		log.Errorf(" arg %s should be %#v, is %#v", "fileName", t, fileName)
 		return errors.New("bad global")
 	}
 
@@ -474,7 +474,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	fmt.Printf("Sending to %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("post error %v\n", err)
+		fmt.Printf("post error %#v\n", err)
 		return err
 	}
 	defer func(Body io.ReadCloser) {
@@ -482,13 +482,13 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	}(resp.Body)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("readall error %v\n", err)
+		fmt.Printf("readall error %#v\n", err)
 		return err
 	}
 	fmt.Printf("\n\nconfig response from server %s\n\n\n", string(body))
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
-		fmt.Printf("err on site %v\n", err)
+		fmt.Printf("err on site %#v\n", err)
 		return errors.New("err on site")
 	}
 
@@ -516,7 +516,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	//	fmt.Printf("writing site to file %s\n\n",filepath)
 	err = ioutil.WriteFile(filepath, bytes, 0777)
 	if err != nil {
-		log.Errorf("error save site file %v", err)
+		log.Errorf("error save site file %#v", err)
 		return err
 	}
 

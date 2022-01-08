@@ -11,13 +11,13 @@ func TestRunADCPoller(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
-		{ name: "happy", wantErr: false},
+		{name: "happy", wantErr: false},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-//			if err := RunADCPoller(); (err != nil) != tt.wantErr {
-//				t.Errorf("RunADCPoller() error = %v, wantErr %v", err, tt.wantErr)
-//			}
+			//			if err := RunADCPoller(); (err != nil) != tt.wantErr {
+			//				t.Errorf("RunADCPoller() error = %#v, wantErr %#v", err, tt.wantErr)
+			//			}
 		})
 	}
 }
@@ -37,7 +37,7 @@ func Test_ReadAllChannels(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ReadAllChannels(0, tt.args.adcMessage); (err != nil) != tt.wantErr {
-				t.Errorf("readAllChannels() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("readAllChannels() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}
@@ -53,7 +53,7 @@ func TestRunADCPoller1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := RunADCPoller(true); (err != nil) != tt.wantErr {
-				t.Errorf("RunADCPoller() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RunADCPoller() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}
@@ -73,7 +73,7 @@ func Test_readAllChannels1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ReadAllChannels(1, tt.args.adcMessage); (err != nil) != tt.wantErr {
-				t.Errorf("readAllChannels() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("readAllChannels() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}

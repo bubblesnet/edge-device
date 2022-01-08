@@ -16,7 +16,6 @@ import (
 	"time"
 )
 
-
 /*
 type ADCSensorMessage struct {
 	ContainerName string `json:"container_name"`
@@ -31,11 +30,11 @@ type ADCSensorMessage struct {
 }
 */
 
-func ReadAllChannels(index int, adcMessage *ADCMessage) (err error ) {
+func ReadAllChannels(index int, adcMessage *ADCMessage) (err error) {
 	return readAllChannels(ads1115s[index], daps[index], adcMessage)
 }
 
-func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) ( err error ) {
+func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) (err error) {
 	log.Debugf("readAllChannels on address 0x%x", config.address)
 	var err1 error
 	adcMessage.Address = config.address
@@ -49,7 +48,7 @@ func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessag
 			(*adcMessage).ChannelValues[channel].Gain = config.channelConfig[channel].gain
 			(*adcMessage).ChannelValues[channel].Rate = config.channelConfig[channel].rate
 		} else {
-			log.Errorf("readAllChannels Read failed %v", err )
+			log.Errorf("readAllChannels Read failed %#v", err)
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			break
@@ -57,11 +56,12 @@ func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessag
 	}
 	return err1
 }
-var last0 = []float64 {
-	0.0,0.0,0.0,0.0,
+
+var last0 = []float64{
+	0.0, 0.0, 0.0, 0.0,
 }
-var last1 = []float64 {
-	0.0,0.0,0.0,0.0,
+var last1 = []float64{
+	0.0, 0.0, 0.0, 0.0,
 }
 
 var ads1115s [2]*i2c.ADS1x15Driver
@@ -75,7 +75,7 @@ func RunADCPoller(onceOnly bool) (err error) {
 		i2c.WithAddress(a0.address))
 	err = ads1115s[0].Start()
 	if err != nil {
-		log.Errorf("error starting interface %v", err )
+		log.Errorf("error starting interface %#v", err)
 		return err
 	}
 
@@ -84,16 +84,16 @@ func RunADCPoller(onceOnly bool) (err error) {
 		i2c.WithAddress(a1.address))
 	err = ads1115s[1].Start()
 	if err != nil {
-		log.Errorf("error starting interface %v", err )
+		log.Errorf("error starting interface %#v", err)
 		return err
 	}
 
 	for {
 		adcMessage := new(ADCMessage)
-//		err := readAllChannels(ads1115s[0], a0, adcMessage)
+		//		err := readAllChannels(ads1115s[0], a0, adcMessage)
 		err := ReadAllChannels(0, adcMessage)
 		if err != nil {
-			log.Errorf("loopforever error %v", err)
+			log.Errorf("loopforever error %#v", err)
 			break
 		} else {
 			for i := 0; i < len(adcMessage.ChannelValues); i++ {
@@ -107,29 +107,29 @@ func RunADCPoller(onceOnly bool) (err error) {
 
 				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", 1, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
-					adcMessage.ChannelValues[i].Voltage,"Volts",
+					adcMessage.ChannelValues[i].Voltage, "Volts",
 					direction,
-					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+					adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
-					log.Errorf("loopforever error %v", err)
+					log.Errorf("loopforever error %#v", err)
 					break
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("RunADCPoller ERROR %v", err)
+					log.Errorf("RunADCPoller ERROR %#v", err)
 				} else {
-//					log.Infof("sensor_reply %v", sensor_reply)
+					//					log.Infof("sensor_reply %#v", sensor_reply)
 				}
 			}
 		}
 
 		adcMessage = new(ADCMessage)
-//		err = readAllChannels(ads1115s[1], a1, adcMessage)
+		//		err = readAllChannels(ads1115s[1], a1, adcMessage)
 		err = ReadAllChannels(1, adcMessage)
 		if err != nil {
-			log.Errorf("loopforever error %v", err)
+			log.Errorf("loopforever error %#v", err)
 			break
 		} else {
 			//			bytearray, err := json.Marshal(adcMessage)
@@ -143,19 +143,19 @@ func RunADCPoller(onceOnly bool) (err error) {
 				last0[i] = adcMessage.ChannelValues[i].Voltage
 				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", 2, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
-					adcMessage.ChannelValues[i].Voltage,"Volts", direction,
-					adcMessage.ChannelValues[i].ChannelNumber,adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+					adcMessage.ChannelValues[i].Voltage, "Volts", direction,
+					adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
 				bytearray, err := json.Marshal(ads)
 				if err != nil {
-					log.Errorf("loopforever error %v", err)
+					log.Errorf("loopforever error %#v", err)
 					break
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("RunADCPoller ERROR %v", err)
+					log.Errorf("RunADCPoller ERROR %#v", err)
 				} else {
-//					log.Infof("sensor_reply %v", sensor_reply)
+					//					log.Infof("sensor_reply %#v", sensor_reply)
 				}
 			}
 		}
@@ -165,8 +165,6 @@ func RunADCPoller(onceOnly bool) (err error) {
 		//		readAllChannels(ads1115s[1],a1)
 		time.Sleep(60 * time.Second)
 	}
-	log.Errorf("loopforever returning err = %v", err)
+	log.Errorf("loopforever returning err = %#v", err)
 	return nil
 }
-
-

@@ -25,12 +25,12 @@ var singletonPowerstrip = RealPowerStrip{Real: true}
 func DoATest(pinnum int) {
 	fmt.Printf("DoATest %d\n", pinnum)
 	if err := rpio.Open(); err != nil {
-		fmt.Printf("error on pin %d %v\n", pinnum,err)
+		fmt.Printf("error on pin %d %#v\n", pinnum, err)
 		return
 	}
-	pin:= rpio.Pin(pinnum)
+	pin := rpio.Pin(pinnum)
 	pin.Output()
-	for i := 0; i < 10; i++  {
+	for i := 0; i < 10; i++ {
 		fmt.Printf("set %d lo \n", pinnum)
 		pin.Low()
 		time.Sleep(5 * time.Second)
@@ -43,7 +43,7 @@ func GetPowerstripService() PowerstripService {
 }
 
 func (r *RealPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool) {
-	log.Infof("Reporting switch %s status %v", switch_name, on)
+	log.Infof("Reporting switch %s status %#v", switch_name, on)
 	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "switch", Data: string(bytearray)}
@@ -52,9 +52,9 @@ func (r *RealPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool
 	} else {
 		_, err = globals.Client.StoreAndForward(context.Background(), &message)
 		if err != nil {
-			log.Errorf("sendSwitchStatusChangeEvent ERROR %v", err)
+			log.Errorf("sendSwitchStatusChangeEvent ERROR %#v", err)
 		} else {
-			//				log.Debugf("%v", sensor_reply)
+			//				log.Debugf("%#v", sensor_reply)
 		}
 	}
 }
@@ -64,12 +64,12 @@ func (r *RealPowerStrip) InitRpioPins() {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		log.Infof("initing BCM%d controlling the device named %s", globals.MyDevice.ACOutlets[i].BCMPinNumber, globals.MyDevice.ACOutlets[i].Name)
 		pins[globals.MyDevice.ACOutlets[i].Index] = rpio.Pin(globals.MyDevice.ACOutlets[i].BCMPinNumber)
-		log.Infof("pins[%d] = %v", globals.MyDevice.ACOutlets[i].Index,pins[globals.MyDevice.ACOutlets[i].Index])
+		log.Infof("pins[%d] = %#v", globals.MyDevice.ACOutlets[i].Index, pins[globals.MyDevice.ACOutlets[i].Index])
 		if globals.RunningOnUnsupportedHardware() {
 			log.Infof("Skipping pin output because we're running on windows")
 			continue
 		}
-		log.Debugf("Setting BCM%d to output mode",globals.MyDevice.ACOutlets[i].BCMPinNumber)
+		log.Debugf("Setting BCM%d to output mode", globals.MyDevice.ACOutlets[i].BCMPinNumber)
 		pins[globals.MyDevice.ACOutlets[i].Index].Output()
 	}
 }
@@ -97,14 +97,14 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
 			log.Infof("TurnOffOutletByName %s", name)
-			log.Infof("offbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
+			log.Infof("offbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index, globals.MyDevice.ACOutlets[i].BCMPinNumber)
 			globals.MyDevice.ACOutlets[i].PowerOn = false
 			singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, false)
 			return
 		}
 	}
-//	log.Warnf("Not my switch %s", name)
+	//	log.Warnf("Not my switch %s", name)
 }
 
 func (r *RealPowerStrip) IsMySwitch(switchName string) bool {
@@ -119,7 +119,6 @@ func (r *RealPowerStrip) IsMySwitch(switchName string) bool {
 	}
 	return false
 }
-
 
 func (r *RealPowerStrip) isOutletOn(name string) bool {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
@@ -138,19 +137,19 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 	}
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
-			log.Infof("turnOnOutletByName %s force %v", name, force)
-			log.Infof("onbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index,globals.MyDevice.ACOutlets[i].BCMPinNumber)
+			log.Infof("turnOnOutletByName %s force %#v", name, force)
+			log.Infof("onbyname found outlet %s at index %d BCM%d", name, globals.MyDevice.ACOutlets[i].Index, globals.MyDevice.ACOutlets[i].BCMPinNumber)
 			globals.MyDevice.ACOutlets[i].PowerOn = true
 			singletonPowerstrip.TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, true)
 			return
 		}
 	}
-//	log.Warnf("Not my switch %s", name)
+	//	log.Warnf("Not my switch %s", name)
 }
 
 func (r *RealPowerStrip) ReportAll(timeout time.Duration) {
-	fmt.Printf("Reporting all switch statuses [%d]\n", len(globals.MyDevice.ACOutlets) )
+	fmt.Printf("Reporting all switch statuses [%d]\n", len(globals.MyDevice.ACOutlets))
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		fmt.Printf("ReportAll outlet %s\n", globals.MyDevice.ACOutlets[i].Name)
 		singletonPowerstrip.SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name, globals.MyDevice.ACOutlets[i].PowerOn)
@@ -166,9 +165,9 @@ func (r *RealPowerStrip) TurnAllOff(timeout time.Duration) {
 		fmt.Printf("TurnAllOff Turning off outlet %s\n", globals.MyDevice.ACOutlets[i].Name)
 		globals.MyDevice.ACOutlets[i].PowerOn = false
 		singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
-//		fmt.Printf("TurnAllOff 1 after\n")
+		//		fmt.Printf("TurnAllOff 1 after\n")
 		singletonPowerstrip.SendSwitchStatusChangeEvent(globals.MyDevice.ACOutlets[i].Name, false)
-//		fmt.Printf("TurnAllOff 2 after\n")
+		//		fmt.Printf("TurnAllOff 2 after\n")
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
 		}
@@ -184,9 +183,9 @@ func (r *RealPowerStrip) TurnOffOutlet(index int) {
 }
 
 func (r *RealPowerStrip) RunPinToggler(isTest bool) {
-	log.Infof("pins %v", pins)
+	log.Infof("pins %#v", pins)
 	for i := 0; i < 8; i++ {
-		log.Debugf("setting up pin[%d] %v", i, pins[i])
+		log.Debugf("setting up pin[%d] %#v", i, pins[i])
 		if globals.RunningOnUnsupportedHardware() {
 			continue
 		}

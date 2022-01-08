@@ -72,6 +72,7 @@ func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.S
 	return &pb.SensorReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", Message: ""}, nil
 }
 
+// parseMessageForCurrentState process a message for any persistent state we might want to keep.
 func parseMessageForCurrentState(message string) {
 	genericMessage := GenericSensorMessage{}
 	err := json.Unmarshal([]byte(message), &genericMessage)
@@ -118,7 +119,7 @@ func parseMessageForCurrentState(message string) {
 		ExternalCurrentState.PressureInternal = genericMessage.FloatValue
 		break
 	case "":
-		log.Warnf("Empty state message sent from %s to store-and-forward %v", genericMessage.ContainerName, genericMessage)
+		log.Warnf("Empty state message sent from %s to store-and-forward %#v", genericMessage.ContainerName, genericMessage)
 		break
 	default:
 		log.Infof("Unused from %s GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.ContainerName, genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
@@ -126,7 +127,7 @@ func parseMessageForCurrentState(message string) {
 	}
 }
 
-// StoreAndForward implements bubblesgrpc.GetState
+// GetState StoreAndForward implements bubblesgrpc.GetState
 func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetStateReply, error) {
 	//	log.Debugf("GetState Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	//	if in.GetSequence() %5 == 0 {

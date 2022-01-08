@@ -35,7 +35,7 @@ func TestAtlasEZODriver_Connection(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if got := d.Connection(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Connection() = %v, want %v", got, tt.want)
+				t.Errorf("Connection() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -66,7 +66,7 @@ func TestAtlasEZODriver_Halt(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if err := d.Halt(); (err != nil) != tt.wantErr {
-				t.Errorf("Halt() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Halt() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}
@@ -97,7 +97,7 @@ func TestAtlasEZODriver_Name(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if got := d.Name(); got != tt.want {
-				t.Errorf("Name() = %v, want %v", got, tt.want)
+				t.Errorf("Name() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -130,11 +130,11 @@ func TestAtlasEZODriver_Ph(t *testing.T) {
 			}
 			gotPH, err := d.Ph()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Ph() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Ph() error = %#v, wantErr %#v", err, tt.wantErr)
 				return
 			}
 			if gotPH != tt.wantPH {
-				t.Errorf("Ph() gotPH = %v, want %v", gotPH, tt.wantPH)
+				t.Errorf("Ph() gotPH = %#v, want %#v", gotPH, tt.wantPH)
 			}
 		})
 	}
@@ -167,7 +167,7 @@ func TestAtlasEZODriver_SetName(t *testing.T) {
 				Config:     tt.fields.Config,
 				tpc:        tt.fields.tpc,
 			}
-			log.Infof("d = %v", d)
+			log.Infof("d = %#v", d)
 		})
 	}
 }
@@ -197,7 +197,7 @@ func TestAtlasEZODriver_Start(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if err := d.Start(); (err != nil) != tt.wantErr {
-				t.Errorf("Start() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Start() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}
@@ -228,7 +228,7 @@ func TestAtlasEZODriver_initialization(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if err := d.initialization(); (err != nil) != tt.wantErr {
-				t.Errorf("initialization() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("initialization() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}
@@ -261,11 +261,11 @@ func TestAtlasEZODriver_rawPh(t *testing.T) {
 			}
 			gotPH, err := d.rawPh()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("rawPh() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("rawPh() error = %#v, wantErr %#v", err, tt.wantErr)
 				return
 			}
 			if gotPH != tt.wantPH {
-				t.Errorf("rawPh() gotPH = %v, want %v", gotPH, tt.wantPH)
+				t.Errorf("rawPh() gotPH = %#v, want %#v", gotPH, tt.wantPH)
 			}
 		})
 	}
@@ -303,11 +303,11 @@ func TestAtlasEZODriver_read(t *testing.T) {
 			}
 			got, err := d.read(tt.args.address, tt.args.n)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("read() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("read() error = %#v, wantErr %#v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("read() got = %v, want %v", got, tt.want)
+				t.Errorf("read() got = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -328,7 +328,7 @@ func TestNewAtlasEZODriver(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewAtlasEZODriver(tt.args.c, tt.args.options...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAtlasEZODriver() = %v, want %v", got, tt.want)
+				t.Errorf("NewAtlasEZODriver() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

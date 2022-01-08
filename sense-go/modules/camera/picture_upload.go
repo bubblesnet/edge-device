@@ -17,7 +17,7 @@ func TakeAPicture() {
 	//	log.Debugf("Creating file %s", filename)
 	f, err := os.Create(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "create file: %v", err)
+		fmt.Fprintf(os.Stderr, "create file: %#v", err)
 		return
 	}
 	defer f.Close()
@@ -27,7 +27,7 @@ func TakeAPicture() {
 	errCh := make(chan error)
 	go func() {
 		for x := range errCh {
-			log.Debugf("CAPTURE ERROR %v", x)
+			log.Debugf("CAPTURE ERROR %#v", x)
 		}
 	}()
 	//	log.Debugf("Capturing image...")

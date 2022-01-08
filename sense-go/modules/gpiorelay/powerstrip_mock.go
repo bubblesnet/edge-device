@@ -20,7 +20,7 @@ func GetPowerstripService() PowerstripService {
 func (r *MockPowerStrip) IsMySwitch(switchName string) bool { return true }
 
 func (m *MockPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool) {
-	log.Infof("Reporting switch %s status %v", switch_name, on)
+	log.Infof("Reporting switch %s status %#v", switch_name, on)
 }
 
 func (m *MockPowerStrip) InitRpioPins() {
