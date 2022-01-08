@@ -2,15 +2,21 @@ package main
 
 const TEMPNOTSET float64 = -100.5
 const HUMIDITYNOTSET float64 = -100.5
+const PRESSURENOTSET float64 = -100.5
+const LIGHTNOTSET float64 = -100.5
 
 type externalState struct {
-	TempF    float64 `json:"tempF,omitempty"`
-	Humidity float64 `json:"humidity,omitempty"`
+	TempF            float64 `json:"tempF,omitempty"`
+	Humidity         float64 `json:"humidity,omitempty"`
+	PressureInternal float64 `json:"pressure_internal,omitempty"`
+	LightInternal    float64 `json:"pressure_internal,omitempty"`
 }
 
 var ExternalCurrentState = externalState{
-	TempF:    TEMPNOTSET,
-	Humidity: HUMIDITYNOTSET,
+	TempF:            TEMPNOTSET,
+	Humidity:         HUMIDITYNOTSET,
+	LightInternal:    LIGHTNOTSET,
+	PressureInternal: PRESSURENOTSET,
 }
 
 type GenericSensorMessage struct {

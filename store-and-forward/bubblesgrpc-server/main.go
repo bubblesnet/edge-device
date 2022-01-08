@@ -80,18 +80,34 @@ func parseMessageForCurrentState(message string) {
 	}
 	switch genericMessage.MeasurementName {
 	case "temp_air_middle":
+		if genericMessage.FloatValue != ExternalCurrentState.TempF {
+			log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempF, genericMessage.FloatValue)
+		}
 		ExternalCurrentState.TempF = genericMessage.FloatValue
-		log.Infof("new temp_air_middle %f", genericMessage.Value)
 		break
 	case "humidity_internal":
+		if genericMessage.FloatValue != ExternalCurrentState.Humidity {
+			log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.Humidity, genericMessage.FloatValue)
+		}
 		ExternalCurrentState.Humidity = genericMessage.FloatValue
-		log.Infof("new humidity_internal %f", genericMessage.Value)
+		break
+	case "light_internal":
+		if genericMessage.FloatValue != ExternalCurrentState.LightInternal {
+			log.Infof("light_internal changed from %f to %f", ExternalCurrentState.LightInternal, genericMessage.FloatValue)
+		}
+		ExternalCurrentState.LightInternal = genericMessage.FloatValue
+		break
+	case "pressure_internal":
+		if genericMessage.FloatValue != ExternalCurrentState.PressureInternal {
+			log.Infof("pressure_internal changed from %f to %f", ExternalCurrentState.PressureInternal, genericMessage.FloatValue)
+		}
+		ExternalCurrentState.PressureInternal = genericMessage.FloatValue
 		break
 	case "":
-		log.Warnf("Empty state message sent to store-and-forward %v", genericMessage)
+		log.Warnf("Empty state message sent from %s to store-and-forward %v", genericMessage.ContainerName, genericMessage)
 		break
 	default:
-		log.Infof("GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
+		log.Infof("Unused GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
 		break
 	}
 }
