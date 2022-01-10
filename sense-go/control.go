@@ -152,7 +152,7 @@ func ControlHeat(force bool) {
 	//	log.Infof("ControlHeat - current stage is %s", globals.MyStation.CurrentStage)
 	if globals.MyStation.CurrentStage == globals.IDLE {
 		log.Debugf("ControlHeat - stage is idle, turning off")
-		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS OFF
+		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS OFFFF
 		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS OFF
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATER, false) // MAKE SURE HEAT IS OFF
 		return
