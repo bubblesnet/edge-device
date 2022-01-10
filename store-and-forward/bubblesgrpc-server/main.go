@@ -79,50 +79,57 @@ func parseMessageForCurrentState(message string) {
 	if err != nil {
 		return
 	}
-	switch genericMessage.MeasurementName {
-	case "plant_height":
-		if genericMessage.FloatValue != ExternalCurrentState.PlantHeightIn {
-			log.Infof("plant_height changed from %f to %f", ExternalCurrentState.PlantHeightIn, genericMessage.FloatValue)
-		}
-		ExternalCurrentState.PlantHeightIn = genericMessage.FloatValue
-		break
+	switch genericMessage.MessageType {
+	case "measurement":
+		switch genericMessage.MeasurementName {
+		case "plant_height":
+			if genericMessage.FloatValue != ExternalCurrentState.PlantHeightIn {
+				log.Infof("plant_height changed from %f to %f", ExternalCurrentState.PlantHeightIn, genericMessage.FloatValue)
+			}
+			ExternalCurrentState.PlantHeightIn = genericMessage.FloatValue
+			break
 
-	case "temp_water":
-		if genericMessage.FloatValue != ExternalCurrentState.WaterTempF {
-			log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTempF, genericMessage.FloatValue)
-		}
-		ExternalCurrentState.WaterTempF = genericMessage.FloatValue
-		break
+		case "temp_water":
+			if genericMessage.FloatValue != ExternalCurrentState.WaterTempF {
+				log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTempF, genericMessage.FloatValue)
+			}
+			ExternalCurrentState.WaterTempF = genericMessage.FloatValue
+			break
 
-	case "temp_air_middle":
-		if genericMessage.FloatValue != ExternalCurrentState.TempF {
-			log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempF, genericMessage.FloatValue)
+		case "temp_air_middle":
+			if genericMessage.FloatValue != ExternalCurrentState.TempF {
+				log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempF, genericMessage.FloatValue)
+			}
+			ExternalCurrentState.TempF = genericMessage.FloatValue
+			break
+		case "humidity_internal":
+			if genericMessage.FloatValue != ExternalCurrentState.Humidity {
+				log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.Humidity, genericMessage.FloatValue)
+			}
+			ExternalCurrentState.Humidity = genericMessage.FloatValue
+			break
+		case "light_internal":
+			if genericMessage.FloatValue != ExternalCurrentState.LightInternal {
+				log.Infof("light_internal changed from %f to %f", ExternalCurrentState.LightInternal, genericMessage.FloatValue)
+			}
+			ExternalCurrentState.LightInternal = genericMessage.FloatValue
+			break
+		case "pressure_internal":
+			if genericMessage.FloatValue != ExternalCurrentState.PressureInternal {
+				log.Infof("pressure_internal changed from %f to %f", ExternalCurrentState.PressureInternal, genericMessage.FloatValue)
+			}
+			ExternalCurrentState.PressureInternal = genericMessage.FloatValue
+			break
+		case "":
+			log.Warnf("Empty state message sent from %s to store-and-forward %#v", genericMessage.ContainerName, genericMessage)
+			break
+		default:
+			log.Infof("Unused from %s GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.ContainerName, genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
+			break
 		}
-		ExternalCurrentState.TempF = genericMessage.FloatValue
-		break
-	case "humidity_internal":
-		if genericMessage.FloatValue != ExternalCurrentState.Humidity {
-			log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.Humidity, genericMessage.FloatValue)
-		}
-		ExternalCurrentState.Humidity = genericMessage.FloatValue
-		break
-	case "light_internal":
-		if genericMessage.FloatValue != ExternalCurrentState.LightInternal {
-			log.Infof("light_internal changed from %f to %f", ExternalCurrentState.LightInternal, genericMessage.FloatValue)
-		}
-		ExternalCurrentState.LightInternal = genericMessage.FloatValue
-		break
-	case "pressure_internal":
-		if genericMessage.FloatValue != ExternalCurrentState.PressureInternal {
-			log.Infof("pressure_internal changed from %f to %f", ExternalCurrentState.PressureInternal, genericMessage.FloatValue)
-		}
-		ExternalCurrentState.PressureInternal = genericMessage.FloatValue
-		break
-	case "":
-		log.Warnf("Empty state message sent from %s to store-and-forward %#v", genericMessage.ContainerName, genericMessage)
 		break
 	default:
-		log.Infof("Unused from %s GenericMessage.SensorName/MeasurementName = %s/%s value %f", genericMessage.ContainerName, genericMessage.SensorName, genericMessage.MeasurementName, genericMessage.FloatValue)
+		log.Warnf("Non-measurement message sent from %s to store-and-forward %#v", genericMessage.ContainerName, genericMessage)
 		break
 	}
 }

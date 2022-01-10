@@ -313,7 +313,7 @@ def append_axl345_data(msg):
     msg['sensor_name'] = 'tamper_detector'
     msg['measurement_name'] = 'tamper'
     msg['value_name'] = 'tamper'
-    msg['units'] = 'boolear'
+    msg['units'] = 'boolean'
     msg['floatvalue'] = 0.0
 
     msg['tamper_detector'] = False
