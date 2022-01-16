@@ -1,4 +1,4 @@
-// +build linux,arm windows,amd64
+// +build linux,arm arm64 windows,amd64
 
 package a2dconverter
 

@@ -69,9 +69,10 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 	if msg == nil || msg.Err != nil {
 		if msg != nil && msg.Err != nil {
 			if strings.Contains(fmt.Sprintf("%#v", msg.Err), "timeout") {
-				log.Debugf("queue read timed out - resubscribing %#v", msg.Err)
+				//				log.Debugf("queue read timed out - NOT resubscribing %#v", msg.Err)
+				return true, nil
 			} else {
-				log.Errorf("listenForCommands read topic error %#v", msg.Err)
+				log.Errorf("listenForCommands read topic error %#v - resubscribing", msg.Err)
 			}
 			time.Sleep(2 * time.Second)
 			return true, msg.Err
@@ -133,7 +134,7 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 			}
 			switchMessage := SwitchMessage{}
 			err := json.Unmarshal(msg.Body, &switchMessage)
-			log.Infof("listenForCommands parsed body into SwitchMessage %#v", switchMessage)
+			log.Infof("listenForCommands parsed body into SwitchMessage %#v on-demand", switchMessage)
 			if err != nil {
 				log.Errorf("listenForCommands switch error %#v", err)
 				break
@@ -143,16 +144,16 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 				break
 			}
 			if switchMessage.SwitchName == "automaticControl" {
-				log.Infof("listenForCommands setting %s to %#v", switchMessage.SwitchName, switchMessage.On)
+				log.Infof("listenForCommands setting %s to %#v on-demand", switchMessage.SwitchName, switchMessage.On)
 				globals.MyStation.AutomaticControl = switchMessage.On
 				if globals.MyStation.AutomaticControl {
 					initializeOutletsForAutomation() // Make sure the switches conform to currently configured automation
 				}
 			} else if switchMessage.On == true {
-				log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
+				log.Infof("listenForCommands turning on %s on-demand", switchMessage.SwitchName)
 				gpiorelay.GetPowerstripService().TurnOnOutletByName(switchMessage.SwitchName, true)
 			} else {
-				log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
+				log.Infof("listenForCommands turning off %s on-demand", switchMessage.SwitchName)
 				gpiorelay.GetPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true)
 			}
 			break
@@ -162,25 +163,26 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 			break
 		}
 	}
-	log.Infof("listenForCommands received message %s", string(msg.Body))
+	log.Infof("listenForCommands successfully processed message %s", string(msg.Body))
 	return false, nil
 }
 
 func listenForCommands(isUnitTest bool) (err error) {
-	log.Infof("listenForCommands dial")
+	topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
+	hostPort := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
+	log.Infof("listenForCommands at %s topic %s", hostPort, topicName)
 
 	var options func(*stomp.Conn) error = func(*stomp.Conn) error {
 		stomp.ConnOpt.Login("userid", "userpassword")
 		stomp.ConnOpt.Host(globals.MySite.ControllerHostName)
 		stomp.ConnOpt.RcvReceiptTimeout(30 * time.Second)
-		stomp.ConnOpt.HeartBeat(30*time.Second, 30*time.Second) // I put this but seems no impact
+		stomp.ConnOpt.HeartBeat(60*time.Second, 60*time.Second) // I put this but seems no impact
 		return nil
 	}
 
 	for j := 0; ; j++ {
 		log.Debugf("stomp.Dial at %d", getNowMillis())
-		host_port := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
-		stompConn, err := stomp.Dial("tcp", host_port, options)
+		stompConn, err := stomp.Dial("tcp", hostPort, options)
 		if err != nil {
 			log.Errorf("listenForCommands dial error %#v", err)
 			return err
@@ -188,13 +190,10 @@ func listenForCommands(isUnitTest bool) (err error) {
 		log.Infof("listenForCommands connect")
 		defer stompConn.Disconnect()
 
-		topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
-		log.Infof("listenForCommands subscribe to topic %s", topicName)
-
+		log.Info("subscribe")
 		sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
 		if err != nil {
-			log.Infof("readtimeout error at %d", getNowMillis())
-			log.Errorf("listenForCommands subscribe error %#v", err)
+			log.Errorf("listenForCommands subscribe error at %d %#v no retry!", getNowMillis(), err)
 			return err
 		}
 		//
@@ -203,7 +202,7 @@ func listenForCommands(isUnitTest bool) (err error) {
 			msg := <-sub.C
 			reSubscribe, err := processCommand(msg)
 			if err != nil {
-				log.Errorf("processCommand error %#v", err)
+				log.Warnf("processCommand error %#v need to redial/resubscribe", err)
 			}
 			if reSubscribe {
 				break
