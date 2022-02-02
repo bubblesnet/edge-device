@@ -235,7 +235,7 @@ func initializeOutletsForAutomation() {
 }
 
 func makeControlDecisions(once_only bool) {
-	log.Info("makeControlDecisions endless loop with once_only set to %#v", once_only)
+	log.Info("makeControlDecisions endless loop with once_only set to %v", once_only)
 	i := 0
 
 	for {
