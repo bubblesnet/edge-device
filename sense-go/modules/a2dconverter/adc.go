@@ -48,7 +48,7 @@ func readAllChannels(ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessag
 			(*adcMessage).ChannelValues[channel].Gain = config.channelConfig[channel].gain
 			(*adcMessage).ChannelValues[channel].Rate = config.channelConfig[channel].rate
 		} else {
-			log.Errorf("readAllChannels Read failed %#v", err)
+			log.Errorf("readAllChannels Read failed on address 0x%x channel %d %#v", config.address, channel, err)
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			break
@@ -91,7 +91,8 @@ func RunADCPoller(onceOnly bool) (err error) {
 	for {
 		adcMessage := new(ADCMessage)
 		//		err := readAllChannels(ads1115s[0], a0, adcMessage)
-		err := ReadAllChannels(0, adcMessage)
+		module_index := 0
+		err := ReadAllChannels(module_index, adcMessage)
 		if err != nil {
 			log.Errorf("loopforever error %#v", err)
 			break
@@ -104,18 +105,20 @@ func RunADCPoller(onceOnly bool) (err error) {
 					direction = "down"
 				}
 				last0[i] = adcMessage.ChannelValues[i].Voltage
-
-				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", 1, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
-					adcMessage.ChannelValues[i].Voltage, "Volts",
-					direction,
-					adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				bytearray, err := json.Marshal(ads)
-				if err != nil {
-					log.Errorf("loopforever error %#v", err)
-					break
-				}
-				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+				/*
+					sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", 1, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+					ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
+						adcMessage.ChannelValues[i].Voltage, "Volts",
+						direction,
+						adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+					bytearray, err := json.Marshal(ads)
+					if err != nil {
+						log.Errorf("loopforever error %#v", err)
+						break
+					}
+					message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+				*/
+				err, message := getADCSensorMessageForChannel(adcMessage, module_index, i, direction)
 				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
 					log.Errorf("RunADCPoller ERROR %#v", err)
@@ -127,7 +130,8 @@ func RunADCPoller(onceOnly bool) (err error) {
 
 		adcMessage = new(ADCMessage)
 		//		err = readAllChannels(ads1115s[1], a1, adcMessage)
-		err = ReadAllChannels(1, adcMessage)
+		module_index = 1
+		err = ReadAllChannels(module_index, adcMessage)
 		if err != nil {
 			log.Errorf("loopforever error %#v", err)
 			break
@@ -141,22 +145,26 @@ func RunADCPoller(onceOnly bool) (err error) {
 					direction = "down"
 				}
 				last0[i] = adcMessage.ChannelValues[i].Voltage
-				sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", 2, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
-					adcMessage.ChannelValues[i].Voltage, "Volts", direction,
-					adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
-				bytearray, err := json.Marshal(ads)
-				if err != nil {
-					log.Errorf("loopforever error %#v", err)
-					break
-				}
-				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+				err, message := getADCSensorMessageForChannel(adcMessage, module_index, i, direction)
+				/*
+					sensor_name := fmt.Sprintf("adc_%d_%d_%d_%d", 2, adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+					ads := messaging.NewADCSensorMessage(sensor_name, sensor_name,
+						adcMessage.ChannelValues[i].Voltage, "Volts", direction,
+						adcMessage.ChannelValues[i].ChannelNumber, adcMessage.ChannelValues[i].Gain, adcMessage.ChannelValues[i].Rate)
+					bytearray, err := json.Marshal(ads)
+					if err != nil {
+						log.Errorf("loopforever error %#v", err)
+						break
+					}
+					message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+				*/
 				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
 					log.Errorf("RunADCPoller ERROR %#v", err)
 				} else {
 					//					log.Infof("sensor_reply %#v", sensor_reply)
 				}
+
 			}
 		}
 		if onceOnly {
@@ -167,4 +175,44 @@ func RunADCPoller(onceOnly bool) (err error) {
 	}
 	log.Errorf("loopforever returning err = %#v", err)
 	return nil
+}
+
+func getADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, index int, direction string) (err error, message pb.SensorRequest) {
+	sensorName := fmt.Sprintf("adc_%d_%d_%d_%d", moduleIndex, adcMessage.ChannelValues[index].ChannelNumber, adcMessage.ChannelValues[index].Gain, adcMessage.ChannelValues[index].Rate)
+
+	if moduleIndex == 0 {
+		if index == 0 {
+			/// TODO convert volts to inches and gallons
+			ads := messaging.NewGenericSensorMessage("water_level", "water_level",
+				adcMessage.ChannelValues[index].Voltage, "Volts", direction)
+			bytearray, err := json.Marshal(ads)
+			if err != nil {
+				log.Errorf("loopforever error %#v", err)
+				return err, message
+			}
+			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+		} else if index == 1 {
+			/// TODO convert volts to temperature
+			ads := messaging.NewGenericSensorMessage("temp_water", "temp_water",
+				adcMessage.ChannelValues[index].Voltage, "F", direction)
+			bytearray, err := json.Marshal(ads)
+			if err != nil {
+				log.Errorf("loopforever error %#v", err)
+				return err, message
+			}
+			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+		}
+	} else {
+		ads := messaging.NewADCSensorMessage(sensorName, sensorName,
+			adcMessage.ChannelValues[index].Voltage, "Volts",
+			direction,
+			adcMessage.ChannelValues[index].ChannelNumber, adcMessage.ChannelValues[index].Gain, adcMessage.ChannelValues[index].Rate)
+		bytearray, err := json.Marshal(ads)
+		if err != nil {
+			log.Errorf("loopforever error %#v", err)
+			return err, message
+		}
+		message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+	}
+	return nil, message
 }

@@ -151,10 +151,10 @@ func TestNewTamperSensorMessage(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		wantPmsg *TamperSensorMessage
+		wantPmsg *TamperEventMessage
 	}{
 		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "", measurement_name: "movement", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
-			wantPmsg: &TamperSensorMessage{
+			wantPmsg: &TamperEventMessage{
 				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
 				ContainerName:     "sense-go",

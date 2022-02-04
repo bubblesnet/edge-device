@@ -74,7 +74,7 @@ type PhMessage struct {
 	Direction         string  `json:"direction"`
 }
 
-type TamperSensorMessage struct {
+type TamperEventMessage struct {
 	DeviceId          int64   `json:"deviceid"`
 	ContainerName     string  `json:"container_name"`
 	ExecutableVersion string  `json:"executable_version"`
@@ -204,17 +204,17 @@ func NewDistanceSensorMessage(sensor_name string, measurement_name string, value
 	return &msg
 }
 
-func NewTamperSensorMessage(sensor_name string, value float64, units string, direction string, moveX float64, moveY float64, moveZ float64) (pmsg *TamperSensorMessage) {
-	msg := TamperSensorMessage{
+func NewTamperSensorMessage(sensor_name string, value float64, units string, direction string, moveX float64, moveY float64, moveZ float64) (pmsg *TamperEventMessage) {
+	msg := TamperEventMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		ContainerName: globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
 		SampleTimestamp: getNowMillis(),
-		MessageType:     "measurement",
+		MessageType:     "event",
 		SensorName:      sensor_name,
-		MeasurementName: "movement",
+		MeasurementName: "tamper",
 		Value:           value,
 		FloatValue:      value,
 		Units:           units,

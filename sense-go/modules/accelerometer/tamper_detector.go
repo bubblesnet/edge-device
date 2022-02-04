@@ -56,7 +56,7 @@ func RunTamperDetector(onceOnly bool) {
 					}
 
 				} else {
-					//					log.Debugf("x: %.3f | y: %.3f | z: %.3f \n", xmove, ymove, zmove))
+					//					log.Debugf("non-tamper movement - x: %.3f | y: %.3f | z: %.3f", xmove, ymove, zmove)
 				}
 			}
 			lastx = x

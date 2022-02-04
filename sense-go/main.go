@@ -181,16 +181,16 @@ func listenForCommands(isUnitTest bool) (err error) {
 	}
 
 	for j := 0; ; j++ {
-		log.Debugf("stomp.Dial at %d", getNowMillis())
+		log.Debugf("stomp.Dial %s at %d - if this is the last message you see, open the firewall port 61613 on ActiveMQ host", hostPort, getNowMillis())
 		stompConn, err := stomp.Dial("tcp", hostPort, options)
 		if err != nil {
 			log.Errorf("listenForCommands dial error %#v", err)
 			return err
 		}
-		log.Infof("listenForCommands connect")
+		log.Infof("listenForCommands connected to %s", hostPort)
 		defer stompConn.Disconnect()
 
-		log.Info("subscribe")
+		log.Infof("subscribing to topic %s", topicName)
 		sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
 		if err != nil {
 			log.Errorf("listenForCommands subscribe error at %d %#v no retry!", getNowMillis(), err)
@@ -372,14 +372,15 @@ func setupGPIO() {
 }
 
 func setupPhMonitor() {
-	log.Infof("ezo mydevice %#v, mystation %#v", globals.MyDevice, globals.MyStation)
+	log.Infof("setupPhMonitor")
 	globals.ValidateConfigured("setupPhMonitor")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
+		log.Info("RootPhSensor configured for this device, starting")
 		phsensor.StartEzoDriver()
+		log.Debug("Ezo driver started")
 	} else {
-		log.Infof("No root ph sensor configured")
+		log.Info("RootPhSensor not configured for this device")
 	}
-	log.Info("after ezo")
 }
 
 func countGoRoutines() (count int) {
@@ -404,16 +405,16 @@ func countGoRoutines() (count int) {
 }
 
 func startGoRoutines(onceOnly bool) {
-	log.Info("movement")
+	log.Info("startGoRoutines")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
-		log.Info("MovementSensor should be connected to this device, starting")
+		log.Info("MovementSensor configured for this device, starting")
 		go accelerometer.RunTamperDetector(onceOnly)
 	} else {
-		log.Warnf("No adxl345 Configured - skipping tamper detection")
+		log.Warnf("MovementSensor (adxl345) not configured for this device - skipping tamper detection")
 	}
 	log.Infof("adc %s %d %#v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
-		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
+		log.Info("WaterlevelSensor configured for this device, starting ADC")
 		go func() {
 			err := a2dconverter.RunADCPoller(onceOnly)
 			if err != nil {
@@ -421,23 +422,27 @@ func startGoRoutines(onceOnly bool) {
 			}
 		}()
 	} else {
-		log.Warnf("No ads1115s configured - skipping A to D conversion because %#v", globals.MyStation.WaterLevelSensor)
+		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
 	}
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
+		log.Info("RootPhSensor configured for this device, starting ezoPh")
 		phsensor.StartEzo(onceOnly)
 	} else {
-		log.Warnf("No ezoph configured - skipping pH monitoring")
+		log.Warnf("RootPhSensor (ezoPh) not configured for this device, - skipping pH monitoring")
 	}
 	log.Infof("moduleShouldBeHere %s %d %#v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
-		log.Info("HeightSensor should be connected to this device, starting HSCR04")
+		log.Info("HeightSensor configured for this device, starting HSCR04")
 		go distancesensor.RunDistanceWatcher(onceOnly)
 	} else {
-		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
+		log.Warnf("HeightSensor (hcsr04) not configured for this device - skipping distance monitoring")
 	}
 	if globals.MyDevice.Camera.PiCamera == true {
+		log.Info("Camera configured for this device, starting picture taker")
 		go pictureTaker(onceOnly)
+	} else {
+		log.Warnf("Camera (piCamers) not configured for this device - skipping picture taker")
 	}
 }
 
@@ -523,7 +528,7 @@ func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInStation 
 		//		log.Infof("%#v", globals.MySite.AttachedDevices[i])
 		for j := 0; j < len(globals.MyStation.EdgeDevices[i].DeviceModules); j++ {
 			if globals.MyStation.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && globals.MyStation.EdgeDevices[i].DeviceID == mydeviceid && globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType == moduleType {
-				log.Infof("Device %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceType, globals.MyStation.EdgeDevices[i].DeviceModules[j].Address)
+				log.Infof("Module %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType, globals.MyStation.EdgeDevices[i].DeviceModules[j].Address)
 				return true
 			}
 		}
