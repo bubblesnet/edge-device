@@ -7,6 +7,7 @@ import (
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
 	"testing"
+	"time"
 )
 
 func TestRunADCPoller(t *testing.T) {
@@ -47,6 +48,14 @@ func initIt() (err error) {
 	}
 	return nil
 }
+
+func _Loop(t *testing.T) {
+	for {
+		Test_ReadAllChannels(t)
+		time.Sleep(1 * time.Second)
+	}
+}
+
 func Test_ReadAllChannels(t *testing.T) {
 	adcM := ADCMessage{}
 
@@ -72,7 +81,9 @@ func Test_ReadAllChannels(t *testing.T) {
 			if err := ReadAllChannels(tt.args.boardIndex, tt.args.adcMessage); (err != nil) != tt.wantErr {
 				t.Errorf("readAllChannels() error = %#v, wantErr %#v", err, tt.wantErr)
 			} else {
-				t.Logf("Board %d message = %#v", tt.args.boardIndex, tt.args.adcMessage)
+				for i := 0; i < 4; i++ {
+					t.Logf("Board %d channel %d Voltage = %f", tt.args.boardIndex, i, tt.args.adcMessage.ChannelValues[i].Voltage)
+				}
 			}
 		})
 	}
