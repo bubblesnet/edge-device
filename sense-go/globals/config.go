@@ -14,11 +14,8 @@ import (
 	"time"
 )
 
-// Site
-/**
-Top-level object in the data hierarchy.  A site is identified by the user/owner
-and contains multiple stations.
-*/
+// Site is the Top-level object in the data hierarchy.  A site is identified by the user/owner
+// and contains multiple stations.
 type Site struct {
 	SiteID             int64     `json:"siteid"`
 	UserID             int64     `json:"userid"`
@@ -28,14 +25,12 @@ type Site struct {
 	Stations           []Station `json:"stations,omitempty"`
 }
 
-// Station
-/**
-A station is a grow-unit, typically either a cabinet or a tent.  A station
-contains multiple edge devices, typically Raspberry Pi.
-*/
+// Station is a grow-unit, typically either a cabinet or a tent.  A station
+// contains multiple edge devices, typically Raspberry Pi.  It's the enclosing physical
+// structure for one or more plants.
 type Station struct {
 	StationID              int64           `json:"stationid"`
-	AutomaticControl       bool            `json: "automatic_control, omitempty"`
+	AutomaticControl       bool            `json:"automatic_control,omitempty"`
 	HeightSensor           bool            `json:"height_sensor,omitempty"`
 	Humidifier             bool            `json:"humidifier,omitempty"`
 	HumiditySensor         bool            `json:"humidity_sensor_internal,omitempty"`
@@ -72,14 +67,11 @@ type Station struct {
 	TamperSpec             Tamper          `json:"tamper,omitempty"`
 }
 
-// EdgeDevice
-/**
-An EdgeDevice is a single-board-computer that, with the other
-AttachedDevices in the Station, implements the intelligence of the Station
-such that the ideal grow-conditions for the plants inside the Station are
-always maintained, and a stream of event and environmental sensor messages are sent to
-the time-series database.
-*/
+// EdgeDevice is a single-board-computer that, with the other
+// AttachedDevices in the Station, implements the intelligence of the Station
+// such that the ideal grow-conditions for the plants inside the Station are
+// always maintained, and a stream of event and environmental sensor messages are sent to
+// the time-series database.
 type EdgeDevice struct {
 	DeviceID                          int64          `json:"deviceid"`
 	DeviceType                        string         `json:"devicetypename,omitempty"`
@@ -92,12 +84,9 @@ type EdgeDevice struct {
 	ACOutlets                         []ACOutlet     `json:"ac_outlets,omitempty"`
 }
 
-// DeviceModule
-/**
-A DeviceModule is typically an add-on board attached to the edge device that
-generates one or more types of measurements.  An AttachedDevice can have multiple
-DeviceModules.
-*/
+// DeviceModule is typically an add-on board attached to the edge device that
+//generates one or more types of measurements.  An AttachedDevice can have multiple
+//DeviceModules.
 type DeviceModule struct {
 	ModuleID        int64    `json:"moduleid"`
 	ContainerName   string   `json:"container_name,omitempty"`
@@ -133,6 +122,7 @@ type StageSchedule struct {
 	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
 }
 
+/// TODO: Delete this
 type ControlState struct {
 }
 
@@ -155,6 +145,7 @@ type ACOutlet struct {
 	BCMPinNumber int    `json:"bcm_pin_number"`
 }
 
+// ReadMyDeviceId reads the deviceid of this device from the config directory
 func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string) (id int64, err error) {
 	log.Debug("ReadMyDeviceId")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
@@ -169,6 +160,7 @@ func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string
 	return id, err
 }
 
+// ReadMyServerHostname reads the name/ip of the server from the config directory
 func ReadMyServerHostname(storeMountPoint string, relativePath string, fileName string) (serverHostname string, err error) {
 	log.Debug("ReadMyServerHostname")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
@@ -182,8 +174,10 @@ func ReadMyServerHostname(storeMountPoint string, relativePath string, fileName 
 	return serverHostname, err
 }
 
-func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileName string, site *Site, currentStageSchedule *StageSchedule) error {
-	log.Debug("ReadFromPersistentStore")
+// ReadCompleteSiteFromPersistentStore reads a complete site configuration from the specified mount-point/relativePath/fileName
+// and sets the station, and currentStageSchedule from there.
+func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath string, fileName string, site *Site, currentStageSchedule *StageSchedule) error {
+	log.Debug("ReadCompleteSiteFromPersistentStore")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
 		fullpath = storeMountPoint + "/" + fileName
@@ -202,7 +196,7 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 		fmt.Printf("filestr = %s\n", str)
 		return err
 	}
-	success := setMyStation(MySite)
+	success := setMyStationAndMyDevice(MySite)
 	if !success {
 		if len(site.Stations) == 0 {
 			fmt.Printf("NO STATIONS IN THIS SITE!! %#v\n", site)
@@ -227,7 +221,9 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	return errors.New(errstr)
 }
 
-func setMyStation(site Site) (success bool) {
+// setMyStationAndMyDevice sets the globally accessible vars MyStation and MyDevice from a full
+// site configuration.  Convenience function to keep from accessing site every time
+func setMyStationAndMyDevice(site Site) (success bool) {
 	//	fmt.Printf("data = %#v\n", *site)
 	found := false
 	fmt.Printf("searching %d stations\n", len(site.Stations))
@@ -239,6 +235,7 @@ func setMyStation(site Site) (success bool) {
 				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 				MyStation = &site.Stations[stationIndex]
 				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
+				found = true
 				return true
 			}
 		}
@@ -277,6 +274,7 @@ func (c *CustomHandler) Log(e log.Entry) {
 	fmt.Println(b.String())
 }
 
+// ConfigureLogging adds log handlers for each log level enabled in the site configuration
 func ConfigureLogging(site Site, containerName string) {
 	cLog := new(CustomHandler)
 
@@ -301,6 +299,8 @@ func ConfigureLogging(site Site, containerName string) {
 
 }
 
+// ValidateConfigurable checks MySite and MyDevice configuration to determine that all configuration
+// structures are present and implement the appropriate interfaces.
 func ValidateConfigurable() (err error) {
 	if t, ok := interface{}(MySite).(Site); ok == false {
 		fmt.Printf("ValidateConfigurable mysite.site context %s should be %T, is %T\n", "MySite", t, MySite)
@@ -329,6 +329,9 @@ func ValidateConfigurable() (err error) {
 	}
 	return nil
 }
+
+// ValidateConfigured checks that the configuration is present and implements all interfaces and that all checkable
+// values are within limits.
 func ValidateConfigured(situation string) (err error) {
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %#v", err)
@@ -451,6 +454,8 @@ func ValidateConfigured(situation string) (err error) {
 	return nil
 }
 
+// GetConfigFromServer get the site config from the host named in the configuration file "hostname" in the config
+// directory.
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	fmt.Printf("\n\nGetConfigFromServer\n")
 	if err = ValidateConfigurable(); err != nil {
@@ -497,7 +502,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		log.Fatalf("stations is nil!!!")
 	}
 	MySite.Stations = newconfig.Stations
-	success := setMyStation(MySite)
+	success := setMyStationAndMyDevice(MySite)
 	if !success {
 		fmt.Printf("No station\n")
 		return errors.New("NO station!!")
@@ -508,13 +513,17 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return err
 	}
 
-	bytes, err := json.MarshalIndent(MySite, "", "  ")
+	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
+	if err != nil {
+		log.Errorf("error marshalling MySite %#v", err)
+		return err
+	}
 	filepath := fmt.Sprintf("%s/%s/%s", storeMountPoint, relativePath, fileName)
 	if len(relativePath) == 0 {
 		filepath = fmt.Sprintf("%s/%s", storeMountPoint, fileName)
 	}
 	//	fmt.Printf("writing site to file %s\n\n",filepath)
-	err = ioutil.WriteFile(filepath, bytes, 0777)
+	err = ioutil.WriteFile(filepath, siteBytes, 0777)
 	if err != nil {
 		log.Errorf("error save site file %#v", err)
 		return err

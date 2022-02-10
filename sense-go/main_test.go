@@ -13,8 +13,8 @@ import (
 
 func init() {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		log.Errorf("ReadFromPersistentStore() error = %#v", err)
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
 	}
 
 }
@@ -154,8 +154,8 @@ func testLight(t *testing.T) {
 
 func Test_moduleShouldBeHere(t *testing.T) {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		log.Errorf("ReadFromPersistentStore() error = %#v", err)
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
 	}
 	type args struct {
 		containerName   string
@@ -358,8 +358,8 @@ func Test_countACOutlets(t *testing.T) {
 
 func Test_isMySwitch(t *testing.T) {
 	globals.MyDeviceID = 70000007
-	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		t.Errorf("ReadFromPersistentStore() error = %#v", err)
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		t.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
 	}
 	/*
 		type args struct {
@@ -473,8 +473,8 @@ func Test_startGoRoutines(t *testing.T) {
 func Test_testableSubmain(t *testing.T) {
 	globals.MyDeviceID = 70000007
 	globals.PersistentStoreMountPoint = "./testdata"
-	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		t.Errorf("ReadFromPersistentStore() error = %#v", err)
+	if err := globals.ReadCompleteSiteFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		t.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
 	}
 	type args struct {
 		isUnitTest bool

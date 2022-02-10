@@ -327,8 +327,8 @@ func initGlobals() {
 }
 
 func readConfigFromDisk() {
-	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		fmt.Printf("ReadFromPersistentStore failed - using default config\n")
+	if err := globals.ReadCompleteSiteFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		fmt.Printf("ReadCompleteSiteFromPersistentStore failed - using default config\n")
 		//		globals.MySite.ControllerHostName = serverHostname
 		globals.MySite.ControllerAPIPort = 3003
 		nodeEnv := os.Getenv("NODE_ENV")

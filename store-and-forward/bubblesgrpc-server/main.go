@@ -64,7 +64,7 @@ type server struct {
 
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
-	//	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
 		parseMessageForCurrentState(in.GetData())

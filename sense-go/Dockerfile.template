@@ -15,6 +15,6 @@ ENV UDEV=1
 ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 
 CMD ["modprobe i2c-dev; export I2C_BUS=1"]
-CMD ["/go/bin/sense-go"]
-#CMD ["bash"]
+# CMD ["/go/bin/sense-go"]
+CMD ["bash"]
 
