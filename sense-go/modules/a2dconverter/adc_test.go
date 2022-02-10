@@ -71,7 +71,6 @@ func Test_ReadAllChannels(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{name: "Board 0", args: args0, wantErr: false},
 		{name: "Board 1", args: args1, wantErr: false},
 	}
@@ -81,13 +80,14 @@ func Test_ReadAllChannels(t *testing.T) {
 			if err := ReadAllChannels(tt.args.boardIndex, tt.args.adcMessage); (err != nil) != tt.wantErr {
 				t.Errorf("readAllChannels() error = %#v, wantErr %#v", err, tt.wantErr)
 			} else {
-				for i := 0; i < 4; i++ {
-					t.Logf("Board %d channel %d Voltage = %f", tt.args.boardIndex, i, tt.args.adcMessage.ChannelValues[i].Voltage)
-				}
+				t.Logf("Board %d %f/%f/%f/%f", tt.args.boardIndex,
+					tt.args.adcMessage.ChannelValues[0].Voltage,
+					tt.args.adcMessage.ChannelValues[1].Voltage,
+					tt.args.adcMessage.ChannelValues[2].Voltage,
+					tt.args.adcMessage.ChannelValues[3].Voltage)
 			}
 		})
 	}
-
 }
 
 func TestRunADCPoller1(t *testing.T) {
