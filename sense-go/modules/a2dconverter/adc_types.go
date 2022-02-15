@@ -6,9 +6,10 @@ type ChannelConfig struct {
 }
 
 type AdapterConfig struct {
-	bus_id        int
-	address       int
-	channelConfig [4]ChannelConfig
+	bus_id            int
+	address           int
+	channelConfig     [4]ChannelConfig
+	channelWaitMillis int
 }
 
 type ChannelValue struct {
@@ -25,13 +26,13 @@ var a0 = AdapterConfig{
 	address: 0x48,
 	channelConfig: [4]ChannelConfig{
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 	},
 }
 
@@ -40,13 +41,13 @@ var a1 = AdapterConfig{
 	address: 0x49,
 	channelConfig: [4]ChannelConfig{
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 	},
 }
 var daps = []AdapterConfig{a0, a1}

@@ -416,7 +416,7 @@ func startGoRoutines(onceOnly bool) {
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
 		log.Info("WaterlevelSensor configured for this device, starting ADC")
 		go func() {
-			err := a2dconverter.RunADCPoller(onceOnly)
+			err := a2dconverter.RunADCPoller(onceOnly, globals.PollingWaitInSeconds)
 			if err != nil {
 				log.Errorf("rpio.close %+v", err)
 			}

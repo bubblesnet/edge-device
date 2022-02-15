@@ -41,6 +41,7 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 	adcMessage.BusId = config.bus_id
 	for channel := 0; channel < 4; channel++ {
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
+		//		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, 860)
 		if err == nil {
 			log.Debugf("Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 			(*adcMessage).ChannelValues[channel].ChannelNumber = channel
@@ -53,39 +54,34 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 			err1 = err
 			break
 		}
+		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
 	}
 	return err1
 }
 
-var last0 = []float64{
-	0.0, 0.0, 0.0, 0.0,
-}
-var last1 = []float64{
-	0.0, 0.0, 0.0, 0.0,
+var lastValues = [][]float64{
+	{0.0, 0.0, 0.0, 0.0},
+	{0.0, 0.0, 0.0, 0.0},
+	{0.0, 0.0, 0.0, 0.0},
+	{0.0, 0.0, 0.0, 0.0},
 }
 
 var ads1115s [2]*i2c.ADS1x15Driver
+var i2cAddresses = []int{0x48, 0x49, 0x4a, 0x4d}
 
-func RunADCPoller(onceOnly bool) (err error) {
+func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 
 	adcAdaptor := raspi.NewAdaptor() // optional bus/address
 
-	ads1115s[0] = i2c.NewADS1115Driver(adcAdaptor,
-		i2c.WithBus(a0.bus_id),
-		i2c.WithAddress(a0.address))
-	err = ads1115s[0].Start()
-	if err != nil {
-		log.Errorf("error starting interface %#v", err)
-		return err
-	}
-
-	ads1115s[1] = i2c.NewADS1115Driver(adcAdaptor,
-		i2c.WithBus(a1.bus_id),
-		i2c.WithAddress(a1.address))
-	err = ads1115s[1].Start()
-	if err != nil {
-		log.Errorf("error starting interface %#v", err)
-		return err
+	for moduleIndex := 0; moduleIndex < 2; moduleIndex++ {
+		ads1115s[moduleIndex] = i2c.NewADS1115Driver(adcAdaptor,
+			i2c.WithBus(a0.bus_id),
+			i2c.WithAddress(i2cAddresses[moduleIndex]))
+		err = ads1115s[moduleIndex].Start()
+		if err != nil {
+			log.Errorf("error starting interface %#v", err)
+			return err
+		}
 	}
 
 	for {
@@ -99,12 +95,12 @@ func RunADCPoller(onceOnly bool) (err error) {
 				for channelIndex := 0; channelIndex < len(adcMessage.ChannelValues); channelIndex++ {
 					log.Infof("adc message for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, adcMessage)
 					direction := ""
-					if adcMessage.ChannelValues[channelIndex].Voltage > last0[channelIndex] {
+					if adcMessage.ChannelValues[channelIndex].Voltage > lastValues[moduleIndex][channelIndex] {
 						direction = "up"
-					} else if adcMessage.ChannelValues[channelIndex].Voltage < last0[channelIndex] {
+					} else if adcMessage.ChannelValues[channelIndex].Voltage < lastValues[moduleIndex][channelIndex] {
 						direction = "down"
 					}
-					last0[channelIndex] = adcMessage.ChannelValues[channelIndex].Voltage
+					lastValues[moduleIndex][channelIndex] = adcMessage.ChannelValues[channelIndex].Voltage
 					err, message := getADCSensorMessageForChannel(adcMessage, moduleIndex, channelIndex, direction)
 					log.Infof("adc %#v", adcMessage)
 					sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
@@ -120,7 +116,7 @@ func RunADCPoller(onceOnly bool) (err error) {
 				return nil
 			}
 			//		readAllChannels(ads1115s[1],a1)
-			time.Sleep(60 * time.Second)
+			time.Sleep(time.Duration(pollingWaitInSeconds) * time.Second)
 		}
 	}
 	log.Errorf("loopforever returning err = %#v", err)
@@ -176,8 +172,21 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			/// TODO convert values using configuration  data
 			sensorName = "water_level"
 			measurementName = "water_level"
-			measurementValue = adcMessage.ChannelValues[channelIndex].Voltage
-			measurementUnits = "Volts"
+			//			measurementValue = adcMessage.ChannelValues[channelIndex].Voltage
+			//			measurementUnits = "Volts"
+			maxVoltage := 3.324
+			maxInches := 12.0
+			maxGallons := 10.0
+			addlVolts := adcMessage.ChannelValues[channelIndex].Voltage - (maxVoltage / 2)
+			if addlVolts < 0.0 {
+				addlVolts = 0.0
+			}
+			percent := addlVolts / (maxVoltage / 2)
+			inches := maxInches * percent
+			gallons := maxGallons * percent
+			measurementValue = gallons
+			measurementUnits = "Gallons"
+			log.Infof("raw Volts %f, percent %f, inches %f, gallons %f, addlVolts %f", adcMessage.ChannelValues[channelIndex].Voltage, percent, inches, gallons, addlVolts)
 		} else if channelIndex == 1 {
 			sensorName = "temp_water"
 			measurementName = "temp_water"
