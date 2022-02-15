@@ -71,7 +71,6 @@ func Test_ReadAllChannels(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{name: "Board 0", args: args0, wantErr: false},
 		{name: "Board 1", args: args1, wantErr: false},
 	}
