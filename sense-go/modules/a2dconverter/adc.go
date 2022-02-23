@@ -1,3 +1,4 @@
+//go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
 package a2dconverter
@@ -174,19 +175,21 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			measurementName = "water_level"
 			//			measurementValue = adcMessage.ChannelValues[channelIndex].Voltage
 			//			measurementUnits = "Volts"
-			maxVoltage := 3.324
-			maxInches := 12.0
-			maxGallons := 10.0
-			addlVolts := adcMessage.ChannelValues[channelIndex].Voltage - (maxVoltage / 2)
-			if addlVolts < 0.0 {
-				addlVolts = 0.0
+			// ohms =ohmsAtMax+(ohmsAtMin-ohmsAtMax)-percent*(ohmsAtMin-ohmsAtMax)
+			// volts =voltsMin+(voltsMin*(ohms/(ohms+ohmsAtMin)))
+			maxVoltage := 3.325
+			minResistance := 400.0
+			maxResistance := 2200.0
+			//			maxGallons := 10.0
+			inches, err := etapeInchesFromVolts(maxVoltage, adcMessage.ChannelValues[channelIndex].Voltage, minResistance, maxResistance, 1.0, 12.78)
+			if err != nil {
+				log.Errorf("etapeInchesFromVolts returned error %v", err)
+				return err, message
 			}
-			percent := addlVolts / (maxVoltage / 2)
-			inches := maxInches * percent
-			gallons := maxGallons * percent
+			gallons := etapeInchesToGallons(inches)
 			measurementValue = gallons
 			measurementUnits = "Gallons"
-			log.Infof("raw Volts %f, percent %f, inches %f, gallons %f, addlVolts %f", adcMessage.ChannelValues[channelIndex].Voltage, percent, inches, gallons, addlVolts)
+			log.Infof("raw Volts %f, inches %f", adcMessage.ChannelValues[channelIndex].Voltage, inches, gallons)
 		} else if channelIndex == 1 {
 			sensorName = "temp_water"
 			measurementName = "temp_water"

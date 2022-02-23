@@ -1,4 +1,5 @@
-// +build linux,arm arm64 windows,amd64
+//go:build (linux && arm) || arm64
+// +build linux,arm arm64
 
 package a2dconverter
 

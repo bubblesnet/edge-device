@@ -1,19 +1,17 @@
-package rpio
-
 // +build linux,arm
 
-package main
+package rpio
 
 import (
-"fmt"
-"github.com/stianeikeland/go-rpio"
+	"fmt"
+	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
 	fmt.Println("Calling rpio.open")
 	err := rpio.Open()
-	if err != nil  {
-		fmt.Println("%#v", err )
+	if err != nil {
+		fmt.Println("%#v", err)
 	} else {
 		fmt.Println("Error is nil rpio.open worked")
 	}

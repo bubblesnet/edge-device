@@ -24,13 +24,13 @@ func openWriteable(dbFilename string) {
 	}
 	if err != nil {
 		log.Errorf("writeable open timed out after 5 attempts in 10 seconds")
-		log.Fatalf("%v",err)
+		log.Fatalf("%v", err)
 	} else {
 		log.Infof("Succeeded opening database %s", databaseFilename)
 	}
-//	defer func() {
-//		_ = xdb.Close()
-//	}()
+	//	defer func() {
+	//		_ = xdb.Close()
+	//	}()
 
 	writeableDb = xdb
 	log.Debugf(" writeabledb is %v", writeableDb)
@@ -38,34 +38,77 @@ func openWriteable(dbFilename string) {
 	//	defer writeableDb.Close()
 }
 
-func makeBuckets( buckets []string) {
+func makeBuckets(buckets []string) {
 	log.Info("makeBuckets\n")
 	messageBucketName := buckets[0]
+	nodeEnv := os.Getenv("NODE_ENV")
+	if nodeEnv == "DEV" {
+		err := deleteBucketIfExist(messageBucketName)
+		if err != nil {
+			log.Warnf("error deleting bucket %s %v ... continuing", messageBucketName, err)
+		}
+	}
 	created, err := makeBucketIfNotExist(messageBucketName)
 	if err != nil {
 		return
 	}
 	if created == true {
 		log.Debug("Successfully created msg bucket")
-	} else  {
+	} else {
 		log.Debug("msg Bucket already existed")
 	}
 	stateBucketName := buckets[1]
+	if nodeEnv == "DEV" {
+		err := deleteBucketIfExist(stateBucketName)
+		if err != nil {
+			log.Warnf("error deleting bucket %s %v ... continuing", stateBucketName, err)
+		}
+	}
 	created, err = makeBucketIfNotExist(stateBucketName)
 	if err != nil {
 		return
 	}
 	if created == true {
 		log.Debug("Successfully created state bucket")
-	} else  {
+	} else {
 		log.Debug("state Bucket already existed")
 	}
 }
 
 func initDb(databaseFilename string) {
-	fmt.Printf("initdb %s\n",databaseFilename)
+	fmt.Printf("initdb %s\n", databaseFilename)
 	openWriteable(databaseFilename)
-	makeBuckets([]string{messageBucketName,stateBucketName})
+	makeBuckets([]string{messageBucketName, stateBucketName})
+}
+
+func deleteBucketIfExist(bucketName string) (error) {
+	log.Debugf("deleteBucketIfExist %s\n", bucketName)
+	// Start a writable transaction.
+	log.Debugf(" begin writeabledb is %v", writeableDb)
+	tx, err := writeableDb.Begin(true)
+	if err != nil {
+		log.Errorf("begin transaction error %v", err)
+		return err
+	} else {
+		log.Debugf("succeeded transaction start")
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	log.Debugf("DeleteBucket %s\n", bucketName)
+	// Use the transaction...
+	err = tx.DeleteBucket([]byte(bucketName))
+	if err != nil {
+		log.Errorf("DeleteBucket bucket error %v", err)
+		return nil
+	}
+
+	// Commit the transaction and check for error.
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func makeBucketIfNotExist(bucketName string) (bool, error) {
@@ -80,7 +123,7 @@ func makeBucketIfNotExist(bucketName string) (bool, error) {
 		log.Debugf("succeeded transaction start")
 	}
 	defer func() {
-		_= tx.Rollback()
+		_ = tx.Rollback()
 	}()
 
 	log.Debugf("CreateBucket %s\n", bucketName)
@@ -90,7 +133,7 @@ func makeBucketIfNotExist(bucketName string) (bool, error) {
 		log.Errorf("Create bucket error %v", err)
 		return false, nil
 	}
-	log.Debugf( "bucket create = %v", blah)
+	log.Debugf("bucket create = %v", blah)
 
 	// Commit the transaction and check for error.
 	if err := tx.Commit(); err != nil {
@@ -99,24 +142,24 @@ func makeBucketIfNotExist(bucketName string) (bool, error) {
 	return true, nil
 }
 
-func addRecord(bucketName string, message string, sequence int32 ) error {
+func addRecord(bucketName string, message string, sequence int32) error {
 	currentTime := time.Now()
-	key := fmt.Sprintf( "%s (%6.6d)", currentTime.Format(time.RFC3339), sequence )
+	key := fmt.Sprintf("%s (%6.6d)", currentTime.Format(time.RFC3339), sequence)
 
-//	key := fmt.Sprintf("%20.20d", currentTime.Unix())
-//	log.Debugf("adding record key %s value %s", key, message)
+	//	key := fmt.Sprintf("%20.20d", currentTime.Unix())
+	//	log.Debugf("adding record key %s value %s", key, message)
 	_ = writeableDb.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucketName))
 		err := b.Put([]byte(key), []byte(message))
 		if err != nil {
-			log.Errorf("error addRecord %v", err )
+			log.Errorf("error addRecord %v", err)
 		}
 		return err
 	})
 	return nil
 }
 
-func deleteFromBucket( bucketName string, key []byte ) error {
+func deleteFromBucket(bucketName string, key []byte) error {
 	//	log.Debugf("deleting key=%s\n", key )
 	tx, err := writeableDb.Begin(true)
 	if err != nil {
@@ -201,7 +244,7 @@ func getStatesAsJson(tx *bolt.Tx) (err error) {
 		return nil
 	})
 	csvx = csvx + "\n]"
-	log.Debugf("getStates - got %d records", count )
+	log.Debugf("getStates - got %d records", count)
 	return nil
 }
 
@@ -230,8 +273,7 @@ func getStateAsCsv( bucketName string, year int, month int, day int) (string, er
 }
 */
 
-
-func getStateAsJson( _ string, _ int, _ int, _ int) (string, error) {
+func getStateAsJson(_ string, _ int, _ int, _ int) (string, error) {
 	csv := ""
 	log.Debugf("pid %d getRecordList getStateAsJson", os.Getpid())
 	csvx = ""
