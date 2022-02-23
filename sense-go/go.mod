@@ -14,7 +14,7 @@ require (
 	github.com/jdevelop/golang-rpi-extras v0.0.0-20181010003844-c75e8edb0d6f
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/stianeikeland/go-rpio v4.2.0+incompatible // indirect
+	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	gobot.io/x/gobot v1.14.0
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc

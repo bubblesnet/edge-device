@@ -235,7 +235,7 @@ func initializeOutletsForAutomation() {
 }
 
 func makeControlDecisions(once_only bool) {
-	log.Info("makeControlDecisions endless loop with once_only set to %v", once_only)
+	log.Infof("makeControlDecisions endless loop with once_only set to %t", once_only)
 	i := 0
 
 	for {
@@ -275,7 +275,7 @@ func reportVersion() {
 		BubblesnetBuildNumberString, BubblesnetBuildTimestamp, BubblesnetGitHash)
 }
 
-func initGlobals() {
+func initGlobals(testing bool) {
 	log.Infof("initGlobals")
 	globals.BubblesnetVersionMajorString = BubblesnetVersionMajorString
 	globals.BubblesnetVersionMinorString = BubblesnetVersionMinorString
@@ -300,6 +300,10 @@ func initGlobals() {
 	readConfigFromDisk()
 	// Get a NEW config file from server and save to disk
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
+		if testing {
+			fmt.Printf("Returning because of bad configuration\n")
+			return
+		}
 		fmt.Printf("Exiting because of bad configuration - sleeping for 60 seconds to allow intervention\n")
 		time.Sleep(60 * time.Second)
 		os.Exit(1)
@@ -465,7 +469,7 @@ func testableSubmain(isUnitTest bool) {
 	fmt.Printf(globals.ContainerName)
 	log.Infof(globals.ContainerName)
 
-	initGlobals()
+	initGlobals(isUnitTest)
 
 	// Set up a connection to the server.
 	if !isUnitTest {
@@ -514,7 +518,7 @@ func testableSubmain(isUnitTest bool) {
 }
 
 func isRelayAttached(deviceid int64) (relayIsAttached bool) {
-	if len(globals.MyDevice.ACOutlets) > 0 {
+	if globals.MyDeviceID == deviceid && len(globals.MyDevice.ACOutlets) > 0 {
 		return true
 	}
 	return false
