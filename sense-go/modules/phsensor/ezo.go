@@ -1,4 +1,5 @@
-// +build linux,arm
+//go:build (linux && arm) || arm64
+// +build linux,arm arm64
 
 package phsensor
 
@@ -20,7 +21,8 @@ func StartEzoDriver() {
 	err := ezoDriver.Start()
 	if err != nil {
 		globals.ReportDeviceFailed("ezoph")
-		log.Errorf("ezo start error %v", err)
+		log.Errorf("ezo start error %#v", err)
+
 	}
 }
 
@@ -39,7 +41,8 @@ func ReadPh(once_only bool) error {
 	ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 	err := ezoDriver.Start()
 	if err != nil {
-		log.Errorf("ezoDriver.Start returned ph device error %v", err)
+		log.Errorf("ezoDriver.Start returned ph device error %#v", err)
+
 		return err
 	}
 	var e error = nil
@@ -47,7 +50,8 @@ func ReadPh(once_only bool) error {
 	for {
 		ph, err := ezoDriver.Ph()
 		if err != nil {
-			log.Errorf("ReadPh error %v", err)
+			log.Errorf("ReadPh error %#v", err)
+
 			e = err
 			break
 		} else {
@@ -64,9 +68,10 @@ func ReadPh(once_only bool) error {
 			if globals.Client != nil {
 				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("RunADCPoller ERROR %v", err)
+					log.Errorf("RunADCPoller ERROR %#v", err)
 				} else {
-					//				log.Infof("sensor_reply %v", sensor_reply)
+					//				log.Infof("sensor_reply %#v", sensor_reply)
+
 				}
 			} else {
 				e = errors.New("GRPC client is not connected!")
@@ -75,8 +80,11 @@ func ReadPh(once_only bool) error {
 		if once_only {
 			break
 		}
-		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
+		//		x := globals.MyDevice.TimeBetweenSensorPollingInSeconds
+
+		time.Sleep(30 * time.Second)
 	}
-	log.Debugf("returning %v from readph", e)
+	log.Debugf("returning %#v from readph", e)
+
 	return e
 }

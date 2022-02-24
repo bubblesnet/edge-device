@@ -6,48 +6,48 @@ type ChannelConfig struct {
 }
 
 type AdapterConfig struct {
-	bus_id int
-	address int
-	channelConfig[4]ChannelConfig
+	bus_id            int
+	address           int
+	channelConfig     [4]ChannelConfig
+	channelWaitMillis int
 }
 
 type ChannelValue struct {
-	ChannelNumber int `json:"channel_number,omitempty"`
-	Voltage float64 `json:"voltage,omitempty"`
-	Gain    int	`json:"gain,omitempty"`
-	Rate    int	`json:"rate,omitempty"`
+	ChannelNumber int     `json:"channel_number"`
+	Voltage       float64 `json:"voltage,omitempty"`
+	Gain          int     `json:"gain"`
+	Rate          int     `json:"rate"`
 }
 
 type Channels [4]ChannelValue
 
-
-var	a0 = AdapterConfig{
+var a0 = AdapterConfig{
 	bus_id:  1,
 	address: 0x48,
 	channelConfig: [4]ChannelConfig{
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 	},
 }
 
 var a1 = AdapterConfig{
-	bus_id: 1,
-	address:    0x49,
+	bus_id:  1,
+	address: 0x49,
 	channelConfig: [4]ChannelConfig{
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 		{gain: 1,
-			rate: 8},
+			rate: 860},
 	},
 }
 var daps = []AdapterConfig{a0, a1}
@@ -57,4 +57,3 @@ type ADCMessage struct {
 	Address       int      `json:"address"`
 	ChannelValues Channels `json:"channel_values"`
 }
-

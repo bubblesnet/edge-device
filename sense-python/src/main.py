@@ -27,7 +27,7 @@ except ImportError:
 try:
     import grpc as grpcio
 except ImportError:
-    grpc = ""
+    grpcio = ""
 
 try:
     import smbus2
@@ -42,6 +42,7 @@ except ImportError:
 
 import bubblesgrpc_pb2
 from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
+from os.path import exists
 
 lastTemp = 0.0
 global my_site
@@ -56,19 +57,31 @@ lastHumidity = 0.0
 lastPressure = 0.0
 lastLight = 0.0
 
-global temperature_sensor_name
 global humidity_sensor_name
 global pressure_sensor_name
+global temperature_sensor_name
 global temperature_measurement_name
 global humidity_measurement_name
 global pressure_measurement_name
+global light_sensor_name
+global light_measurement_name
 
-temperature_sensor_name = "UNKNOWN"
-humidity_sensor_name = "UNKNOWN"
-pressure_sensor_name = "UNKNOWN"
-temperature_measurement_name = 'UNKNOWN'
-humidity_measurement_name = "UNKNOWN"
-pressure_measurement_name = "UNKNOWN"
+
+def wait_for_config(filename):
+    logging.info('wait_for_config %s' % filename)
+    index = 0
+    while index <= 60:
+        if exists(filename):
+            logging.info('%s file exists' % filename)
+            return
+        logging.info("Sleeping while we wait for someone to create %s" % filename)
+        time.sleep(60)
+        index = index+1
+        if index == 60:
+            logging.error("config file never showed up, exiting")
+            exit(1)
+
+    return
 
 
 def read_deviceid(filename):
@@ -80,12 +93,22 @@ def read_deviceid(filename):
         return (deviceid)
 
 
+def validate_config():
+    b = 'stations' in my_site
+    if not b:
+        return False
+
+    return True
+
+
 def read_config(fullpath):
     global my_site, my_station, my_device
     deviceid = my_site['deviceid']
     with open(fullpath) as f:
         my_site = json.load(f)
         my_site['deviceid'] = deviceid
+        if not validate_config():
+            return False
         for station in my_site['stations']:
             if 'edge_devices' not in station:
                 continue
@@ -94,6 +117,7 @@ def read_config(fullpath):
                     my_device = device
                     my_station = station
                     my_site['time_between_sensor_polling_in_seconds'] = 15
+        return True
 
 
 def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
@@ -103,8 +127,11 @@ def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
         data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['units'] = 'C'
         msg['value'] = (data.temperature * 1.8) + 32.0
         msg[measurement_name] = msg['value']
+        msg['floatvalue'] = msg['value']
+        msg['value_name'] = measurement_name
         msg['direction'] = ''
         if data.temperature > lastTemp:
             msg['direction'] = "up"
@@ -117,7 +144,7 @@ def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
         msg['tempC'] = data.temperature
         msg['tempF'] = (data.temperature * 1.8) + 32.0
     except Exception as ee:
-        logging.debug("bme280 error %s" % e)
+        logging.debug("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
@@ -128,7 +155,10 @@ def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name):
         data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['units'] = '%'
+        msg['value_name'] = measurement_name
         msg['value'] = data.humidity
+        msg['floatvalue'] = msg['value']
         msg[measurement_name] = data.humidity
         direction = ""
         if data.humidity > lastHumidity:
@@ -152,7 +182,10 @@ def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name):
         data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['units'] = 'hPa'
+        msg['value_name'] = measurement_name
         msg['value'] = data.pressure
+        msg['floatvalue'] = msg['value']
         msg[measurement_name] = data.pressure
         direction = ""
         if data.pressure > lastPressure:
@@ -187,15 +220,33 @@ def is_our_device(module_type):
     return False
 
 
+def bh1750_names():
+    global my_site
+    global my_device
+    global light_sensor_name
+    global light_measurement_name
+
+    print(my_device)
+    for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == "bh1750":
+            for included_sensor in module['included_sensors']:
+                if 'light' in included_sensor['measurement_name']:
+                    light_sensor_name = included_sensor['sensor_name']
+                    light_measurement_name = included_sensor['measurement_name']
+
+
 def bme280_names():
     global my_site
     global my_device
-    global temperature_sensor_name
     global humidity_sensor_name
     global pressure_sensor_name
+    global temperature_sensor_name
     global temperature_measurement_name
     global humidity_measurement_name
     global pressure_measurement_name
+    global light_sensor_name
+    global light_measurement_name
+
     print(my_device)
     for module in my_device['modules']:
         if module['container_name'] == 'sense-python' and module['module_type'] == "bme280":
@@ -217,7 +268,10 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
     try:
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
+        msg['value_name'] = measurement_name
+        msg['units'] = 'lux'
         msg['value'] = bh1750.readLight(LightAddress)
+        msg['floatvalue'] = msg['value']
         msg[measurement_name] = msg['value']
         direction = ""
         if msg['value'] > lastLight:
@@ -230,38 +284,60 @@ def append_bh1750_data(msg, sensor_name, measurement_name):
         msg[direction_name] = direction
         lastLight = msg['value']
 
-        #        logging.debug("Read bh1750 light at 0x%x as %f" % (deviceAddressList['light'], msg['light']))
     except Exception as ee:
         logging.debug('BH1750 at 0x%2x failed to read %s' % (LightAddress, ee))
         logging.debug(traceback.format_exc())
 
-
 def append_adc_data(msg):
+    msg['sensor_name'] = 'water_temperature_sensor'
+    msg['measurement_name'] = 'temp_water'
+    msg['value_name'] = 'temp_water'
+    msg['units'] = 'gallons'
+    msg['value'] = 0.0
+    msg['floatvalue'] = 0.0
     msg['water_temperature'] = 0.0
 
-
 def append_gpio_data(msg):
+    msg['sensor_name'] = 'water_temperature_sensor'
+    msg['measurement_name'] = 'temp_water'
+    msg['value_name'] = 'temp_water'
+    msg['units'] = 'gallons'
+    msg['value'] = 0.0
+    msg['floatvalue'] = 0.0
+    msg['water_temperature'] = 0.0
     msg['door_open'] = False
     msg['leak_detector'] = False
 
 
 def append_axl345_data(msg):
+    msg['sensor_name'] = 'tamper_detector'
+    msg['measurement_name'] = 'tamper'
+    msg['value_name'] = 'tamper'
+    msg['units'] = 'boolean'
+    msg['floatvalue'] = 0.0
+
     msg['tamper_detector'] = False
+    msg['value'] = False
 
 
 def report_polled_sensor_parameters(i2cbus):
     global my_site
+    global light_sensor_name
+    global light_measurement_name
+
     #    logging.debug("reportPolledSensorParameters")
 
     if is_our_device('bh1750'):
-        msg = {'message_type': 'measurement'}
+        msg = {
+            'message_type': 'measurement'
+        }
         # If reading the sensor hardware fails, pass the exception up here and
         # we'll skip sending the half-complete message
         try:
-            append_bh1750_data(msg, 'light_internal_sensor', 'light_internal')
+            append_bh1750_data(msg, light_sensor_name, light_measurement_name)
             send_message(msg)
         except Exception as ee:
-            logging.error(e)
+            logging.error(ee)
 
     if is_our_device('bme280'):
         msg = {'message_type': 'measurement'}
@@ -313,7 +389,7 @@ def send_message(msg):
     msg['sample_timestamp'] = int(millis)
     msg['deviceid'] = my_device['deviceid']
     msg['container_name'] = "sense-python"
-    msg['executable_version'] = "9.9.9 "
+    msg['executable_version'] = "9.9.10"
     json_bytes = str.encode(json.dumps(msg))
     logging.debug(json_bytes)
     message = bubblesgrpc_pb2.SensorRequest(sequence=seq, type_id="sensor", data=json_bytes)
@@ -330,8 +406,15 @@ if __name__ == "__main__":
     logging.debug("Starting sense-python")
     my_site['deviceid'] = read_deviceid('/config/deviceid')
     logging.info("deviceid from file is %d" % my_site['deviceid'])
-    read_config('/config/config.json')
+    wait_for_config('/config/config.json')
+    b = read_config('/config/config.json')
+    if not b:
+        logging.error('invalid config.json - not validating')
+        time.sleep(60)
+        exit(1)
+
     bme280_names()
+    bh1750_names()
     LightAddress = get_address('bh1750')
 
     # Create library object using our Bus I2C port

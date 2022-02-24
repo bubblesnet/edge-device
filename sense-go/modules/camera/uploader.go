@@ -24,14 +24,14 @@ func SendPictureTakenEvent() {
 	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "picture", Data: string(bytearray)}
 	_, err = globals.Client.StoreAndForward(context.Background(), &message)
 	if err != nil {
-		log.Errorf("SendPictureTakenEvent ERROR %v", err)
+		log.Errorf("SendPictureTakenEvent ERROR %#v", err)
 	} else {
-		//				log.Debugf("%v", sensor_reply)
+		//				log.Debugf("%#v", sensor_reply)
 	}
 }
 
 func uploadFile(name string) (err error) {
-	log.Infof("uploadFile %s", name)
+	//	log.Infof("uploadFile %s", name)
 	path, _ := os.Getwd()
 	path += "/" + name
 	extraParams := map[string]string{
@@ -41,24 +41,24 @@ func uploadFile(name string) (err error) {
 	}
 	url := fmt.Sprintf("http://%s:%d/api/video/%8.8d/%8.8d/upload", globals.MySite.ControllerHostName,
 		globals.MySite.ControllerAPIPort, globals.MySite.UserID, globals.MyDevice.DeviceID)
-	log.Debugf("Uploading to api at %s", url)
+	//	log.Debugf("Uploading to api at %s", url)
 	request, err := newfileUploadRequest(url, extraParams, "filename", name)
 	if err != nil {
-		log.Errorf("uploadFile 1 fatal %v", err)
+		log.Errorf("uploadFile 1 fatal %#v", err)
 		log.Fatal(err)
 	}
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		log.Errorf("uploadFile 2 fatal %v", err)
-		log.Fatal(err)
+		log.Errorf("uploadFile %s 2 fatal %#v", name, err)
+		return err
 	} else {
 		var bodyContent []byte
-		fmt.Println(resp.StatusCode)
-		fmt.Println(resp.Header)
+		//		log.Infof("File upload returned %d", resp.StatusCode)
+		//		log.Infof("AND %#v", resp.Header)
 		resp.Body.Read(bodyContent)
 		resp.Body.Close()
-		fmt.Println(bodyContent)
+		//		log.Infof("AND %#v", bodyContent)
 	}
 	return nil
 }
@@ -80,30 +80,30 @@ func createFormFile(w *multipart.Writer, fieldname string, filename string) (io.
 
 // Creates a new file upload http request with optional extra params
 func newfileUploadRequest(uri string, params map[string]string, paramName string, path string) (*http.Request, error) {
-	log.Infof("newfileUploadRequest %s", uri)
+	//	log.Infof("newfileUploadRequest %s", uri)
 	file, err := os.Open(path)
 	if err != nil {
-		log.Errorf("newfileUploadRequest 1 failed %v", err)
+		log.Errorf("newfileUploadRequest 1 failed %#v", err)
 		return nil, err
 	}
 	fileContents, err := ioutil.ReadAll(file)
 	if err != nil {
-		log.Errorf("newfileUploadRequest 2 failed %v", err)
+		log.Errorf("newfileUploadRequest 2 failed %#v", err)
 		return nil, err
 	}
 	fi, err := file.Stat()
 	if err != nil {
-		log.Errorf("newfileUploadRequest 3 failed %v", err)
+		log.Errorf("newfileUploadRequest 3 failed %#v", err)
 		return nil, err
 	}
 	file.Close()
 
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	log.Infof("CreateFormFile %s %s", paramName, fi.Name())
+	//	log.Infof("CreateFormFile %s %s", paramName, fi.Name())
 	part, err := createFormFile(writer, paramName, fi.Name())
 	if err != nil {
-		log.Errorf("newfileUploadRequest 4 failed %v", err)
+		log.Errorf("newfileUploadRequest 4 failed %#v", err)
 		return nil, err
 	}
 
@@ -114,7 +114,7 @@ func newfileUploadRequest(uri string, params map[string]string, paramName string
 	}
 	err = writer.Close()
 	if err != nil {
-		log.Errorf("newfileUploadRequest 5 failed %v", err)
+		log.Errorf("newfileUploadRequest 5 failed %#v", err)
 		return nil, err
 	}
 
@@ -122,4 +122,3 @@ func newfileUploadRequest(uri string, params map[string]string, paramName string
 	request.Header.Add("Content-Type", writer.FormDataContentType())
 	return request, err
 }
-

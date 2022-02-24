@@ -8,15 +8,15 @@ import (
 
 // These are shadows of vars in main
 var BubblesnetVersionMajorString string
-var BubblesnetVersionMinorString=""
-var BubblesnetVersionPatchString=""
-var BubblesnetBuildNumberString=""
-var BubblesnetBuildTimestamp=""
-var BubblesnetGitHash=""
+var BubblesnetVersionMinorString = ""
+var BubblesnetVersionPatchString = ""
+var BubblesnetBuildNumberString = ""
+var BubblesnetBuildTimestamp = ""
+var BubblesnetGitHash = ""
 
 var ContainerName = "sense-go"
 
-var PersistentStoreMountPoint = "/config"	// Can be changed for units
+var PersistentStoreMountPoint = "/config" // Can be changed for units
 
 var DevicesFailed []string
 
@@ -26,6 +26,8 @@ var MyStation *Station
 
 var MyDeviceID = int64(0)
 
+var PollingWaitInSeconds = 10
+
 // var DeviceId = int64(0)
 // var UserId = int64(0)
 
@@ -34,30 +36,40 @@ const (
 )
 
 type LocalState struct {
-	EnvironmentalControl string  `json:"environmental_control,omitempty"`
-	Humidifier bool `json:"humidifier"`
-	Heater bool `json:"heater"`
-	HeaterPad bool `json:"heater_pad"`
-	GrowLightVeg bool `json:"grow_light_veg"`
+	EnvironmentalControl string `json:"environmental_control,omitempty"`
+	Humidifier           bool   `json:"humidifier"`
+	Heater               bool   `json:"heater"`
+	HeaterPad            bool   `json:"heater_pad"`
+	GrowLightVeg         bool   `json:"grow_light_veg"`
 }
 
-var LocalCurrentState = LocalState {
+var LocalCurrentState = LocalState{
 	EnvironmentalControl: "",
-	GrowLightVeg:             false,
-	HeaterPad:              false,
-	Heater:              false,
-	Humidifier: false,
+	GrowLightVeg:         false,
+	HeaterPad:            false,
+	Heater:               false,
+	Humidifier:           false,
 }
 
 const INLETFAN string = "inletFan"
 const WATERPUMP string = "waterPump"
 const GROWLIGHTVEG string = "lightVegetative"
+const GROWLIGHTBLOOM string = "lightBloom"
 const HEATPAD string = "lightBloom"
 const HEATLAMP string = "heatLamp"
 const AIRPUMP string = "airPump"
 const OUTLETFAN string = "exhaustFan"
 const HUMIDIFIER string = "humidifier"
 const HEATER string = "heater"
+
+const GERMINATION string = "germination"
+const SEEDLING string = "seedling"
+const VEGETATIVE string = "vegetative"
+const BLOOMING string = "blooming"
+const HARVEST string = "harvest"
+const CURING string = "curing"
+const DRYING string = "drying"
+const IDLE string = "idle"
 
 var CurrentStageSchedule StageSchedule
 
@@ -68,7 +80,7 @@ var Sequence int32
 var Client pb.SensorStoreAndForwardClient
 
 func RunningOnUnsupportedHardware() (notSupported bool) {
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm"  && runtime.GOARCH != "arm64") {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
 		return true
 	}
 	return false
@@ -81,10 +93,10 @@ func ReportDeviceFailed(devicename string) {
 		}
 	}
 	log.Errorf("Adding device %s to failed list", devicename)
-	DevicesFailed = append(DevicesFailed,devicename)
+	DevicesFailed = append(DevicesFailed, devicename)
 }
 
-func GetSequence() (int32){
+func GetSequence() int32 {
 	if Sequence > 200000 {
 		Sequence = 100001
 	} else {

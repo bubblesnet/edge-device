@@ -1,4 +1,5 @@
-// +build linux,arm
+//go:build (linux && arm) || arm64
+// +build linux,arm arm64
 
 package accelerometer
 
@@ -38,7 +39,7 @@ func RunTamperDetector(onceOnly bool) {
 				xmove = math.Abs(lastx - x)
 				ymove = math.Abs(lasty - y)
 				zmove = math.Abs(lastz - z)
-				if xmove > globals.MyStation.TamperSpec.Xmove ||  ymove > globals.MyStation.TamperSpec.Ymove ||  zmove > globals.MyStation.TamperSpec.Zmove {
+				if xmove > globals.MyStation.TamperSpec.Xmove || ymove > globals.MyStation.TamperSpec.Ymove || zmove > globals.MyStation.TamperSpec.Zmove {
 					log.Infof("new tamper message !! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove)
 					var tamperMessage = messaging.NewTamperSensorMessage("tamper_sensor",
 						0.0, "", "", xmove, ymove, zmove)
@@ -50,13 +51,13 @@ func RunTamperDetector(onceOnly bool) {
 					message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 					_, err = globals.Client.StoreAndForward(context.Background(), &message)
 					if err != nil {
-						log.Errorf("runTamperDetector ERROR %v", err)
+						log.Errorf("runTamperDetector ERROR %#v", err)
 					} else {
-						//						log.Debugf("%v", sensor_reply)
+						//						log.Debugf("%#v", sensor_reply)
 					}
 
 				} else {
-					//					log.Debugf("x: %.3f | y: %.3f | z: %.3f \n", xmove, ymove, zmove))
+					//					log.Debugf("non-tamper movement - x: %.3f | y: %.3f | z: %.3f", xmove, ymove, zmove)
 				}
 			}
 			lastx = x
@@ -74,11 +75,14 @@ func RunTamperDetector(onceOnly bool) {
 	err := robot.Start()
 	if err != nil {
 		globals.ReportDeviceFailed("adxl345")
-		log.Errorf("adxl345 robot start error %v", err)
+		log.Errorf("adxl345 robot start error %#v", err)
+	}
+
+	if onceOnly {
+		robot.Stop()
 	}
 
 	if onceOnly {
 		robot.Stop()
 	}
 }
-

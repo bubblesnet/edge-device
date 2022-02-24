@@ -6,9 +6,9 @@ import (
 	"bubblesnet/edge-device/sense-go/modules/a2dconverter"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
 	"bubblesnet/edge-device/sense-go/modules/camera"
-	"bubblesnet/edge-device/sense-go/modules/phsensor"
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
 	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
+	"bubblesnet/edge-device/sense-go/modules/phsensor"
 	"bubblesnet/edge-device/sense-go/modules/rpio"
 	"encoding/json"
 	"fmt"
@@ -29,8 +29,6 @@ var BubblesnetBuildNumberString = ""
 var BubblesnetBuildTimestamp = ""
 var BubblesnetGitHash = ""
 
-
-
 func runLocalStateWatcher() {
 	log.Info("runLocalStateWatcher")
 	for true {
@@ -39,10 +37,10 @@ func runLocalStateWatcher() {
 			log.Debugf("sending local current state msg %s?", string(bytearray))
 			//			err = grpc.SendStoreAndForwardMessageWithRetries(grpc.GetSequenceNumber(), string(bytearray[:]), 3)
 			//			if err != nil {
-			//				log.Error(fmt.Sprintf("runLocalStateWatcher ERROR %v", err))
+			//				log.Error(fmt.Sprintf("runLocalStateWatcher ERROR %#v", err))
 			//			}
 		} else {
-			//			log.Debugf("runLocalStateWatcher error = %v", err ))
+			//			log.Debugf("runLocalStateWatcher error = %#v", err ))
 			break
 		}
 		delay := globals.MyDevice.TimeBetweenSensorPollingInSeconds
@@ -67,31 +65,19 @@ func countACOutlets() int {
 	return len(globals.MyDevice.ACOutlets)
 }
 
-func isMySwitch(switchName string) bool {
-	if switchName == "automaticControl" {
-		return true
-	}
-
-	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
-		if globals.MyDevice.ACOutlets[i].Name == switchName {
-			return true
-		}
-	}
-	return false
-}
-
-func processCommand(msg *stomp.Message) (resub bool, err error ) {
+func processCommand(msg *stomp.Message) (resub bool, err error) {
 	if msg == nil || msg.Err != nil {
 		if msg != nil && msg.Err != nil {
-			if strings.Contains(fmt.Sprintf("%v",msg.Err), "timeout") {
-				log.Debugf("queue read timed out - resubscribing %v", msg.Err)
+			if strings.Contains(fmt.Sprintf("%#v", msg.Err), "timeout") {
+				//				log.Debugf("queue read timed out - NOT resubscribing %#v", msg.Err)
+				return true, nil
 			} else {
-				log.Errorf("listenForCommands read topic error %v", msg.Err)
+				log.Errorf("listenForCommands read topic error %#v - resubscribing", msg.Err)
 			}
 			time.Sleep(2 * time.Second)
 			return true, msg.Err
 		} else {
-			//				log.Errorf("listenForCommands read topic error %v", msg)
+			//				log.Errorf("listenForCommands read topic error %#v", msg)
 		}
 		time.Sleep(2 * time.Second)
 		return false, nil
@@ -104,23 +90,41 @@ func processCommand(msg *stomp.Message) (resub bool, err error ) {
 		SwitchName string `json:"switch_name"`
 		On         bool   `json:"on"`
 	}
-
+	type StageMessage struct {
+		Command   string `json:"command"`
+		StageName string `json:"stage_name"`
+	}
 	header := MessageHeader{}
 	err = json.Unmarshal(msg.Body, &header)
 	if err != nil {
-		log.Errorf("listenForCommands marshal error %v", err)
+		log.Errorf("listenForCommands marshal error %#v", err)
 		return false, err
 	}
-	log.Infof("listenForCommands parsed body into %v", header)
+	log.Infof("listenForCommands parsed body into %#v", header)
 	log.Infof("header.Command === %s", header.Command)
 	switch header.Command {
+	case "stage":
+		log.Infof("Changing stage via message %s", msg.Body)
+		stageMessage := StageMessage{}
+		if err := json.Unmarshal(msg.Body, &stageMessage); err != nil {
+			log.Errorf("couldn't parse stage message %s, %#v", msg.Body, err)
+			break
+		}
+		log.Infof("listenForCommands parsed body into SwitchMessage %#v", stageMessage)
+		globals.MyStation.CurrentStage = stageMessage.StageName
+		break
 	case "picture":
-		if globals.MyDevice.Camera.PiCamera == false{
+		if globals.MyDevice.Camera.PiCamera == false {
 			log.Infof("No camera configured, skipping picture")
 		} else {
 			log.Infof("switch calling takeAPicture")
 			camera.TakeAPicture()
 		}
+		break
+	case "status":
+		fmt.Printf("\n\nReceived status message\n\n")
+		gpiorelay.PowerstripSvc.ReportAll(200 * time.Millisecond)
+		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
 		break
 	case "switch":
 		{
@@ -130,27 +134,27 @@ func processCommand(msg *stomp.Message) (resub bool, err error ) {
 			}
 			switchMessage := SwitchMessage{}
 			err := json.Unmarshal(msg.Body, &switchMessage)
-			log.Infof("listenForCommands parsed body into SwitchMessage %v", switchMessage)
+			log.Infof("listenForCommands parsed body into SwitchMessage %#v on-demand", switchMessage)
 			if err != nil {
-				log.Errorf("listenForCommands switch error %v", err)
+				log.Errorf("listenForCommands switch error %#v", err)
 				break
 			}
-			if !isMySwitch( switchMessage.SwitchName) {
+			if !gpiorelay.PowerstripSvc.IsMySwitch(switchMessage.SwitchName) {
 				log.Infof("Not my switch %s", switchMessage.SwitchName)
-				break;
+				break
 			}
 			if switchMessage.SwitchName == "automaticControl" {
-				log.Infof("listenForCommands setting %s to %v", switchMessage.SwitchName, switchMessage.On)
-				globals.MySite.AutomaticControl = switchMessage.On
-				if globals.MySite.AutomaticControl {
-					initializeOutletsForAutomation()	// Make sure the switches conform to currently configured automation
+				log.Infof("listenForCommands setting %s to %#v on-demand", switchMessage.SwitchName, switchMessage.On)
+				globals.MyStation.AutomaticControl = switchMessage.On
+				if globals.MyStation.AutomaticControl {
+					initializeOutletsForAutomation() // Make sure the switches conform to currently configured automation
 				}
 			} else if switchMessage.On == true {
-				log.Infof("listenForCommands turning on %s", switchMessage.SwitchName)
-				gpiorelay.PowerstripSvc.TurnOnOutletByName(switchMessage.SwitchName, true)
+				log.Infof("listenForCommands turning on %s on-demand", switchMessage.SwitchName)
+				gpiorelay.GetPowerstripService().TurnOnOutletByName(switchMessage.SwitchName, true)
 			} else {
-				log.Infof("listenForCommands turning off %s", switchMessage.SwitchName)
-				gpiorelay.PowerstripSvc.TurnOffOutletByName(switchMessage.SwitchName, true)
+				log.Infof("listenForCommands turning off %s on-demand", switchMessage.SwitchName)
+				gpiorelay.GetPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true)
 			}
 			break
 		}
@@ -159,39 +163,37 @@ func processCommand(msg *stomp.Message) (resub bool, err error ) {
 			break
 		}
 	}
-	log.Infof("listenForCommands received message %s", string(msg.Body))
+	log.Infof("listenForCommands successfully processed message %s", string(msg.Body))
 	return false, nil
 }
 
 func listenForCommands(isUnitTest bool) (err error) {
-	log.Infof("listenForCommands dial")
+	topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
+	hostPort := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
+	log.Infof("listenForCommands at %s topic %s", hostPort, topicName)
 
-	var options func(*stomp.Conn) error = func(*stomp.Conn) error{
+	var options func(*stomp.Conn) error = func(*stomp.Conn) error {
 		stomp.ConnOpt.Login("userid", "userpassword")
 		stomp.ConnOpt.Host(globals.MySite.ControllerHostName)
-		stomp.ConnOpt.RcvReceiptTimeout(30*time.Second)
-		stomp.ConnOpt.HeartBeat(30*time.Second, 30*time.Second) // I put this but seems no impact
+		stomp.ConnOpt.RcvReceiptTimeout(30 * time.Second)
+		stomp.ConnOpt.HeartBeat(60*time.Second, 60*time.Second) // I put this but seems no impact
 		return nil
 	}
 
 	for j := 0; ; j++ {
-		log.Debugf("stomp.Dial at %d", getNowMillis())
-		host_port := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
-		stompConn, err := stomp.Dial("tcp", host_port, options)
+		log.Debugf("stomp.Dial %s at %d - if this is the last message you see, open the firewall port 61613 on ActiveMQ host", hostPort, getNowMillis())
+		stompConn, err := stomp.Dial("tcp", hostPort, options)
 		if err != nil {
-			log.Errorf("listenForCommands dial error %v", err)
+			log.Errorf("listenForCommands dial error %#v", err)
 			return err
 		}
-		log.Infof("listenForCommands connect")
+		log.Infof("listenForCommands connected to %s", hostPort)
 		defer stompConn.Disconnect()
 
-		topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
-		log.Infof("listenForCommands subscribe to topic %s", topicName)
-
+		log.Infof("subscribing to topic %s", topicName)
 		sub, err := stompConn.Subscribe(topicName, stomp.AckClient)
 		if err != nil {
-			log.Infof("readtimeout error at %d", getNowMillis())
-			log.Errorf("listenForCommands subscribe error %v", err)
+			log.Errorf("listenForCommands subscribe error at %d %#v no retry!", getNowMillis(), err)
 			return err
 		}
 		//
@@ -200,7 +202,7 @@ func listenForCommands(isUnitTest bool) (err error) {
 			msg := <-sub.C
 			reSubscribe, err := processCommand(msg)
 			if err != nil {
-				log.Errorf("processCommand error %v", err)
+				log.Warnf("processCommand error %#v need to redial/resubscribe", err)
 			}
 			if reSubscribe {
 				break
@@ -212,43 +214,60 @@ func listenForCommands(isUnitTest bool) (err error) {
 	return nil
 }
 
+func initializeOutletsFromConfiguration() {
+	ps := gpiorelay.GetPowerstripService()
+	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
+		if globals.MyDevice.ACOutlets[i].PowerOn {
+			ps.TurnOnOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
+		} else {
+			ps.TurnOffOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
+		}
+	}
+}
+
 func initializeOutletsForAutomation() {
 	ControlLight(true)
 	ControlHeat(true)
 	ControlHumidity(true)
-	ControlOxygenation(true )
-	ControlRootWater(true )
-	ControlAirflow(true )
+	ControlOxygenation(true)
+	ControlRootWater(true)
+	ControlAirflow(true)
 }
 
 func makeControlDecisions(once_only bool) {
-	log.Info("makeControlDecisions")
+	log.Infof("makeControlDecisions endless loop with once_only set to %t", once_only)
 	i := 0
 
 	for {
-		//		gsm := bubblesgrpc.GetStateRequest{}
-		//		grpc. (gsm)
-		if i%60 == 0 {
-			log.Debugf("LocalCurrentState = %v", globals.LocalCurrentState)
-//			log.Debugf("globals.Configuration = %v", globals.MySite)
+		gsm := pb.GetStateRequest{}
+		gsm.Sequence = globals.GetSequence()
+		gr, err := globals.Client.GetState(context.Background(), &gsm)
+		if err != nil {
+			log.Errorf("getState got error %#v", err)
+		} else {
+			globals.ExternalCurrentState.TempF = gr.TempF
+			globals.ExternalCurrentState.Humidity = gr.Humidity
 		}
-		if globals.MySite.AutomaticControl {
+		//		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
+
+		if globals.MyStation.AutomaticControl {
 			ControlLight(false)
 			ControlHeat(false)
 			ControlHumidity(false)
-			ControlOxygenation(false )
-			ControlRootWater(false )
-			ControlAirflow(false )
+			ControlOxygenation(false)
+			ControlRootWater(false)
+			ControlAirflow(false)
 		}
 		time.Sleep(time.Second)
 		i++
-		if i == 60 {
+		if i >= 60 {
 			i = 0
 		}
 		if once_only {
 			break
 		}
 	}
+	log.Infof("makeControlDecisions returning")
 }
 
 func reportVersion() {
@@ -256,7 +275,8 @@ func reportVersion() {
 		BubblesnetBuildNumberString, BubblesnetBuildTimestamp, BubblesnetGitHash)
 }
 
-func initGlobals() {
+func initGlobals(testing bool) {
+	log.Infof("initGlobals")
 	globals.BubblesnetVersionMajorString = BubblesnetVersionMajorString
 	globals.BubblesnetVersionMinorString = BubblesnetVersionMinorString
 	globals.BubblesnetVersionPatchString = BubblesnetVersionPatchString
@@ -265,25 +285,34 @@ func initGlobals() {
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
 	var err error
-	globals.MyDeviceID, err = globals.ReadMyDeviceId(globals.PersistentStoreMountPoint,"", "deviceid")
+	globals.MyDeviceID, err = globals.ReadMyDeviceId(globals.PersistentStoreMountPoint, "", "deviceid")
 	if err != nil {
-		fmt.Printf("error read device %v\n", err)
+		fmt.Printf("error read device %#v\n", err)
 		return
 	}
-	fmt.Printf("Read deviceid %d\n", globals.MyDeviceID)
-	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		globals.MySite.ControllerHostName = "192.168.21.237"
-		globals.MySite.ControllerAPIPort = 3003
-		globals.MySite.UserID = 90000009
-		d := globals.EdgeDevice{ DeviceID: globals.MyDeviceID }
-		globals.MyDevice = &d
-//		fmt.Printf("\ngetconfigfromserver config = %v\n\n", globals.MySite)
+	globals.MySite.ControllerHostName, err = globals.ReadMyServerHostname(globals.PersistentStoreMountPoint, "", "hostname")
+	if err != nil {
+		fmt.Printf("error read serverHostname %#v\n", err)
+		return
 	}
+	// Read the configuration file
+	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerHostName)
+	readConfigFromDisk()
+	// Get a NEW config file from server and save to disk
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
-		return
+		if testing {
+			fmt.Printf("Returning because of bad configuration\n")
+			return
+		}
+		fmt.Printf("Exiting because of bad configuration - sleeping for 60 seconds to allow intervention\n")
+		time.Sleep(60 * time.Second)
+		os.Exit(1)
 	}
+	// Reread the configuration file
+	readConfigFromDisk()
+
 	globals.MySite.LogLevel = "silly,debug,info,warn,fatal,notice,error,alert"
-//	fmt.Printf("done getting config from server %v\n\n", globals.MySite)
+	//	fmt.Printf("done getting config from server %#v\n\n", globals.MySite)
 	globals.ConfigureLogging(globals.MySite, "sense-go")
 
 	//	globals.MySite.Station.HeightSensor = true
@@ -297,38 +326,68 @@ func initGlobals() {
 	// log.Panic("panic") // this will panic
 	log.Alert("alert")
 
-//	log.Infof("globals.Configuration = %v", globals.MySite)
-//	log.Infof("stageSchedule = %v", globals.CurrentStageSchedule)
+	//	log.Infof("globals.Configuration = %#v", globals.MySite)
+	//	log.Infof("stageSchedule = %#v", globals.CurrentStageSchedule)
+}
+
+func readConfigFromDisk() {
+	if err := globals.ReadCompleteSiteFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		fmt.Printf("ReadCompleteSiteFromPersistentStore failed - using default config\n")
+		//		globals.MySite.ControllerHostName = serverHostname
+		globals.MySite.ControllerAPIPort = 3003
+		nodeEnv := os.Getenv("NODE_ENV")
+		switch nodeEnv {
+		case "PRODUCTION":
+			globals.MySite.ControllerAPIPort = 3001
+			break
+		case "DEV":
+			globals.MySite.ControllerAPIPort = 3003
+			break
+		case "TEST":
+			globals.MySite.ControllerAPIPort = 3002
+			break
+		}
+		globals.MySite.UserID = 90000009
+		d := globals.EdgeDevice{DeviceID: globals.MyDeviceID}
+		globals.MyDevice = &d
+		//		fmt.Printf("\ngetconfigfromserver config = %#v\n\n", globals.MySite)
+	}
 }
 
 func setupGPIO() {
 	rpio.OpenRpio()
+	/*	defer func() {
+		rpio.CloseRpio()
+	}() */
+
 	if isRelayAttached(globals.MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
 		gpiorelay.PowerstripSvc.InitRpioPins()
-		if globals.MySite.AutomaticControl {
-			gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
+		gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
+		if globals.MyStation.AutomaticControl {
 			initializeOutletsForAutomation()
 		} else {
-			gpiorelay.PowerstripSvc.TurnAllOff(1)
+			initializeOutletsFromConfiguration()
 		}
-		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl",globals.MySite.AutomaticControl)
+		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
 	} else {
 		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
 	}
 }
 
 func setupPhMonitor() {
-	log.Info("ezo")
+	log.Infof("setupPhMonitor")
+	globals.ValidateConfigured("setupPhMonitor")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
+		log.Info("RootPhSensor configured for this device, starting")
 		phsensor.StartEzoDriver()
+		log.Debug("Ezo driver started")
 	} else {
-		log.Infof("No root ph sensor configured")
+		log.Info("RootPhSensor not configured for this device")
 	}
-	log.Info("after ezo")
 }
 
-func countGoRoutines() (count int){
+func countGoRoutines() (count int) {
 	numGoroutines := 6
 	if !globals.MyStation.MovementSensor {
 		numGoroutines--
@@ -350,37 +409,59 @@ func countGoRoutines() (count int){
 }
 
 func startGoRoutines(onceOnly bool) {
-	log.Info("movement")
+	log.Info("startGoRoutines")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
-		log.Info("MovementSensor should be connected to this device, starting")
+		log.Info("MovementSensor configured for this device, starting")
+
 		go accelerometer.RunTamperDetector(onceOnly)
 	} else {
-		log.Warnf("No adxl345 Configured - skipping tamper detection")
+		log.Warnf("MovementSensor (adxl345) not configured for this device - skipping tamper detection")
 	}
-	log.Infof("adc %s %d %v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor)
+	log.Infof("adc %s %d %#v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
-		log.Info("WaterlevelSensor should be connected to this device, starting ADC")
+		log.Info("WaterlevelSensor configured for this device, starting ADC")
 		go func() {
-			err := a2dconverter.RunADCPoller(onceOnly)
+			err := a2dconverter.RunADCPoller(onceOnly, globals.PollingWaitInSeconds)
+
 			if err != nil {
 				log.Errorf("rpio.close %+v", err)
 			}
 		}()
 	} else {
-		log.Warnf("No ads1115s configured - skipping A to D conversion")
+		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
 	}
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
+		log.Info("RootPhSensor configured for this device, starting ezoPh")
+
 		phsensor.StartEzo(onceOnly)
 	} else {
-		log.Warnf("No ezoph configured - skipping pH monitoring")
+		log.Warnf("RootPhSensor (ezoPh) not configured for this device, - skipping pH monitoring")
 	}
-	log.Infof("moduleShouldBeHere %s %d %v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
+	log.Infof("moduleShouldBeHere %s %d %#v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
-		log.Info("HeightSensor should be connected to this device, starting HSCR04")
+		log.Info("HeightSensor configured for this device, starting HSCR04")
+
 		go distancesensor.RunDistanceWatcher(onceOnly)
 	} else {
-		log.Warnf("No hcsr04 Configured - skipping distance monitoring")
+		log.Warnf("HeightSensor (hcsr04) not configured for this device - skipping distance monitoring")
+	}
+
+	if globals.MyDevice.Camera.PiCamera == true {
+		log.Info("Camera configured for this device, starting picture taker")
+		go pictureTaker(onceOnly)
+	} else {
+		log.Warnf("Camera (piCamers) not configured for this device - skipping picture taker")
+	}
+}
+
+func pictureTaker(onceOnly bool) {
+	for {
+		camera.TakeAPicture()
+		time.Sleep(30 * time.Second)
+		if onceOnly {
+			break
+		}
 	}
 
 }
@@ -393,14 +474,14 @@ func testableSubmain(isUnitTest bool) {
 	fmt.Printf(globals.ContainerName)
 	log.Infof(globals.ContainerName)
 
-	initGlobals()
+	initGlobals(isUnitTest)
 
 	// Set up a connection to the server.
 	if !isUnitTest {
 		log.Infof("Dialing GRPC server at %s", globals.ForwardingAddress)
 		conn, err := grpc.Dial(globals.ForwardingAddress, grpc.WithInsecure(), grpc.WithBlock())
 		if err != nil {
-			log.Fatalf("did not connect: %v", err)
+			log.Fatalf("did not connect: %#v", err)
 		}
 		defer conn.Close()
 		globals.Client = pb.NewSensorStoreAndForwardClient(conn)
@@ -410,6 +491,7 @@ func testableSubmain(isUnitTest bool) {
 	defer cancel()
 
 	setupGPIO()
+
 	setupPhMonitor()
 	numGoRoutines := countGoRoutines()
 	var wg sync.WaitGroup
@@ -417,7 +499,7 @@ func testableSubmain(isUnitTest bool) {
 	startGoRoutines(isUnitTest)
 
 	if len(globals.DevicesFailed) > 0 {
-		log.Errorf("Exiting because of device failure %v", globals.DevicesFailed)
+		log.Errorf("Exiting because of device failure %#v", globals.DevicesFailed)
 		os.Exit(1)
 	}
 
@@ -441,7 +523,7 @@ func testableSubmain(isUnitTest bool) {
 }
 
 func isRelayAttached(deviceid int64) (relayIsAttached bool) {
-	if len(globals.MyDevice.ACOutlets) > 0 {
+	if globals.MyDeviceID == deviceid && len(globals.MyDevice.ACOutlets) > 0 {
 		return true
 	}
 	return false
@@ -452,16 +534,13 @@ func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInStation 
 		return false
 	}
 	for i := 0; i < len(globals.MyStation.EdgeDevices); i++ {
-		//		log.Infof("%v", globals.MySite.AttachedDevices[i])
+		//		log.Infof("%#v", globals.MySite.AttachedDevices[i])
 		for j := 0; j < len(globals.MyStation.EdgeDevices[i].DeviceModules); j++ {
 			if globals.MyStation.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && globals.MyStation.EdgeDevices[i].DeviceID == mydeviceid && globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType == moduleType {
-				log.Infof("Device %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceType, globals.MyStation.EdgeDevices[i].DeviceModules[j].Address)
+				log.Infof("Module %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType, globals.MyStation.EdgeDevices[i].DeviceModules[j].Address)
 				return true
 			}
 		}
 	}
 	return false
 }
-
-
-

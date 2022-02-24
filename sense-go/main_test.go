@@ -3,8 +3,10 @@ package main
 import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
-	"bubblesnet/edge-device/sense-go/modules/phsensor"
+
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
+	"bubblesnet/edge-device/sense-go/modules/phsensor"
+
 	"errors"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
@@ -13,8 +15,8 @@ import (
 
 func init() {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
-		log.Errorf("ReadFromPersistentStore() error = %v", err)
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
 	}
 
 }
@@ -35,8 +37,8 @@ func TestControlHeat(t *testing.T) {
 globals.CurrentStageSchedule.EnvironmentalTargets.Temperature
 globals.Lasttemp
 globals.ExternalCurrentState.TempF
- */
-func testHeat( t *testing.T) {
+*/
+func testHeat(t *testing.T) {
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
@@ -68,23 +70,24 @@ func TestControlHumidity(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{ name: "all" },
+		{name: "all"},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testHumidity(t)
 		})
 	}
 }
+
 /*
 globals.Lasthumidity = globals.ExternalCurrentState.Humidity
 globals.CurrentStageSchedule.EnvironmentalTargets.Humidity
- */
-var humidifierstates = []bool{true,false}
+*/
+var humidifierstates = []bool{true, false}
+
 func testHumidity(t *testing.T) {
 
 	globals.CurrentStageSchedule.EnvironmentalTargets.Humidity = 60
-
 
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.Lasthumidity = 59
@@ -109,7 +112,7 @@ func TestControlLight(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-	{name: "happy"},
+		{name: "happy"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -127,15 +130,16 @@ globals.LocalCurrentState.GrowLightVeg
 "seedling"
 "vegetative"
 */
-var stages = []string {
-"germination","seedling","vegetative","idle",
+var stages = []string{
+	globals.GERMINATION, globals.SEEDLING, globals.VEGETATIVE, globals.IDLE,
 }
-var growlightstates = []bool {
-	true,false,
+var growlightstates = []bool{
+	true, false,
 }
+
 func testLight(t *testing.T) {
-	globals.MyStation = &globals.Station{CurrentStage: "idle"}
-	for i := 0; i < len(stages); i++  {
+	globals.MyStation = &globals.Station{CurrentStage: globals.IDLE}
+	for i := 0; i < len(stages); i++ {
 		globals.MyStation.CurrentStage = stages[i]
 		for n := 1; n <= 24; n++ {
 			globals.CurrentStageSchedule.HoursOfLight = n
@@ -150,11 +154,11 @@ func testLight(t *testing.T) {
 	}
 }
 
-
 func Test_moduleShouldBeHere(t *testing.T) {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
-		log.Errorf("ReadFromPersistentStore() error = %v", err)
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
+
 	}
 	type args struct {
 		containerName   string
@@ -167,13 +171,13 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		args                args
 		wantShouldBePresent bool
 	}{
-		{ name: "happy", wantShouldBePresent: true, args: args{ containerName: "sense-python", mydeviceid: 70000008, deviceInStation: true, moduleType: "bme280"}},
-		{ name: "unhappy", wantShouldBePresent: false, args: args{ containerName: "sense-python", mydeviceid: 70000006, deviceInStation: true, moduleType: "bme280"}},
+		{name: "happy", wantShouldBePresent: true, args: args{containerName: "sense-python", mydeviceid: globals.MyDeviceID, deviceInStation: true, moduleType: "bme280"}},
+		{name: "unhappy", wantShouldBePresent: false, args: args{containerName: "sense-python", mydeviceid: 70000006, deviceInStation: true, moduleType: "bme280"}},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
-				t.Errorf("moduleShouldBeHere(%v) = %v, want %v", tt.args, gotShouldBePresent, tt.wantShouldBePresent)
+				t.Errorf("moduleShouldBeHere(%#v) = %#v, want %#v", tt.args, gotShouldBePresent, tt.wantShouldBePresent)
 			}
 		})
 	}
@@ -201,7 +205,7 @@ func Test_inRange(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := inRange(tt.args.starthour, tt.args.numhours, tt.args.currenthours); got != tt.want {
-				t.Errorf("inRange() = %v, want %v", got, tt.want)
+				t.Errorf("inRange() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -216,23 +220,27 @@ func Test_isRelayAttached(t *testing.T) {
 		args                args
 		wantRelayIsAttached bool
 	}{
-		{name: "happy", args: args{deviceid: 70000007}, wantRelayIsAttached: false},
+		{name: "happy", args: args{deviceid: 70000008}, wantRelayIsAttached: true},
+		{name: "sad", args: args{deviceid: 70000006}, wantRelayIsAttached: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotRelayIsAttached := isRelayAttached(tt.args.deviceid); gotRelayIsAttached != tt.wantRelayIsAttached {
-				t.Errorf("isRelayAttached() = %v, want %v", gotRelayIsAttached, tt.wantRelayIsAttached)
+				t.Errorf("isRelayAttached() = %#v, want %#v", gotRelayIsAttached, tt.wantRelayIsAttached)
 			}
 		})
 	}
 }
 
 func Test_makeControlDecisions(t *testing.T) {
-	globals.MySite.AutomaticControl = true
-	tests := []struct {
+	globals.MyStation.AutomaticControl = true
+	var tests []struct {
 		name string
-	}{
-		{name: "happy"},
+	}
+
+	if globals.Client == nil {
+		t.Logf("globals.Client is nil - won't work")
+		return
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -251,7 +259,7 @@ func Test_readPh(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := phsensor.ReadPh(true); (err != nil) != tt.wantErr {
-				t.Errorf("ReadPh() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ReadPh() error = %#v, wantErr %#v", err, tt.wantErr)
 			}
 		})
 	}
@@ -322,19 +330,18 @@ func Test_setEnvironmentalControlString(t *testing.T) {
 	}
 }
 
-
 func Test_getNowMillis(t *testing.T) {
 
 	tests := []struct {
 		name string
 		want int64
 	}{
-		{name:"happy", want: 1000000},
+		{name: "happy", want: 1000000},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getNowMillis(); got <= 1000000 {
-				t.Errorf("getNowMillis() = %v, want >= %v", got, tt.want)
+				t.Errorf("getNowMillis() = %#v, want >= %#v", got, tt.want)
 			}
 		})
 	}
@@ -345,50 +352,52 @@ func Test_countACOutlets(t *testing.T) {
 		name string
 		want int
 	}{
-{name: "happy", want: 0},
+		{name: "happy", want: 8},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := countACOutlets(); got != tt.want {
-				t.Errorf("countACOutlets() = %v, want %v", got, tt.want)
+				t.Errorf("countACOutlets() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
 func Test_isMySwitch(t *testing.T) {
-	globals.MyDeviceID = 70000007
-	if err := globals.ReadFromPersistentStore("./testdata", "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
-		t.Errorf("ReadFromPersistentStore() error = %v", err)
+	globals.MyDeviceID = 70000008
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		t.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
 	}
-	type args struct {
-		switchName string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{ name: "nonsense", want: false, args: args{switchName: "blah"}},
-		{ name: "auto", want: true, args: args{switchName: "automaticControl"}},
-		{ name: "heater", want: true, args: args{switchName: "heater"}},
-	}
-		for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isMySwitch(tt.args.switchName); got != tt.want {
-				t.Errorf("isMySwitch() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	/*
+		type args struct {
+			switchName string
+		}
+		tests := []struct {
+			name string
+			args args
+			want bool
+		}{
+			{ name: "nonsense", want: false, args: args{switchName: "blah"}},
+			{ name: "auto", want: true, args: args{switchName: "automaticControl"}},
+			{ name: "heater", want: true, args: args{switchName: "heater"}},
+		}
+			for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := IsMySwitch(tt.args.switchName); got != tt.want {
+					t.Errorf("IsMySwitch() = %#v, want %#v", got, tt.want)
+				}
+			})
+		}
+	*/
 }
 
 func Test_initializeOutletsForAutomation(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{ name: "happy"},
+		{name: "happy"},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			initializeOutletsForAutomation()
 		})
@@ -400,11 +409,11 @@ func Test_initGlobals(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{ name: "happy"},
+		{name: "happy"},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			initGlobals()
+			initGlobals(true)
 		})
 	}
 }
@@ -413,9 +422,9 @@ func Test_setupGPIO(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{ name: "happy"},
+		{name: "happy"},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setupGPIO()
 		})
@@ -426,7 +435,7 @@ func Test_setupPhMonitor(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{ name: "happy"},
+		{name: "happy"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -440,12 +449,12 @@ func Test_countGoRoutines(t *testing.T) {
 		name      string
 		wantCount int
 	}{
-		{ name: "happy", wantCount: 0},
+		{name: "happy", wantCount: 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotCount := countGoRoutines(); gotCount <= tt.wantCount {
-				t.Errorf("countGoRoutines() = %v, want %v", gotCount, tt.wantCount)
+				t.Errorf("countGoRoutines() = %#v, want %#v", gotCount, tt.wantCount)
 			}
 		})
 	}
@@ -459,9 +468,9 @@ func Test_startGoRoutines(t *testing.T) {
 		name string
 		args args
 	}{
-		{ name: "happy", args: args{ once_only: true}},
+		{name: "happy", args: args{once_only: true}},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			startGoRoutines(tt.args.once_only)
 		})
@@ -469,64 +478,66 @@ func Test_startGoRoutines(t *testing.T) {
 }
 
 func Test_testableSubmain(t *testing.T) {
-	globals.MyDeviceID = 70000007
-	globals.PersistentStoreMountPoint = "./testdata"
-	if err := globals.ReadFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json",&globals.MySite, &globals.CurrentStageSchedule ); err != nil {
-		t.Errorf("ReadFromPersistentStore() error = %v", err)
-	}
-	type args struct {
-		isUnitTest bool
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{ name: "happy", args: args{isUnitTest: true}},
-	}
+	/*
+		globals.MyDeviceID = 70000008
+		globals.PersistentStoreMountPoint = "./testdata"
+		if err := globals.ReadCompleteSiteFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+			t.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
+		}
+		type args struct {
+			isUnitTest bool
+		}
+		tests := []struct {
+			name string
+			args args
+		}{
+			{name: "happy", args: args{isUnitTest: true}},
+		}
 		for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testableSubmain(tt.args.isUnitTest)
-		})
-	}
+			t.Run(tt.name, func(t *testing.T) {
+				testableSubmain(tt.args.isUnitTest)
+			})
+		}
+	*/
 }
 
 func Test_processCommand(t *testing.T) {
 	var uninitMessage stomp.Message
 
 	emptyBody := "{}"
-	emptyMessage := stomp.Message {
+	emptyMessage := stomp.Message{
 		Body: []byte(emptyBody),
 	}
 	myswitchOnBody := "{ \"command\": \"switch\", \"switch_name\": \"heater\", \"on\": true }"
-	myswitchOnMessage := stomp.Message {
+	myswitchOnMessage := stomp.Message{
 		Body: []byte(myswitchOnBody),
 	}
 	myswitchOffBody := "{ \"command\": \"switch\", \"switch_name\": \"heater\", \"on\": false }"
-	myswitchOffMessage := stomp.Message {
+	myswitchOffMessage := stomp.Message{
 		Body: []byte(myswitchOffBody),
 	}
 	pictureBody := "{ \"command\": \"picture\" }"
-	pictureMessage := stomp.Message {
+	pictureMessage := stomp.Message{
 		Body: []byte(pictureBody),
 	}
 
 	notMyswitchBody := "{ \"command\": \"switch\", \"switch_name\": \"blahblah\", \"on\": true }"
-	notMyswitchMessage := stomp.Message {
+	notMyswitchMessage := stomp.Message{
 		Body: []byte(notMyswitchBody),
 	}
 	autoSwitchBody := "{ \"command\": \"switch\", \"switch_name\": \"automaticControl\", \"on\": true }"
-	autoSwitchMessage := stomp.Message {
+	autoSwitchMessage := stomp.Message{
 		Body: []byte(autoSwitchBody),
 	}
 
-	messageWithError := stomp.Message {
+	messageWithError := stomp.Message{
 		Body: []byte(myswitchOnBody),
-		Err: errors.New("test error handling"),
+		Err:  errors.New("test error handling"),
 	}
-	messageWithTimeout := stomp.Message {
-		Body: []byte(myswitchOnBody),
-		Err: errors.New("timeout"),
-	}
+	//	messageWithTimeout := stomp.Message{
+	//		Body: []byte(myswitchOnBody),
+	//		Err:  errors.New("timeout"),
+	//	}
 
 	type args struct {
 		msg *stomp.Message
@@ -537,26 +548,26 @@ func Test_processCommand(t *testing.T) {
 		wantResub bool
 		wantErr   bool
 	}{
-		{ name: "nil_message", args: args{msg: nil}, wantResub: false, wantErr: false},
-		{ name: "messageWithError", args: args{msg: &messageWithError}, wantResub: true, wantErr: true},
-		{ name: "messageTimeout", args: args{msg: &messageWithTimeout}, wantResub: true, wantErr: true},
-		{ name: "uninit_message", args: args{msg: &uninitMessage}, wantResub: false, wantErr: true},
-		{ name: "emptyMessage", args: args{msg: &emptyMessage}, wantResub: false, wantErr: false},
-		{ name: "myswitchOnMessage", args: args{msg: &myswitchOnMessage}, wantResub: false, wantErr: false},
-		{ name: "myswitchOffMessage", args: args{msg: &myswitchOffMessage}, wantResub: false, wantErr: false},
-		{ name: "notMyswitchMessage", args: args{msg: &notMyswitchMessage}, wantResub: false, wantErr: false},
-		{ name: "autoSwitchMessage", args: args{msg: &autoSwitchMessage}, wantResub: false, wantErr: false},
-		{ name: "pictureMessage", args: args{msg: &pictureMessage}, wantResub: false, wantErr: false},
+		{name: "nil_message", args: args{msg: nil}, wantResub: false, wantErr: false},
+		{name: "messageWithError", args: args{msg: &messageWithError}, wantResub: true, wantErr: true},
+		//		{name: "messageTimeout", args: args{msg: &messageWithTimeout}, wantResub: true, wantErr: true},
+		{name: "uninit_message", args: args{msg: &uninitMessage}, wantResub: false, wantErr: true},
+		{name: "emptyMessage", args: args{msg: &emptyMessage}, wantResub: false, wantErr: false},
+		{name: "myswitchOnMessage", args: args{msg: &myswitchOnMessage}, wantResub: false, wantErr: false},
+		{name: "myswitchOffMessage", args: args{msg: &myswitchOffMessage}, wantResub: false, wantErr: false},
+		{name: "notMyswitchMessage", args: args{msg: &notMyswitchMessage}, wantResub: false, wantErr: false},
+		{name: "autoSwitchMessage", args: args{msg: &autoSwitchMessage}, wantResub: false, wantErr: false},
+		{name: "pictureMessage", args: args{msg: &pictureMessage}, wantResub: false, wantErr: false},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotResub, err := processCommand(tt.args.msg)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("processCommand() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("processCommand() error = %#v, wantErr %#v", err, tt.wantErr)
 				return
 			}
 			if gotResub != tt.wantResub {
-				t.Errorf("processCommand() gotResub = %v, want %v", gotResub, tt.wantResub)
+				t.Errorf("processCommand() gotResub = %#v, want %#v", gotResub, tt.wantResub)
 			}
 		})
 	}

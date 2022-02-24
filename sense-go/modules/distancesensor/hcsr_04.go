@@ -1,4 +1,5 @@
-// +build linux,arm
+//go:build (linux && arm) || arm64
+// +build linux,arm arm64
 
 package distancesensor
 
@@ -12,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 	"time"
 )
+
 var lastDistance = float64(0.0)
 
 func RunDistanceWatcher(once_only bool) {
@@ -44,13 +46,13 @@ func RunDistanceWatcher(once_only bool) {
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
 			_, err := globals.Client.StoreAndForward(context.Background(), &message)
 			if err != nil {
-				log.Errorf("runDistanceWatcher ERROR %v", err)
+				log.Errorf("runDistanceWatcher ERROR %#v", err)
 			} else {
-				//				log.Debugf("%v", sensor_reply)
+				//				log.Debugf("%#v", sensor_reply)
 			}
 		} else {
 			globals.ReportDeviceFailed("hcsr04")
-			log.Errorf("rundistancewatcher error = %v", err)
+			log.Errorf("rundistancewatcher error = %#v", err)
 			break
 		}
 		if once_only {
@@ -60,4 +62,3 @@ func RunDistanceWatcher(once_only bool) {
 		time.Sleep(time.Duration(60) * time.Second)
 	}
 }
-
