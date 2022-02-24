@@ -1,6 +1,7 @@
 {
   "siteid": 0,
   "userid": 90000009,
+
   "controller_hostname": "192.168.21.277",
   "controller_api_port": 3003,
   "log_level": "silly,debug,info,warn,fatal,notice,error,alert",
@@ -167,6 +168,7 @@
           ]
         }
       ],
+
       "stage_schedules": [
         {
           "name": "idle",
@@ -179,6 +181,7 @@
           "environmental_targets": {
             "temperature": 81,
             "humidity": 30
+
           }
         },
         {
@@ -208,6 +211,7 @@
         {
           "name": "drying",
           "hours_of_light": 0,
+
           "environmental_targets": {
             "temperature": 80,
             "humidity": 60
@@ -216,6 +220,7 @@
         {
           "name": "curing",
           "hours_of_light": 0,
+
           "environmental_targets": {
             "temperature": 80,
             "humidity": 60
@@ -228,6 +233,7 @@
         "xmove": 0.5,
         "ymove": 0.5,
         "zmove": 0.5
+
       }
     }
   ]

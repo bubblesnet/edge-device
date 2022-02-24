@@ -20,5 +20,3 @@ type PowerstripService interface {
 	RunPinToggler(isTest bool)
 	IsMySwitch(switchName string) bool
 }
-
-

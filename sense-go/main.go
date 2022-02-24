@@ -412,6 +412,7 @@ func startGoRoutines(onceOnly bool) {
 	log.Info("startGoRoutines")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
 		log.Info("MovementSensor configured for this device, starting")
+
 		go accelerometer.RunTamperDetector(onceOnly)
 	} else {
 		log.Warnf("MovementSensor (adxl345) not configured for this device - skipping tamper detection")
@@ -421,6 +422,7 @@ func startGoRoutines(onceOnly bool) {
 		log.Info("WaterlevelSensor configured for this device, starting ADC")
 		go func() {
 			err := a2dconverter.RunADCPoller(onceOnly, globals.PollingWaitInSeconds)
+
 			if err != nil {
 				log.Errorf("rpio.close %+v", err)
 			}
@@ -431,6 +433,7 @@ func startGoRoutines(onceOnly bool) {
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("RootPhSensor configured for this device, starting ezoPh")
+
 		phsensor.StartEzo(onceOnly)
 	} else {
 		log.Warnf("RootPhSensor (ezoPh) not configured for this device, - skipping pH monitoring")
@@ -438,10 +441,12 @@ func startGoRoutines(onceOnly bool) {
 	log.Infof("moduleShouldBeHere %s %d %#v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
 		log.Info("HeightSensor configured for this device, starting HSCR04")
+
 		go distancesensor.RunDistanceWatcher(onceOnly)
 	} else {
 		log.Warnf("HeightSensor (hcsr04) not configured for this device - skipping distance monitoring")
 	}
+
 	if globals.MyDevice.Camera.PiCamera == true {
 		log.Info("Camera configured for this device, starting picture taker")
 		go pictureTaker(onceOnly)

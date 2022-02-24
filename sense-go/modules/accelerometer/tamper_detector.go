@@ -1,3 +1,4 @@
+//go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
 package accelerometer
@@ -75,6 +76,10 @@ func RunTamperDetector(onceOnly bool) {
 	if err != nil {
 		globals.ReportDeviceFailed("adxl345")
 		log.Errorf("adxl345 robot start error %#v", err)
+	}
+
+	if onceOnly {
+		robot.Stop()
 	}
 
 	if onceOnly {

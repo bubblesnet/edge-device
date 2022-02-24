@@ -155,7 +155,7 @@ func (s *server) GetRecordList(_ context.Context, in *pb.GetRecordListRequest) (
 
 func forwardMessages(bucketName string, oneOnly bool) (err error) {
 	log.Debugf("forwardMessages %s", bucketName)
-	for ; ; {
+	for {
 		var forwarded []string
 
 		_ = writeableDb.View(func(tx *bolt.Tx) error {

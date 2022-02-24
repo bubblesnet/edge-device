@@ -37,6 +37,7 @@ func ControlOxygenation(force bool) {
 		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.AIRPUMP, force)
 		break
 	}
+
 }
 
 func ControlRootWater(force bool) {
@@ -44,6 +45,7 @@ func ControlRootWater(force bool) {
 		log.Debugf("ControlRootWater - no relay attached")
 		return
 	}
+
 	if globals.MyStation.CurrentStage == globals.IDLE {
 		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
 		return
@@ -82,6 +84,7 @@ func ControlAirflow(force bool) {
 		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.INLETFAN, force)
 		break
 	}
+
 }
 
 func ControlLight(force bool) {
@@ -108,6 +111,7 @@ func ControlLight(force bool) {
 		// If it's time for grow light veg to be on
 		if inRange(globals.MyStation.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
 			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.GROWLIGHTVEG, force)
+
 			veglight = true
 		} else {
 			// If it's time for grow light veg to be off
@@ -174,10 +178,11 @@ func ControlHeat(force bool) {
 		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
 		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATER, force) // MAKE SURE HEAT IS OFF
+
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
 		setEnvironmentalControlString()
-	} else {                                               // NOT TOO HOT
+	} else { // NOT TOO HOT
 		if globals.ExternalCurrentState.TempF < lowLimit { // TOO COLD
 			if globals.Lasttemp > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
@@ -186,6 +191,7 @@ func ControlHeat(force bool) {
 			//			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
 			//			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
 			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATER, false) // MAKE SURE HEAT IS ON
+
 			globals.LocalCurrentState.Heater = true
 			globals.LocalCurrentState.HeaterPad = true
 		} else { // JUST RIGHT
@@ -227,14 +233,14 @@ func ControlHumidity(force bool) {
 		}
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS OFF
 		globals.LocalCurrentState.Humidifier = false
-	} else {                                                  // NOT TOO HOT
+	} else { // NOT TOO HOT
 		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
 			if globals.Lasthumidity > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
 				force = true
 			}
-
 			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
+
 			globals.LocalCurrentState.Humidifier = true
 		} else { // JUST RIGHT
 			if globals.Lasthumidity < lowLimit {

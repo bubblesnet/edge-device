@@ -190,6 +190,7 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 	}
 	str := string(file)
 	//	log.Infof(str)
+
 	err = json.Unmarshal([]byte(file), site)
 	if err != nil {
 		fmt.Printf("Error unmarshalling %#v\n\n", err)
@@ -202,11 +203,14 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 			fmt.Printf("NO STATIONS IN THIS SITE!! %#v\n", site)
 		} else {
 			fmt.Printf("MyStation not found???\n")
+
 		}
 		return errors.New(fmt.Sprintf("DeviceID %d not found in %#v", MyDeviceID, site.Stations))
 	}
+
 	fmt.Printf("my station is set to %#v\n", MyStation)
 	//	fmt.Printf("MyStation = %#v\n", MyStation)
+
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
@@ -490,7 +494,9 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		fmt.Printf("readall error %#v\n", err)
 		return err
 	}
+
 	fmt.Printf("\n\nconfig response from server %s\n\n\n", string(body))
+
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %#v\n", err)
@@ -502,6 +508,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		log.Fatalf("stations is nil!!!")
 	}
 	MySite.Stations = newconfig.Stations
+
 	success := setMyStationAndMyDevice(MySite)
 	if !success {
 		fmt.Printf("No station\n")
@@ -514,6 +521,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	}
 
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
+
 	if err != nil {
 		log.Errorf("error marshalling MySite %#v", err)
 		return err

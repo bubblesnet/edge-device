@@ -3,8 +3,10 @@ package main
 import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
+
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
 	"bubblesnet/edge-device/sense-go/modules/phsensor"
+
 	"errors"
 	"github.com/go-playground/log"
 	"github.com/go-stomp/stomp"
@@ -156,6 +158,7 @@ func Test_moduleShouldBeHere(t *testing.T) {
 	globals.MyDeviceID = 70000008
 	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
 		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
+
 	}
 	type args struct {
 		containerName   string

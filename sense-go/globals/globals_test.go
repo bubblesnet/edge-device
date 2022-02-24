@@ -114,6 +114,7 @@ func Test_getConfigFromServer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := GetConfigFromServer("../testdata", "", "config.json"); (err != nil) != tt.wantErr {
 				t.Errorf("getConfigFromServer() error = %#v, wantErr %#v", err, tt.wantErr)
+
 			}
 			nextGlobalMisConfig()
 		})
@@ -148,7 +149,9 @@ func TestReadFromPersistentStore(t *testing.T) {
 			args:    args{storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 	}
+
 	MyStation.CurrentStage = IDLE
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ReadCompleteSiteFromPersistentStore(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName, tt.args.site, tt.args.currentStageSchedule); (err != nil) != tt.wantErr {

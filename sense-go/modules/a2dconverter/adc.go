@@ -36,25 +36,31 @@ func ReadAllChannels(index int, adcMessage *ADCMessage) (err error) {
 }
 
 func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) (err error) {
+
 	log.Debugf("readAllChannels on address 0x%x", config.address)
 	var err1 error
 	adcMessage.Address = config.address
 	adcMessage.BusId = config.bus_id
 	for channel := 0; channel < 4; channel++ {
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
+
 		//		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, 860)
 		if err == nil {
 			log.Debugf("Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
+
 			(*adcMessage).ChannelValues[channel].ChannelNumber = channel
 			(*adcMessage).ChannelValues[channel].Voltage = value
 			(*adcMessage).ChannelValues[channel].Gain = config.channelConfig[channel].gain
 			(*adcMessage).ChannelValues[channel].Rate = config.channelConfig[channel].rate
 		} else {
+
 			log.Errorf("readAllChannels Read failed on address 0x%x channel %d %#v", config.address, channel, err)
+
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			break
 		}
+
 		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
 	}
 	return err1
