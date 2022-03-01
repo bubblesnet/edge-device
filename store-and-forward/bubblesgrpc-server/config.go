@@ -171,14 +171,15 @@ type ACOutlet struct {
 	BCMPinNumber int    `json:"bcm_pin_number"`
 }
 
-func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string, ) (id int64, err error) {
-	log.Debug("ReadMyDeviceId")
+func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string) (id int64, err error) {
+	fmt.Printf("ReadMyDeviceId")
 	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
 	if relativePath == "" {
 		fullpath = storeMountPoint + "/" + fileName
 	}
 	fmt.Printf("readConfig from %s", fullpath)
 	file, _ := ioutil.ReadFile(fullpath)
+	fmt.Printf("file = %s\n", file)
 	idstring := strings.TrimSpace(string(file))
 
 	id, err = strconv.ParseInt(idstring, 10, 64)

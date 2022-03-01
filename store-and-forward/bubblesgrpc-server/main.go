@@ -237,11 +237,11 @@ func main() {
 	}
 	var err error
 	MyDeviceID, err = ReadMyDeviceId("/config", "", "deviceid")
+	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 	if err != nil {
 		fmt.Printf("error read device %v\n", err)
 		return
 	}
-	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 
 	WaitForConfigFile(storeMountPoint, "", "config.json")
 	err = ReadFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)

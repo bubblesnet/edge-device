@@ -1,3 +1,4 @@
+//go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
 package gpiorelay
@@ -175,11 +176,11 @@ func (r *RealPowerStrip) TurnAllOff(timeout time.Duration) {
 }
 
 func (r *RealPowerStrip) TurnOnOutlet(index int) {
-	pins[index].Low()
+	pins[index].High()
 }
 
 func (r *RealPowerStrip) TurnOffOutlet(index int) {
-	pins[index].High()
+	pins[index].Low()
 }
 
 func (r *RealPowerStrip) RunPinToggler(isTest bool) {
