@@ -31,6 +31,8 @@ type ADCSensorMessage struct {
 }
 */
 
+const WaterLevelChannelIndex = 1
+
 func ReadAllChannels(index int, adcMessage *ADCMessage) (err error) {
 	return readAllChannels(index, ads1115s[index], daps[index], adcMessage)
 }
@@ -73,6 +75,9 @@ var lastValues = [][]float64{
 	{0.0, 0.0, 0.0, 0.0},
 }
 
+const Etape_slope = 11.37795
+const Etape_y_intercept = -17.28562
+
 var ads1115s [2]*i2c.ADS1x15Driver
 var i2cAddresses = []int{0x48, 0x49, 0x4a, 0x4d}
 
@@ -100,6 +105,13 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 				break
 			} else {
 				for channelIndex := 0; channelIndex < len(adcMessage.ChannelValues); channelIndex++ {
+					if channelIndex == 1 {
+						adcMessage.ChannelValues[channelIndex].SensorName = "water_level"
+						adcMessage.ChannelValues[channelIndex].MeasurementName = "water_level"
+						adcMessage.ChannelValues[channelIndex].MeasurementUnits = "gallons"
+						adcMessage.ChannelValues[channelIndex].Slope = Etape_slope
+						adcMessage.ChannelValues[channelIndex].Yintercept = Etape_y_intercept
+					}
 					log.Infof("adc message for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, adcMessage)
 					direction := ""
 					if adcMessage.ChannelValues[channelIndex].Voltage > lastValues[moduleIndex][channelIndex] {
@@ -135,10 +147,11 @@ func sendTranslatedADCSensorMessages(moduleIndex int, channelIndex int, adcMessa
 	if moduleIndex != 0 {
 		return nil
 	}
-	if channelIndex == 0 || channelIndex == 1 {
+	if channelIndex == WaterLevelChannelIndex {
 		direction := "up"
-		err, message := getTranslatedADCSensorMessageForChannel(adcMessage, moduleIndex, channelIndex, direction)
-		log.Infof("sendTranslatedADCSensorMessages adc %#v", adcMessage)
+		err, message := getTranslatedADCSensorMessageForChannel(adcMessage, moduleIndex, channelIndex, direction, adcMessage.ChannelValues[channelIndex].SensorName, adcMessage.ChannelValues[channelIndex].MeasurementName,
+			adcMessage.ChannelValues[channelIndex].Slope, adcMessage.ChannelValues[channelIndex].Yintercept, adcMessage.ChannelValues[channelIndex].MeasurementUnits)
+		//		log.Infof("sendTranslatedADCSensorMessages adc %#v", adcMessage)
 		sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
 		if err != nil {
 			log.Errorf("sendTranslatedADCSensorMessages ERROR %#v", err)
@@ -151,7 +164,7 @@ func sendTranslatedADCSensorMessages(moduleIndex int, channelIndex int, adcMessa
 
 func getADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, channelIndex int, direction string) (err error, message pb.SensorRequest) {
 	sensorName := fmt.Sprintf("adc_%d_%d_%d_%d", moduleIndex, adcMessage.ChannelValues[channelIndex].ChannelNumber, adcMessage.ChannelValues[channelIndex].Gain, adcMessage.ChannelValues[channelIndex].Rate)
-	log.Infof("sensorName %s", sensorName)
+	//	log.Infof("sensorName %s", sensorName)
 
 	ads := messaging.NewADCSensorMessage(sensorName, sensorName,
 		adcMessage.ChannelValues[channelIndex].Voltage, "Volts",
@@ -166,43 +179,24 @@ func getADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, chan
 	return nil, message
 }
 
-func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, channelIndex int, direction string) (err error, message pb.SensorRequest) {
-	sensorName := fmt.Sprintf("adc_%d_%d_%d_%d", moduleIndex, adcMessage.ChannelValues[channelIndex].ChannelNumber, adcMessage.ChannelValues[channelIndex].Gain, adcMessage.ChannelValues[channelIndex].Rate)
+func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, channelIndex int, direction string,
+	sensorName string, measurementName string, slope float64, yintercept float64, measurementUnits string) (err error, message pb.SensorRequest) {
+
 	log.Infof("sendTranslatedADCSensorMessages sensorName %s %v", sensorName, adcMessage.ChannelValues[channelIndex].Voltage)
 	typeId := "sensor"
 
 	if moduleIndex == 0 {
-		measurementName := "na"
-		measurementUnits := "na"
 		measurementValue := 0.0
-		if channelIndex == 0 {
-			/// TODO convert values using configuration  data
-			sensorName = "water_level"
-			measurementName = "water_level"
-			//			measurementValue = adcMessage.ChannelValues[channelIndex].Voltage
-			//			measurementUnits = "Volts"
-			// ohms =ohmsAtMax+(ohmsAtMin-ohmsAtMax)-percent*(ohmsAtMin-ohmsAtMax)
-			// volts =voltsMin+(voltsMin*(ohms/(ohms+ohmsAtMin)))
-			maxVoltage := 3.325
-			minResistance := 400.0
-			maxResistance := 2200.0
-			//			maxGallons := 10.0
-			inches, err := etapeInchesFromVolts(maxVoltage, adcMessage.ChannelValues[channelIndex].Voltage, minResistance, maxResistance, 1.0, 12.78)
-			if err != nil {
-				log.Errorf("etapeInchesFromVolts returned error %v", err)
-				return err, message
+		if channelIndex == WaterLevelChannelIndex {
+			inches := 0.0
+			if adcMessage.ChannelValues[channelIndex].Voltage < MinVoltage {
+				inches = 0.0
+			} else {
+				inches = etapeInchesFromVolts(adcMessage.ChannelValues[channelIndex].Voltage, slope, yintercept)
 			}
-			gallons := etapeInchesToGallons(inches)
-			measurementValue = gallons
-			measurementUnits = "Gallons"
-			log.Infof("raw Volts %f, inches %f", adcMessage.ChannelValues[channelIndex].Voltage, inches, gallons)
-		} else if channelIndex == 1 {
-			sensorName = "temp_water"
-			measurementName = "temp_water"
-			measurementValue = adcMessage.ChannelValues[channelIndex].Voltage
-			measurementUnits = "F"
-		}
-		if channelIndex == 0 || channelIndex == 1 {
+			measurementValue = etapeInchesToGallons(12.5, 18.0, inches)
+			log.Infof("sendTranslatedADCSensorMessages raw %f Volts, %s %f inches, %f %s", adcMessage.ChannelValues[channelIndex].Voltage, measurementName, inches, measurementValue, measurementUnits)
+
 			ads := messaging.NewGenericSensorMessage(sensorName, measurementName,
 				measurementValue, measurementUnits, direction)
 			bytearray, err := json.Marshal(ads)
@@ -211,7 +205,7 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 				return err, message
 			}
 			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-			log.Infof("sendTranslatedADCSensorMessages message = %#v", message)
+			//			log.Infof("sendTranslatedADCSensorMessages message = %#v", message)
 		}
 	}
 	return nil, message

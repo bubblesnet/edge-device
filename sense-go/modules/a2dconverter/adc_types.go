@@ -13,13 +13,27 @@ type AdapterConfig struct {
 }
 
 type ChannelValue struct {
-	ChannelNumber int     `json:"channel_number"`
-	Voltage       float64 `json:"voltage,omitempty"`
-	Gain          int     `json:"gain"`
-	Rate          int     `json:"rate"`
+	ChannelNumber    int     `json:"channel_number"`
+	Voltage          float64 `json:"voltage,omitempty"`
+	Gain             int     `json:"gain"`
+	Rate             int     `json:"rate"`
+	SensorName       string  `json:"sensor_name"`
+	MeasurementName  string  `json:"measurement_name"`
+	MeasurementUnits string  `json:"measurement_units"`
+	Slope            float64 `json:"slope"`
+	Yintercept       float64 `json:"yintercept"`
+}
+
+type LinearChannelTranslations struct {
+	SensorName       string  `json:"sensor_name"`
+	MeasurementName  string  `json:"measurement_name"`
+	MeasurementUnits string  `json:"measurement_units"`
+	Slope            float64 `json:"slope"`
+	Yintercept       float64 `json:"yintercept"`
 }
 
 type Channels [4]ChannelValue
+type Translations [4]LinearChannelTranslations
 
 var a0 = AdapterConfig{
 	bus_id:  1,
