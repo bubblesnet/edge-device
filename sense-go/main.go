@@ -8,6 +8,7 @@ import (
 	"bubblesnet/edge-device/sense-go/modules/camera"
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
 	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
+	gonewire "bubblesnet/edge-device/sense-go/modules/onewire"
 	"bubblesnet/edge-device/sense-go/modules/phsensor"
 	"bubblesnet/edge-device/sense-go/modules/rpio"
 	"encoding/json"
@@ -30,7 +31,7 @@ var BubblesnetBuildTimestamp = ""
 var BubblesnetGitHash = ""
 
 func runLocalStateWatcher() {
-	log.Info("runLocalStateWatcher")
+	log.Info("automation: runLocalStateWatcher")
 	for true {
 		bytearray, err := json.Marshal(globals.LocalCurrentState)
 		if err == nil {
@@ -226,7 +227,13 @@ func initializeOutletsFromConfiguration() {
 }
 
 func initializeOutletsForAutomation() {
+	if !isRelayAttached(globals.MyDevice.DeviceID) {
+		log.Debugf("automation: initializeOutletsForAutomation - no outlets attached")
+		return
+	}
+
 	ControlLight(true)
+	ControlWaterTemp(true)
 	ControlHeat(true)
 	ControlHumidity(true)
 	ControlOxygenation(true)
@@ -251,12 +258,23 @@ func makeControlDecisions(once_only bool) {
 		//		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
 
 		if globals.MyStation.AutomaticControl {
-			ControlLight(false)
-			ControlHeat(false)
-			ControlHumidity(false)
-			ControlOxygenation(false)
-			ControlRootWater(false)
-			ControlAirflow(false)
+			if !isRelayAttached(globals.MyDevice.DeviceID) {
+				log.Debugf("automation: makeControlDecisions - no outlets attached ")
+				return
+			} else {
+				ControlLight(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlHeat(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlHumidity(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlOxygenation(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlRootWater(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlAirflow(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+			}
 		}
 		time.Sleep(time.Second)
 		i++
@@ -319,7 +337,7 @@ func initGlobals(testing bool) {
 	reportVersion()
 
 	log.Debug("debug")
-	log.Info("info")
+	log.Info("automation: info")
 	log.Notice("notice")
 	log.Warn("warn")
 	log.Error("error")
@@ -379,11 +397,11 @@ func setupPhMonitor() {
 	log.Infof("setupPhMonitor")
 	globals.ValidateConfigured("setupPhMonitor")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
-		log.Info("RootPhSensor configured for this device, starting")
+		log.Info("automation: RootPhSensor configured for this device, starting")
 		phsensor.StartEzoDriver()
 		log.Debug("Ezo driver started")
 	} else {
-		log.Info("RootPhSensor not configured for this device")
+		log.Info("automation: RootPhSensor not configured for this device")
 	}
 }
 
@@ -409,9 +427,17 @@ func countGoRoutines() (count int) {
 }
 
 func startGoRoutines(onceOnly bool) {
-	log.Info("startGoRoutines")
+	log.Info("automation: startGoRoutines")
+	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.ThermometerWater, "DS18B20") {
+		log.Info("automation: Water Temperature configured for this device, starting")
+
+		go gonewire.ReadOneWire()
+	} else {
+		log.Warnf("Water Temperature (DS18B20) not configured for this device - skipping water level")
+	}
+
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
-		log.Info("MovementSensor configured for this device, starting")
+		log.Info("automation: MovementSensor configured for this device, starting")
 
 		go accelerometer.RunTamperDetector(onceOnly)
 	} else {
@@ -419,7 +445,7 @@ func startGoRoutines(onceOnly bool) {
 	}
 	log.Infof("adc %s %d %#v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
-		log.Info("WaterlevelSensor configured for this device, starting ADC")
+		log.Info("automation: WaterlevelSensor configured for this device, starting ADC")
 		go func() {
 			err := a2dconverter.RunADCPoller(onceOnly, globals.PollingWaitInSeconds)
 
@@ -430,9 +456,9 @@ func startGoRoutines(onceOnly bool) {
 	} else {
 		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
 	}
-	log.Info("root ph")
+	log.Info("automation: root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
-		log.Info("RootPhSensor configured for this device, starting ezoPh")
+		log.Info("automation: RootPhSensor configured for this device, starting ezoPh")
 
 		phsensor.StartEzo(onceOnly)
 	} else {
@@ -440,7 +466,7 @@ func startGoRoutines(onceOnly bool) {
 	}
 	log.Infof("moduleShouldBeHere %s %d %#v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
-		log.Info("HeightSensor configured for this device, starting HSCR04")
+		log.Info("automation: HeightSensor configured for this device, starting HSCR04")
 
 		go distancesensor.RunDistanceWatcher(onceOnly)
 	} else {
@@ -448,7 +474,7 @@ func startGoRoutines(onceOnly bool) {
 	}
 
 	if globals.MyDevice.Camera.PiCamera == true {
-		log.Info("Camera configured for this device, starting picture taker")
+		log.Info("automation: Camera configured for this device, starting picture taker")
 		go pictureTaker(onceOnly)
 	} else {
 		log.Warnf("Camera (piCamers) not configured for this device - skipping picture taker")

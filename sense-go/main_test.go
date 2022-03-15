@@ -35,7 +35,7 @@ func TestControlHeat(t *testing.T) {
 
 /*
 globals.CurrentStageSchedule.EnvironmentalTargets.Temperature
-globals.Lasttemp
+globals.LastTemp
 globals.ExternalCurrentState.TempF
 */
 func testHeat(t *testing.T) {
@@ -45,23 +45,23 @@ func testHeat(t *testing.T) {
 	ControlHeat(true)
 
 	// all set
-	globals.Lasttemp = 80
+	globals.LastTemp = 80
 	globals.ExternalCurrentState.TempF = 77
 	ControlHeat(true)
 
-	globals.Lasttemp = 79
+	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 77
 	ControlHeat(true)
 
-	globals.Lasttemp = 79
+	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 79
 	ControlHeat(true)
 
-	globals.Lasttemp = 81
+	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 80
 	ControlHeat(true)
 
-	globals.Lasttemp = 81
+	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 83
 	ControlHeat(true)
 
@@ -80,7 +80,7 @@ func TestControlHumidity(t *testing.T) {
 }
 
 /*
-globals.Lasthumidity = globals.ExternalCurrentState.Humidity
+globals.LastHumidity = globals.ExternalCurrentState.Humidity
 globals.CurrentStageSchedule.EnvironmentalTargets.Humidity
 */
 var humidifierstates = []bool{true, false}
@@ -90,19 +90,19 @@ func testHumidity(t *testing.T) {
 	globals.CurrentStageSchedule.EnvironmentalTargets.Humidity = 60
 
 	for i := 0; i < len(humidifierstates); i++ {
-		globals.Lasthumidity = 59
+		globals.LastHumidity = 59
 		globals.ExternalCurrentState.Humidity = 50
 		ControlHumidity(true)
 	}
 
 	for i := 0; i < len(humidifierstates); i++ {
-		globals.Lasthumidity = 61
+		globals.LastHumidity = 61
 		globals.ExternalCurrentState.Humidity = 67
 		ControlHumidity(true)
 	}
 
 	for i := 0; i < len(humidifierstates); i++ {
-		globals.Lasthumidity = 60
+		globals.LastHumidity = 60
 		globals.ExternalCurrentState.Humidity = 60
 		ControlHumidity(true)
 	}

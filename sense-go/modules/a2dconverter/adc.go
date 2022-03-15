@@ -60,10 +60,11 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
-			break
+			//			break
 		}
 
-		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
+		//		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
+		time.Sleep(15 * time.Second)
 	}
 	return err1
 }
@@ -96,6 +97,7 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 		}
 	}
 
+	count := 0
 	for {
 		for moduleIndex := 0; moduleIndex < 2; moduleIndex++ {
 			adcMessage := new(ADCMessage)
@@ -105,13 +107,15 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 				break
 			} else {
 				for channelIndex := 0; channelIndex < len(adcMessage.ChannelValues); channelIndex++ {
-					if channelIndex == 1 {
-						adcMessage.ChannelValues[channelIndex].SensorName = "water_level"
+					if channelIndex == 1 && moduleIndex == 0 {
+						adcMessage.ChannelValues[channelIndex].SensorName = "water_level_sensor"
 						adcMessage.ChannelValues[channelIndex].MeasurementName = "water_level"
 						adcMessage.ChannelValues[channelIndex].MeasurementUnits = "gallons"
 						adcMessage.ChannelValues[channelIndex].Slope = Etape_slope
 						adcMessage.ChannelValues[channelIndex].Yintercept = Etape_y_intercept
 					}
+					count++
+					log.Infof("ADCMessageCounter %d", count)
 					log.Infof("adc message for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, adcMessage)
 					direction := ""
 					if adcMessage.ChannelValues[channelIndex].Voltage > lastValues[moduleIndex][channelIndex] {
@@ -128,15 +132,17 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 					} else {
 						log.Infof("adc message reply for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, sensorReply)
 					}
-					_ = sendTranslatedADCSensorMessages(moduleIndex, channelIndex, adcMessage)
+					if channelIndex == 1 && moduleIndex == 0 {
+						_ = sendTranslatedADCSensorMessages(moduleIndex, channelIndex, adcMessage)
+					}
 				}
 			}
 			if onceOnly {
 				return nil
 			}
 			//		readAllChannels(ads1115s[1],a1)
-			time.Sleep(time.Duration(pollingWaitInSeconds) * time.Second)
 		}
+		time.Sleep(15 * time.Second)
 	}
 	log.Errorf("loopforever returning err = %#v", err)
 	return nil
@@ -148,8 +154,8 @@ func sendTranslatedADCSensorMessages(moduleIndex int, channelIndex int, adcMessa
 		return nil
 	}
 	if channelIndex == WaterLevelChannelIndex {
-		direction := "up"
-		err, message := getTranslatedADCSensorMessageForChannel(adcMessage, moduleIndex, channelIndex, direction, adcMessage.ChannelValues[channelIndex].SensorName, adcMessage.ChannelValues[channelIndex].MeasurementName,
+
+		err, message := getTranslatedADCSensorMessageForChannel(adcMessage, moduleIndex, channelIndex, "", adcMessage.ChannelValues[channelIndex].SensorName, adcMessage.ChannelValues[channelIndex].MeasurementName,
 			adcMessage.ChannelValues[channelIndex].Slope, adcMessage.ChannelValues[channelIndex].Yintercept, adcMessage.ChannelValues[channelIndex].MeasurementUnits)
 		//		log.Infof("sendTranslatedADCSensorMessages adc %#v", adcMessage)
 		sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
@@ -196,6 +202,14 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			}
 			measurementValue = etapeInchesToGallons(12.5, 18.0, inches)
 			log.Infof("sendTranslatedADCSensorMessages raw %f Volts, %s %f inches, %f %s", adcMessage.ChannelValues[channelIndex].Voltage, measurementName, inches, measurementValue, measurementUnits)
+
+			direction := ""
+			if measurementValue > float64(globals.LastWaterLevel) {
+				direction = "up"
+			} else if measurementValue < float64(globals.LastWaterLevel) {
+				direction = "down"
+			}
+			globals.LastWaterTemp = float32(measurementValue)
 
 			ads := messaging.NewGenericSensorMessage(sensorName, measurementName,
 				measurementValue, measurementUnits, direction)

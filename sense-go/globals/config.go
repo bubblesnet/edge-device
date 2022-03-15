@@ -36,6 +36,7 @@ type Station struct {
 	HumiditySensor         bool            `json:"humidity_sensor_internal,omitempty"`
 	ExternalHumiditySensor bool            `json:"humidity_sensor_external,omitempty"`
 	Heater                 bool            `json:"heater,omitempty"`
+	WaterHeater            bool            `json:"water_heater,omitempty"`
 	ThermometerTop         bool            `json:"thermometer_top,omitempty"`
 	ThermometerMiddle      bool            `json:"thermometer_middle,omitempty"`
 	ThermometerBottom      bool            `json:"thermometer_bottom,omitempty"`
