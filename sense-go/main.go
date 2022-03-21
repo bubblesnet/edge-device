@@ -233,7 +233,9 @@ func initializeOutletsForAutomation() {
 	}
 
 	ControlLight(true)
-	ControlWaterTemp(true)
+	ControlWaterTemp(true, globals.MyDevice.DeviceID, *globals.MyStation, globals.CurrentStageSchedule,
+		globals.MyStation.CurrentStage, globals.ExternalCurrentState)
+
 	ControlHeat(true)
 	ControlHumidity(true)
 	ControlOxygenation(true)
@@ -253,7 +255,10 @@ func makeControlDecisions(once_only bool) {
 			log.Errorf("getState got error %#v", err)
 		} else {
 			globals.ExternalCurrentState.TempF = gr.TempF
+			globals.ExternalCurrentState.WaterTempF = gr.WaterTempF
 			globals.ExternalCurrentState.Humidity = gr.Humidity
+			//			fmt.Printf("automation: gr = %+v", gr)
+			//			fmt.Printf("automation: TempF %f, WaterTempF %f, Humidity %f\n", gr.TempF, gr.WaterTempF, gr.Humidity)
 		}
 		//		log.Infof("Got state TempF %f Humidity %f", gr.TempF, gr.Humidity)
 
@@ -265,6 +270,9 @@ func makeControlDecisions(once_only bool) {
 				ControlLight(false)
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlHeat(false)
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlWaterTemp(false, globals.MyDevice.DeviceID, *globals.MyStation, globals.CurrentStageSchedule,
+					globals.MyStation.CurrentStage, globals.ExternalCurrentState)
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlHumidity(false)
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
@@ -427,7 +435,7 @@ func countGoRoutines() (count int) {
 }
 
 func startGoRoutines(onceOnly bool) {
-	log.Info("automation: startGoRoutines")
+	log.Info("startGoRoutines")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.ThermometerWater, "DS18B20") {
 		log.Info("automation: Water Temperature configured for this device, starting")
 
@@ -456,7 +464,7 @@ func startGoRoutines(onceOnly bool) {
 	} else {
 		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
 	}
-	log.Info("automation: root ph")
+	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("automation: RootPhSensor configured for this device, starting ezoPh")
 

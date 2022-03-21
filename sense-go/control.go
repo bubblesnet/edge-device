@@ -115,7 +115,9 @@ func ControlLight(force bool) {
 			bloomlight = true
 		} else {
 			// If it's time for grow light veg to be off
-			log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, globals.CurrentStageSchedule.HoursOfLight, globals.MyStation.LightOnHour)
+			if globals.LocalCurrentState.GrowLightBloom == true {
+				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, globals.CurrentStageSchedule.HoursOfLight, globals.MyStation.LightOnHour)
+			}
 			gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.GROWLIGHTBLOOM, force)
 			bloomlight = false
 		}
@@ -149,26 +151,27 @@ func inRange(starthour int, numhours int, currenthours int) bool {
 	}
 }
 
-func ControlWaterTemp(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("automation: ControlWaterTemp - no outlets attached")
+func ControlWaterTemp(force bool, DeviceID int64, Station globals.Station, Stage globals.StageSchedule,
+	CurrentStage string, ExternalCurrentState globals.ExternalState) {
+	if !isRelayAttached(DeviceID) {
+		log.Infof("automation: ControlWaterTemp - no outlets attached")
 		return
 	}
-	if globals.MyStation.CurrentStage == globals.IDLE {
-		log.Debugf("automation: ControlWaterTemp - stage is idle, turning off")
+	if CurrentStage == globals.IDLE {
+		log.Infof("automation: ControlWaterTemp - stage is idle, turning off")
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.WATERHEATER, false) // MAKE SURE HEAT IS OFF
 		return
 	}
 	if globals.ExternalCurrentState.TempF == globals.TEMPNOTSET {
-		log.Debugf("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.WaterTempF %f - ignoring", globals.ExternalCurrentState.WaterTempF)
+		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.WaterTempF %f - ignoring", globals.ExternalCurrentState.WaterTempF)
 		return
 	}
 	// Go from 62 to 68
-	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 3.0
-	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 3.0
+	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.WaterTemperature + 3.0
+	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.WaterTemperature - 3.0
 	if globals.ExternalCurrentState.WaterTempF > highLimit {
 		if globals.LastWaterTemp < highLimit { // JUST BECAME TOO HOT
-			log.Infof("automation: ControlWaterTemp turning off %s because WaterTemp just rolled over %f on way up %f", globals.WATERHEATER, highLimit, globals.ExternalCurrentState.WaterTempF)
+			log.Infof("automation: ControlWaterTemp turning off %s because WaterTemp (%f) just rolled over %f on way up", globals.WATERHEATER, globals.ExternalCurrentState.WaterTempF, highLimit)
 			force = true
 		}
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.WATERHEATER, force) // MAKE SURE HEAT IS OFF
@@ -176,7 +179,7 @@ func ControlWaterTemp(force bool) {
 		globals.LocalCurrentState.WaterHeater = false
 		setEnvironmentalControlString()
 
-	} else { // NOT TOO HOT
+	} else {                                                    // NOT TOO HOT
 		if globals.ExternalCurrentState.WaterTempF < lowLimit { // TOO COLD
 			if globals.LastWaterTemp > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("automation: ControlWaterTemp turning on %s because WaterTemp just fell below %f on way down - %f", globals.WATERHEATER, lowLimit, globals.ExternalCurrentState.WaterTempF)
@@ -228,7 +231,7 @@ func ControlHeat(force bool) {
 		globals.LocalCurrentState.Heater = false
 		globals.LocalCurrentState.HeaterPad = false
 		setEnvironmentalControlString()
-	} else { // NOT TOO HOT
+	} else {                                               // NOT TOO HOT
 		if globals.ExternalCurrentState.TempF < lowLimit { // TOO COLD
 			if globals.LastTemp > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("automation: ControlHeat turning on %s because internal temp %f just fell below low limit %f on way down", globals.HEATER, globals.ExternalCurrentState.TempF, lowLimit)
@@ -277,7 +280,7 @@ func ControlHumidity(force bool) {
 		}
 		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS OFF
 		globals.LocalCurrentState.Humidifier = false
-	} else { // NOT TOO HOT
+	} else {                                                  // NOT TOO HOT
 		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
 			if globals.LastHumidity > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("automation: ControlHumidity turning on %s because Humidity %f just fell below low limit %f on way down", globals.HUMIDIFIER, globals.ExternalCurrentState.Humidity, highLimit)

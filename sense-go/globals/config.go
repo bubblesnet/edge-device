@@ -113,8 +113,9 @@ type AttachedDevice struct {
 }
 
 type EnvironmentalTarget struct {
-	Temperature float32 `json:"temperature,omitempty"`
-	Humidity    float32 `json:"humidity,omitempty"`
+	Temperature      float32 `json:"temperature,omitempty"`
+	Humidity         float32 `json:"humidity,omitempty"`
+	WaterTemperature float32 `json:"water_temperature,omitempty"`
 }
 
 type StageSchedule struct {
@@ -213,6 +214,7 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 	//	fmt.Printf("MyStation = %#v\n", MyStation)
 
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
+		fmt.Printf("StageSchedule[%d] = %#v\n", i, MyStation.StageSchedules[i])
 		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
 			fmt.Printf("Current stage is %s - schedule is %#v", MyStation.CurrentStage, currentStageSchedule)

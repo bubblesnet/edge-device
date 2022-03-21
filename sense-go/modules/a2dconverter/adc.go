@@ -209,7 +209,7 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			} else if measurementValue < float64(globals.LastWaterLevel) {
 				direction = "down"
 			}
-			globals.LastWaterTemp = float32(measurementValue)
+			globals.LastWaterLevel = float32(measurementValue)
 
 			ads := messaging.NewGenericSensorMessage(sensorName, measurementName,
 				measurementValue, measurementUnits, direction)
