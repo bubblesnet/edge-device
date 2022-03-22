@@ -66,7 +66,7 @@ func countACOutlets() int {
 	return len(globals.MyDevice.ACOutlets)
 }
 
-func processCommand(msg *stomp.Message) (resub bool, err error) {
+func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) (resub bool, err error) {
 	if msg == nil || msg.Err != nil {
 		if msg != nil && msg.Err != nil {
 			if strings.Contains(fmt.Sprintf("%#v", msg.Err), "timeout") {
@@ -124,8 +124,8 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 		break
 	case "status":
 		fmt.Printf("\n\nReceived status message\n\n")
-		gpiorelay.PowerstripSvc.ReportAll(200 * time.Millisecond)
-		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
+		Powerstrip.ReportAll(200 * time.Millisecond)
+		Powerstrip.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
 		break
 	case "switch":
 		{
@@ -140,7 +140,7 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 				log.Errorf("listenForCommands switch error %#v", err)
 				break
 			}
-			if !gpiorelay.PowerstripSvc.IsMySwitch(switchMessage.SwitchName) {
+			if !Powerstrip.IsMySwitch(switchMessage.SwitchName) {
 				log.Infof("Not my switch %s", switchMessage.SwitchName)
 				break
 			}
@@ -152,10 +152,14 @@ func processCommand(msg *stomp.Message) (resub bool, err error) {
 				}
 			} else if switchMessage.On == true {
 				log.Infof("listenForCommands turning on %s on-demand", switchMessage.SwitchName)
-				gpiorelay.GetPowerstripService().TurnOnOutletByName(switchMessage.SwitchName, true)
+				if stateChanged := Powerstrip.TurnOnOutletByName(switchMessage.SwitchName, true); stateChanged == true {
+					ReportSwitchStateChanged("processCommand", switchMessage.SwitchName, false, true)
+				}
 			} else {
 				log.Infof("listenForCommands turning off %s on-demand", switchMessage.SwitchName)
-				gpiorelay.GetPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true)
+				if stateChanged := gpiorelay.GetPowerstripService().TurnOffOutletByName(switchMessage.SwitchName, true); stateChanged == true {
+					ReportSwitchStateChanged("processCommand", switchMessage.SwitchName, true, false)
+				}
 			}
 			break
 		}
@@ -201,7 +205,7 @@ func listenForCommands(isUnitTest bool) (err error) {
 		for i := 0; ; i++ {
 			//		log.Infof("listenForCommands read %d", i)
 			msg := <-sub.C
-			reSubscribe, err := processCommand(msg)
+			reSubscribe, err := processCommand(msg, gpiorelay.GetPowerstripService())
 			if err != nil {
 				log.Warnf("processCommand error %#v need to redial/resubscribe", err)
 			}
@@ -220,10 +224,16 @@ func initializeOutletsFromConfiguration() {
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].PowerOn {
 			ps.TurnOnOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
+			ReportSwitchInitialized("initializeOutletsFromConfiguration", globals.MyDevice.ACOutlets[i].Name, true)
 		} else {
 			ps.TurnOffOutletByName(globals.MyDevice.ACOutlets[i].Name, true)
+			ReportSwitchInitialized("initializeOutletsFromConfiguration", globals.MyDevice.ACOutlets[i].Name, false)
 		}
 	}
+}
+
+func ReportSwitchInitialized(functionName string, switchName string, newState bool) {
+	log.Infof("StateChange: switch %s initialized to %v via %s", switchName, newState, functionName)
 }
 
 func initializeOutletsForAutomation() {
@@ -232,15 +242,19 @@ func initializeOutletsForAutomation() {
 		return
 	}
 
-	ControlLight(true)
-	ControlWaterTemp(true, globals.MyDevice.DeviceID, *globals.MyStation, globals.CurrentStageSchedule,
-		globals.MyStation.CurrentStage, globals.ExternalCurrentState)
-
-	ControlHeat(true)
-	ControlHumidity(true)
-	ControlOxygenation(true)
-	ControlRootWater(true)
-	ControlAirflow(true)
+	ControlLight(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, *globals.MyStation,
+		globals.CurrentStageSchedule, &globals.LocalCurrentState, time.Now(), gpiorelay.GetPowerstripService())
+	ControlWaterTemp(true, globals.MyDevice.DeviceID, globals.CurrentStageSchedule,
+		globals.MyStation.CurrentStage, globals.ExternalCurrentState, &globals.LocalCurrentState,
+		&globals.LastWaterTemp, gpiorelay.GetPowerstripService())
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
+	ControlHumidity(true, globals.MyDevice.DeviceID, globals.CurrentStageSchedule,
+		globals.MyStation.CurrentStage, globals.ExternalCurrentState, &globals.LocalCurrentState,
+		&globals.LastHumidity, gpiorelay.GetPowerstripService())
+	ControlOxygenation(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, gpiorelay.GetPowerstripService())
+	ControlRootWater(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, gpiorelay.GetPowerstripService())
+	ControlAirflow(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, gpiorelay.GetPowerstripService())
 }
 
 func makeControlDecisions(once_only bool) {
@@ -267,20 +281,42 @@ func makeControlDecisions(once_only bool) {
 				log.Debugf("automation: makeControlDecisions - no outlets attached ")
 				return
 			} else {
-				ControlLight(false)
+				ControlLight(false, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage,
+					*globals.MyStation,
+					globals.CurrentStageSchedule, &globals.LocalCurrentState, time.Now(),
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlHeat(false)
+				ControlHeat(false, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+					globals.ExternalCurrentState,
+					&globals.LocalCurrentState, &globals.LastTemp,
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlWaterTemp(false, globals.MyDevice.DeviceID, *globals.MyStation, globals.CurrentStageSchedule,
-					globals.MyStation.CurrentStage, globals.ExternalCurrentState)
+				ControlWaterTemp(false,
+					globals.MyDevice.DeviceID,
+					globals.CurrentStageSchedule,
+					globals.MyStation.CurrentStage,
+					globals.ExternalCurrentState,
+					&globals.LocalCurrentState,
+					&globals.LastWaterTemp,
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlHumidity(false)
+				ControlHumidity(false,
+					globals.MyDevice.DeviceID,
+					globals.CurrentStageSchedule,
+					globals.MyStation.CurrentStage,
+					globals.ExternalCurrentState,
+					&globals.LocalCurrentState,
+					&globals.LastHumidity,
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlOxygenation(false)
+				ControlOxygenation(false, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage,
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlRootWater(false)
+				ControlRootWater(false, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage,
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlAirflow(false)
+				ControlAirflow(false, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage,
+					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 			}
 		}
@@ -380,31 +416,31 @@ func readConfigFromDisk() {
 	}
 }
 
-func setupGPIO() {
+func setupGPIO(MyStation *globals.Station, MyDevice *globals.EdgeDevice, Powerstrip gpiorelay.PowerstripService) {
 	rpio.OpenRpio()
 	/*	defer func() {
 		rpio.CloseRpio()
 	}() */
 
-	if isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Infof("Relay is attached to device %d", globals.MyDevice.DeviceID)
-		gpiorelay.PowerstripSvc.InitRpioPins()
-		gpiorelay.PowerstripSvc.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
+	if isRelayAttached(MyDevice.DeviceID) {
+		log.Infof("Relay is attached to device %d", MyDevice.DeviceID)
+		Powerstrip.InitRpioPins()
+		Powerstrip.TurnAllOff(1) // turn all OFF first since initalizeOutlets doesnt
 		if globals.MyStation.AutomaticControl {
 			initializeOutletsForAutomation()
 		} else {
 			initializeOutletsFromConfiguration()
 		}
-		gpiorelay.PowerstripSvc.SendSwitchStatusChangeEvent("automaticControl", globals.MyStation.AutomaticControl)
+		Powerstrip.SendSwitchStatusChangeEvent("automaticControl", MyStation.AutomaticControl)
 	} else {
-		log.Infof("There is no relay attached to device %d", globals.MyDevice.DeviceID)
+		log.Infof("There is no relay attached to device %d", MyDevice.DeviceID)
 	}
 }
 
 func setupPhMonitor() {
 	log.Infof("setupPhMonitor")
 	globals.ValidateConfigured("setupPhMonitor")
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("automation: RootPhSensor configured for this device, starting")
 		phsensor.StartEzoDriver()
 		log.Debug("Ezo driver started")
@@ -436,7 +472,7 @@ func countGoRoutines() (count int) {
 
 func startGoRoutines(onceOnly bool) {
 	log.Info("startGoRoutines")
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.ThermometerWater, "DS18B20") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.ThermometerWater, "DS18B20") {
 		log.Info("automation: Water Temperature configured for this device, starting")
 
 		go gonewire.ReadOneWire()
@@ -444,7 +480,7 @@ func startGoRoutines(onceOnly bool) {
 		log.Warnf("Water Temperature (DS18B20) not configured for this device - skipping water level")
 	}
 
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
 		log.Info("automation: MovementSensor configured for this device, starting")
 
 		go accelerometer.RunTamperDetector(onceOnly)
@@ -452,7 +488,7 @@ func startGoRoutines(onceOnly bool) {
 		log.Warnf("MovementSensor (adxl345) not configured for this device - skipping tamper detection")
 	}
 	log.Infof("adc %s %d %#v ads1115", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor)
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.WaterLevelSensor, "ads1115") {
 		log.Info("automation: WaterlevelSensor configured for this device, starting ADC")
 		go func() {
 			err := a2dconverter.RunADCPoller(onceOnly, globals.PollingWaitInSeconds)
@@ -465,7 +501,7 @@ func startGoRoutines(onceOnly bool) {
 		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
 	}
 	log.Info("root ph")
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {
 		log.Info("automation: RootPhSensor configured for this device, starting ezoPh")
 
 		phsensor.StartEzo(onceOnly)
@@ -473,7 +509,7 @@ func startGoRoutines(onceOnly bool) {
 		log.Warnf("RootPhSensor (ezoPh) not configured for this device, - skipping pH monitoring")
 	}
 	log.Infof("moduleShouldBeHere %s %d %#v hcsr04", globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor)
-	if moduleShouldBeHere(globals.ContainerName, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
 		log.Info("automation: HeightSensor configured for this device, starting HSCR04")
 
 		go distancesensor.RunDistanceWatcher(onceOnly)
@@ -524,7 +560,7 @@ func testableSubmain(isUnitTest bool) {
 	_, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	setupGPIO()
+	setupGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
 
 	setupPhMonitor()
 	numGoRoutines := countGoRoutines()
@@ -563,15 +599,15 @@ func isRelayAttached(deviceid int64) (relayIsAttached bool) {
 	return false
 }
 
-func moduleShouldBeHere(containerName string, mydeviceid int64, deviceInStation bool, moduleType string) (shouldBePresent bool) {
+func moduleShouldBeHere(containerName string, MyStation *globals.Station, mydeviceid int64, deviceInStation bool, moduleType string) (shouldBePresent bool) {
 	if !deviceInStation {
 		return false
 	}
-	for i := 0; i < len(globals.MyStation.EdgeDevices); i++ {
+	for i := 0; i < len(MyStation.EdgeDevices); i++ {
 		//		log.Infof("%#v", globals.MySite.AttachedDevices[i])
-		for j := 0; j < len(globals.MyStation.EdgeDevices[i].DeviceModules); j++ {
-			if globals.MyStation.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && globals.MyStation.EdgeDevices[i].DeviceID == mydeviceid && globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType == moduleType {
-				log.Infof("Module %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType, globals.MyStation.EdgeDevices[i].DeviceModules[j].Address)
+		for j := 0; j < len(MyStation.EdgeDevices[i].DeviceModules); j++ {
+			if MyStation.EdgeDevices[i].DeviceModules[j].ContainerName == containerName && MyStation.EdgeDevices[i].DeviceID == mydeviceid && MyStation.EdgeDevices[i].DeviceModules[j].ModuleType == moduleType {
+				log.Infof("Module %s should be present at %s", globals.MyStation.EdgeDevices[i].DeviceModules[j].ModuleType, MyStation.EdgeDevices[i].DeviceModules[j].Address)
 				return true
 			}
 		}

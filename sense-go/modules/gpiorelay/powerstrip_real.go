@@ -88,11 +88,12 @@ func (r *RealPowerStrip) TurnAllOn(timeout time.Duration) {
 	}
 }
 
-func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
-	if !force && !singletonPowerstrip.isOutletOn(name) {
+func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) (stateChanged bool) {
+	originallyOn := singletonPowerstrip.isOutletOn(name)
+	if !force && !originallyOn {
 		//		log.Infof(" %s already OFF!!", name)
 		//		SendSwitchStatusChangeEvent(name,false)
-		return
+		return false
 	}
 
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
@@ -102,9 +103,10 @@ func (r *RealPowerStrip) TurnOffOutletByName(name string, force bool) {
 			globals.MyDevice.ACOutlets[i].PowerOn = false
 			singletonPowerstrip.TurnOffOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, false)
-			return
+			return singletonPowerstrip.isOutletOn(name) != originallyOn
 		}
 	}
+	return false
 	//	log.Warnf("Not my switch %s", name)
 }
 
@@ -130,11 +132,12 @@ func (r *RealPowerStrip) isOutletOn(name string) bool {
 	return false
 }
 
-func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
+func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) (stateChanged bool) {
+	originallyOn := singletonPowerstrip.isOutletOn(name)
 	if !force && singletonPowerstrip.isOutletOn(name) {
 		//		log.Debugf("Already ON!!!!")
 		//		SendSwitchStatusChangeEvent(name,true)
-		return
+		return false
 	}
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].Name == name {
@@ -143,9 +146,10 @@ func (r *RealPowerStrip) TurnOnOutletByName(name string, force bool) {
 			globals.MyDevice.ACOutlets[i].PowerOn = true
 			singletonPowerstrip.TurnOnOutlet(globals.MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, true)
-			return
+			return singletonPowerstrip.isOutletOn(name) == originallyOn
 		}
 	}
+	return false
 	//	log.Warnf("Not my switch %s", name)
 }
 

@@ -3,6 +3,8 @@ package main
 import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
+	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
+	"time"
 
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
 	"bubblesnet/edge-device/sense-go/modules/phsensor"
@@ -42,28 +44,34 @@ func testHeat(t *testing.T) {
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	// all set
 	globals.LastTemp = 80
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 79
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 80
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 83
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 }
 func TestControlHumidity(t *testing.T) {
@@ -92,19 +100,34 @@ func testHumidity(t *testing.T) {
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.LastHumidity = 59
 		globals.ExternalCurrentState.Humidity = 50
-		ControlHumidity(true)
+		ControlHumidity(true, globals.MyDevice.DeviceID,
+			globals.CurrentStageSchedule,
+			globals.MyStation.CurrentStage,
+			globals.ExternalCurrentState,
+			&globals.LocalCurrentState,
+			&globals.LastHumidity, gpiorelay.GetPowerstripService())
 	}
 
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.LastHumidity = 61
 		globals.ExternalCurrentState.Humidity = 67
-		ControlHumidity(true)
+		ControlHumidity(true, globals.MyDevice.DeviceID,
+			globals.CurrentStageSchedule,
+			globals.MyStation.CurrentStage,
+			globals.ExternalCurrentState,
+			&globals.LocalCurrentState,
+			&globals.LastHumidity, gpiorelay.GetPowerstripService())
 	}
 
 	for i := 0; i < len(humidifierstates); i++ {
 		globals.LastHumidity = 60
 		globals.ExternalCurrentState.Humidity = 60
-		ControlHumidity(true)
+		ControlHumidity(true, globals.MyDevice.DeviceID,
+			globals.CurrentStageSchedule,
+			globals.MyStation.CurrentStage,
+			globals.ExternalCurrentState,
+			&globals.LocalCurrentState,
+			&globals.LastHumidity, gpiorelay.GetPowerstripService())
 	}
 }
 
@@ -147,7 +170,9 @@ func testLight(t *testing.T) {
 				globals.MyStation.LightOnHour = h
 				for k := 0; k < len(growlightstates); k++ {
 					globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
-					ControlLight(true)
+					ControlLight(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage,
+						*globals.MyStation, globals.CurrentStageSchedule,
+						&globals.LocalCurrentState, time.Now(), gpiorelay.GetPowerstripService())
 				}
 			}
 		}
@@ -163,6 +188,7 @@ func Test_moduleShouldBeHere(t *testing.T) {
 	type args struct {
 		containerName   string
 		mydeviceid      int64
+		myStation       *globals.Station
 		deviceInStation bool
 		moduleType      string
 	}
@@ -176,7 +202,7 @@ func Test_moduleShouldBeHere(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
+			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.myStation, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
 				t.Errorf("moduleShouldBeHere(%#v) = %#v, want %#v", tt.args, gotShouldBePresent, tt.wantShouldBePresent)
 			}
 		})
@@ -325,7 +351,7 @@ func Test_setEnvironmentalControlString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setEnvironmentalControlString()
+			globals.LocalCurrentState.EnvironmentalControl = setEnvironmentalControlString(&globals.LocalCurrentState)
 		})
 	}
 }
@@ -426,7 +452,7 @@ func Test_setupGPIO(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setupGPIO()
+			setupGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
 		})
 	}
 }
@@ -561,7 +587,7 @@ func Test_processCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResub, err := processCommand(tt.args.msg)
+			gotResub, err := processCommand(tt.args.msg, gpiorelay.GetPowerstripService())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("processCommand() error = %#v, wantErr %#v", err, tt.wantErr)
 				return
