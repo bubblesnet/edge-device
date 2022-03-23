@@ -210,7 +210,7 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 		return errors.New(fmt.Sprintf("DeviceID %d not found in %#v", MyDeviceID, site.Stations))
 	}
 
-	fmt.Printf("my station is set to %#v\n", MyStation)
+	//	fmt.Printf("my station is set to %#v\n", MyStation)
 	//	fmt.Printf("MyStation = %#v\n", MyStation)
 
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
@@ -233,13 +233,13 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 func setMyStationAndMyDevice(site Site) (success bool) {
 	//	fmt.Printf("data = %#v\n", *site)
 	found := false
-	fmt.Printf("searching %d stations\n", len(site.Stations))
+	//	fmt.Printf("searching %d stations\n", len(site.Stations))
 	for stationIndex := 0; stationIndex < len(site.Stations) && !found; stationIndex++ {
-		fmt.Printf("searching %d devices\n", len(site.Stations[stationIndex].EdgeDevices))
+		//		fmt.Printf("searching %d devices\n", len(site.Stations[stationIndex].EdgeDevices))
 		for deviceIndex := 0; deviceIndex < len(site.Stations[stationIndex].EdgeDevices) && !found; deviceIndex++ {
-			fmt.Printf("Comparing deviceid %d with %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
+			//			fmt.Printf("Comparing deviceid %d with %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 			if MyDeviceID == site.Stations[stationIndex].EdgeDevices[deviceIndex].DeviceID {
-				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
+				//				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 				MyStation = &site.Stations[stationIndex]
 				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
 				found = true
@@ -315,7 +315,8 @@ func ValidateConfigurable() (err error) {
 		return errors.New("bad global")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf("ValidateConfigurable MySite.ControllerHostName context %s should be %T, is %T value %s\n", "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
+		fmt.Printf("ValidateConfigurable MySite.ControllerHostName context %s should be %T, is %T value %s length %d\n",
+			"MySite.ControllerHostName", t, MySite.ControllerHostName, t, len(t))
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		return errors.New("bad global")
 	}
@@ -343,59 +344,77 @@ func ValidateConfigured(situation string) (err error) {
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %#v", err)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return err
 	}
 	if t, ok := interface{}(MySite).(Site); ok == false {
 		fmt.Printf("ValidateConfigured (%s) (MySite).(Site context %s should be %T, is %T\n", situation, "MySite", t, MySite)
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("nil or empty MySite")
 	}
 	if MySite.SiteID < 0 {
 		fmt.Printf("<0 bad MySite.SiteID\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("<0 bad MySite.SiteID")
 	}
 	if MySite.UserID <= 0 {
 		fmt.Printf("<0 MySite.UserID\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("<0 MySite.UserID")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
 		fmt.Printf("ValidateConfigured (%s) MySite.ControllerHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("nil or wrong type MySite.ControllerHostName")
 	}
 	if MySite.ControllerHostName == "localhost" {
 		fmt.Printf("MySite.ControllerHostName cannot be localhost\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("MySite.ControllerHostName cannot be localhost")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", situation, "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("nil or wrong type ")
 	}
 	if len(MySite.Stations) <= 0 {
 		fmt.Printf("0 length MySite.Stations\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("0 length MySite.Stations")
 	}
 	if t, ok := interface{}(MyStation).(*Station); ok == false {
 		fmt.Printf("ValidateConfigured (%s) (MyStation).(Station context %s should be %T, is %T\n", situation, "*globals.Station", t, MyStation)
 		log.Errorf(" context %s should be %T, is %T", "*globals.Station", t, MyStation)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("nil or wrong type MyStation")
 	}
 	if MyStation == nil || MyStation.StationID < 0 {
@@ -406,46 +425,60 @@ func ValidateConfigured(situation string) (err error) {
 			fmt.Printf("<0 MyStation.StationID\n")
 		}
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("bad MyStation.StationID")
 	}
 	if MyStation.EnclosureType != "CABINET" && MyStation.EnclosureType != "TENT" {
 		fmt.Printf("bad enclosuretype %s\n", MyStation.EnclosureType)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New(fmt.Sprintf("bad MyStation.EnclosureType %s", MyStation.EnclosureType))
 
 	}
 	if len(MyStation.StageSchedules) <= 0 {
 		fmt.Printf("0 length MyStation.StageSchedules\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("0 length MyStation.StageSchedules")
 
 	}
 	if t, ok := interface{}(MyStation.CurrentStage).(string); ok == false || len(t) <= 0 {
 		fmt.Printf("nil, or empty MyStation.CurrentStage\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("nil, or empty MyStation.CurrentStage")
 
 	}
 	if MyStation.TamperSpec.Xmove <= 0.0 {
 		fmt.Printf("bad TamperSpec.Xmove %f\n", MyStation.TamperSpec.Xmove)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New(fmt.Sprintf("bad TamperSpec.Xmove %f", MyStation.TamperSpec.Xmove))
 	}
 	if MyStation.TamperSpec.Ymove <= 0.0 {
 		fmt.Printf("bad TamperSpec.Ymove %f\n", MyStation.TamperSpec.Ymove)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New(fmt.Sprintf("bad TamperSpec.Ymove %f", MyStation.TamperSpec.Ymove))
 	}
 	if MyStation.TamperSpec.Zmove <= 0.0 {
 		fmt.Printf("bad TamperSpec.Zmove %f\n", MyStation.TamperSpec.Zmove)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New(fmt.Sprintf("bad TamperSpec.Zmove %f", MyStation.TamperSpec.Zmove))
 	}
 
@@ -454,7 +487,9 @@ func ValidateConfigured(situation string) (err error) {
 		fmt.Printf("ValidateConfigured (%s) (MyStation).(EdgeDevices context %s should be %T, is %T\n", situation, "[]EdgeDevice]", t, MyStation)
 		log.Errorf(" context %s should be %T, is %T", "[]EdgeDevice", t, MyStation.EdgeDevices)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
-		time.Sleep(60 * time.Second)
+		if situation != "test" {
+			time.Sleep(60 * time.Second)
+		}
 		return errors.New("no edge devices configured in mystation")
 	}
 

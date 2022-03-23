@@ -42,33 +42,33 @@ func testHeat(t *testing.T) {
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	// all set
 	globals.LastTemp = 80
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 79
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 80
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 83
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 }
@@ -87,13 +87,19 @@ globals.LocalCurrentState.GrowLightVeg
 "seedling"
 "vegetative"
 */
-
-func Test_moduleShouldBeHere(t *testing.T) {
+func initGlobalsLocally(t *testing.T) {
 	globals.MyDeviceID = 70000008
 	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
-
+		t.Errorf("getConfigFromServer() error = %#v", err)
 	}
+	if globals.MyStation == nil {
+		t.Error("mystation is nil")
+	}
+}
+
+func Test_moduleShouldBeHere(t *testing.T) {
+	initGlobalsLocally(t)
+
 	type args struct {
 		containerName   string
 		mydeviceid      int64
@@ -106,8 +112,26 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		args                args
 		wantShouldBePresent bool
 	}{
-		{name: "happy", wantShouldBePresent: true, args: args{containerName: "sense-python", mydeviceid: globals.MyDeviceID, deviceInStation: true, moduleType: "bme280"}},
-		{name: "unhappy", wantShouldBePresent: false, args: args{containerName: "sense-python", mydeviceid: 70000006, deviceInStation: true, moduleType: "bme280"}},
+		{name: "happy",
+			wantShouldBePresent: true,
+			args: args{
+				containerName:   "sense-python",
+				mydeviceid:      globals.MyDeviceID,
+				myStation:       globals.MyStation,
+				deviceInStation: true,
+				moduleType:      "bme280",
+			},
+		},
+		{name: "unhappy",
+			wantShouldBePresent: false,
+			args: args{
+				containerName:   "sense-python",
+				mydeviceid:      70000006,
+				myStation:       globals.MyStation,
+				deviceInStation: true,
+				moduleType:      "bme280",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

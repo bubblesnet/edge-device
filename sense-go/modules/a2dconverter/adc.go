@@ -76,9 +76,6 @@ var lastValues = [][]float64{
 	{0.0, 0.0, 0.0, 0.0},
 }
 
-const Etape_slope = 11.37795
-const Etape_y_intercept = -17.28562
-
 var ads1115s [2]*i2c.ADS1x15Driver
 var i2cAddresses = []int{0x48, 0x49, 0x4a, 0x4d}
 

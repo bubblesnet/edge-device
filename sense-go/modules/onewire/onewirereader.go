@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/go-playground/log"
 	"os"
@@ -17,18 +16,10 @@ import (
 	"time"
 )
 
-var (
-	dir  = flag.String("path", "/sys/bus/w1/devices/", "-path /sys/bus/w1/devices/")
-	addr = flag.String("address", ":7777", "-address :7777")
-)
-
-func init() {
-	flag.Parse()
-}
-
 func ReadOneWire() {
+	dir := "/sys/bus/w1/devices/"
 
-	gw, err := New(*dir)
+	gw, err := New(dir)
 	if err != nil {
 		panic(err)
 	}
