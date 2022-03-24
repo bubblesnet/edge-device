@@ -9,22 +9,31 @@ import (
 	"bubblesnet/edge-device/sense-go/messaging"
 	"encoding/json"
 	"github.com/go-playground/log"
-	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
 	"golang.org/x/net/context"
 	"time"
 )
 
 var lastDistance = float64(0.0)
 
-func RunDistanceWatcher(once_only bool) {
-	log.Info("runDistanceWatcher")
+func RunDistanceWatcher(once_only bool, isUnitTest bool) {
+	echoPin := 20
+	pingPin := 21
+	initHCSR04(echoPin, pingPin)
+	RunDistanceWatcher1(once_only, isUnitTest)
+}
+
+func initHCSR04(echoPin int, pingPin int) {
 	if globals.RunningOnUnsupportedHardware() {
 		return
 	}
 	// Use BCM pin numbering
 	// Echo pin
 	// Trigger pin
-	h := hc.NewHCSR04(20, 21)
+	h := hc.NewHCSR04(echoPin, pingPin)
+}
+
+func RunDistanceWatcher1(once_only bool, isUnitTest bool) {
+	log.Info("runDistanceWatcher")
 
 	for true {
 		distance := h.MeasureDistance()
@@ -44,11 +53,13 @@ func RunDistanceWatcher(once_only bool) {
 		if err == nil {
 			log.Debugf("sending distance msg %s?", string(bytearray))
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
-			_, err := globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("runDistanceWatcher ERROR %#v", err)
-			} else {
-				//				log.Debugf("%#v", sensor_reply)
+			if !isUnitTest {
+				_, err := globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Errorf("runDistanceWatcher ERROR %#v", err)
+				} else {
+					//				log.Debugf("%#v", sensor_reply)
+				}
 			}
 		} else {
 			globals.ReportDeviceFailed("hcsr04")

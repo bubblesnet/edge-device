@@ -72,6 +72,20 @@ func Test_isRelayAttached(t *testing.T) {
 		})
 	}
 }
+
+func TestControlLight(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{name: "happy"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testLight(t)
+		})
+	}
+}
+
 func testLight(t *testing.T) {
 	for x := 0; x < len(stages); x++ {
 		globals.MyStation = &globals.Station{CurrentStage: stages[x]}
@@ -92,6 +106,7 @@ func testLight(t *testing.T) {
 		}
 	}
 }
+
 func Test_setEnvironmentalControlString(t *testing.T) {
 	tests := []struct {
 		name string
@@ -133,7 +148,8 @@ func testHumidity(t *testing.T) {
 				globals.MyStation.CurrentStage,
 				globals.ExternalCurrentState,
 				&globals.LocalCurrentState,
-				&globals.LastHumidity, gpiorelay.GetPowerstripService())
+				&globals.LastHumidity,
+				gpiorelay.GetPowerstripService())
 		}
 
 		for i := 0; i < len(humidifierstates); i++ {
@@ -159,19 +175,6 @@ func testHumidity(t *testing.T) {
 				&globals.LocalCurrentState,
 				&globals.LastHumidity, gpiorelay.GetPowerstripService())
 		}
-	}
-}
-
-func TestControlLight(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "happy"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testLight(t)
-		})
 	}
 }
 
