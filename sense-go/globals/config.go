@@ -557,7 +557,14 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	if err = ValidateConfigured("getConfigFromServer"); err != nil {
 		return err
 	}
+	if err = WriteConfig(storeMountPoint, relativePath, fileName); err != nil {
+		return err
+	}
+	return nil
+}
 
+func WriteConfig(storeMountPoint string, relativePath string, fileName string) (err error) {
+	log.Infof("WriteConfig stage now %s", MySite.Stations[0].CurrentStage)
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
 
 	if err != nil {

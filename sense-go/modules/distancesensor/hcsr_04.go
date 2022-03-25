@@ -9,11 +9,13 @@ import (
 	"bubblesnet/edge-device/sense-go/messaging"
 	"encoding/json"
 	"github.com/go-playground/log"
+	hc "github.com/jdevelop/golang-rpi-extras/sensor_hcsr04"
 	"golang.org/x/net/context"
 	"time"
 )
 
 var lastDistance = float64(0.0)
+var h hc.HCSR04
 
 func RunDistanceWatcher(once_only bool, isUnitTest bool) {
 	echoPin := 20
@@ -29,7 +31,7 @@ func initHCSR04(echoPin int, pingPin int) {
 	// Use BCM pin numbering
 	// Echo pin
 	// Trigger pin
-	h := hc.NewHCSR04(echoPin, pingPin)
+	h = hc.NewHCSR04(echoPin, pingPin)
 }
 
 func RunDistanceWatcher1(once_only bool, isUnitTest bool) {

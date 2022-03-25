@@ -111,8 +111,8 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 			log.Errorf("couldn't parse stage message %s, %#v", msg.Body, err)
 			break
 		}
-		log.Infof("listenForCommands parsed body into SwitchMessage %#v", stageMessage)
-		globals.MyStation.CurrentStage = stageMessage.StageName
+		log.Infof("listenForCommands parsed body into StageMessage %#v", stageMessage)
+		ChangeStageTo(stageMessage.StageName)
 		break
 	case "picture":
 		if globals.MyDevice.Camera.PiCamera == false {
@@ -172,6 +172,25 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 	return false, nil
 }
 
+func ChangeStageTo(StageName string) {
+	log.Infof("ChangeStageTo %s", StageName)
+	globals.MyStation.CurrentStage = StageName
+	globals.MySite.Stations[0].CurrentStage = StageName
+	globals.CurrentStageSchedule = findSchedule(StageName)
+	globals.WriteConfig(globals.PersistentStoreMountPoint, "", "config.json")
+	if globals.MyStation.AutomaticControl {
+		initializeOutletsForAutomation() // Make sure the switches conform to newly configured automation
+	}
+}
+
+func findSchedule(StageName string) (stageSchedule globals.StageSchedule) {
+	for i := 0; i < len(globals.MyStation.StageSchedules); i++ {
+		if globals.MyStation.StageSchedules[i].Name == StageName {
+			return globals.MyStation.StageSchedules[i]
+		}
+	}
+	return globals.StageSchedule{}
+}
 func listenForCommands(isUnitTest bool) (err error) {
 	topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
 	hostPort := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
@@ -241,6 +260,7 @@ func initializeOutletsForAutomation() {
 		log.Debugf("automation: initializeOutletsForAutomation - no outlets attached")
 		return
 	}
+	log.Infof("automation: initializeOutletsForAutomation currentStage %s", globals.MyStation.CurrentStage)
 
 	ControlLight(true,
 		globals.MyDevice.DeviceID,
@@ -571,7 +591,7 @@ func startGoRoutines(onceOnly bool) {
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.HeightSensor, "hcsr04") {
 		log.Info("automation: HeightSensor configured for this device, starting HSCR04")
 
-		go distancesensor.RunDistanceWatcher(onceOnly)
+		go distancesensor.RunDistanceWatcher(onceOnly, false)
 	} else {
 		log.Warnf("HeightSensor (hcsr04) not configured for this device - skipping distance monitoring")
 	}

@@ -62,12 +62,6 @@ func ControlRootWater(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, 
 		return somethingChanged
 	}
 
-	if CurrentStage == globals.IDLE {
-		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERPUMP, false); somethingChanged == true {
-			ReportSwitchStateChanged("ControlRootWater", globals.WATERPUMP, true, false)
-		}
-		return somethingChanged
-	}
 	switch CurrentStage {
 	case globals.IDLE:
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERPUMP, false); somethingChanged == true {
