@@ -89,7 +89,7 @@ func (r *RealPowerStrip) TurnAllOn(MyDevice *globals.EdgeDevice, timeout time.Du
 }
 
 func (r *RealPowerStrip) TurnOffOutletByName(MyDevice *globals.EdgeDevice, name string, force bool) (stateChanged bool) {
-	originallyOn := singletonPowerstrip.isOutletOn(MyDevice, name)
+	originallyOn := singletonPowerstrip.IsOutletOn(MyDevice, name)
 	if !force && !originallyOn {
 		//		log.Infof(" %s already OFF!!", name)
 		//		SendSwitchStatusChangeEvent(name,false)
@@ -103,7 +103,7 @@ func (r *RealPowerStrip) TurnOffOutletByName(MyDevice *globals.EdgeDevice, name 
 			(*MyDevice).ACOutlets[i].PowerOn = false
 			singletonPowerstrip.TurnOffOutlet((*MyDevice).ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, false, globals.GetSequence())
-			return singletonPowerstrip.isOutletOn(MyDevice, name) != originallyOn
+			return singletonPowerstrip.IsOutletOn(MyDevice, name) != originallyOn
 		}
 	}
 	return false
@@ -123,7 +123,7 @@ func (r *RealPowerStrip) IsMySwitch(MyDevice *globals.EdgeDevice, switchName str
 	return false
 }
 
-func (r *RealPowerStrip) isOutletOn(MyDevice *globals.EdgeDevice, name string) bool {
+func (r *RealPowerStrip) IsOutletOn(MyDevice *globals.EdgeDevice, name string) bool {
 	for i := 0; i < len((*MyDevice).ACOutlets); i++ {
 		if (*MyDevice).ACOutlets[i].Name == name {
 			return (*MyDevice).ACOutlets[i].PowerOn
@@ -133,8 +133,8 @@ func (r *RealPowerStrip) isOutletOn(MyDevice *globals.EdgeDevice, name string) b
 }
 
 func (r *RealPowerStrip) TurnOnOutletByName(MyDevice *globals.EdgeDevice, name string, force bool) (stateChanged bool) {
-	originallyOn := singletonPowerstrip.isOutletOn(MyDevice, name)
-	if !force && singletonPowerstrip.isOutletOn(MyDevice, name) {
+	originallyOn := singletonPowerstrip.IsOutletOn(MyDevice, name)
+	if !force && singletonPowerstrip.IsOutletOn(MyDevice, name) {
 		//		log.Debugf("Already ON!!!!")
 		//		SendSwitchStatusChangeEvent(name,true)
 		return false
@@ -146,7 +146,7 @@ func (r *RealPowerStrip) TurnOnOutletByName(MyDevice *globals.EdgeDevice, name s
 			MyDevice.ACOutlets[i].PowerOn = true
 			singletonPowerstrip.TurnOnOutlet(MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, true, globals.GetSequence())
-			return singletonPowerstrip.isOutletOn(MyDevice, name) == originallyOn
+			return singletonPowerstrip.IsOutletOn(MyDevice, name) == originallyOn
 		}
 	}
 	return false

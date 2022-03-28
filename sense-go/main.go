@@ -146,19 +146,23 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 			}
 			if switchMessage.SwitchName == "automaticControl" {
 				log.Infof("listenForCommands setting %s to %#v on-demand", switchMessage.SwitchName, switchMessage.On)
+				originalState := globals.MyStation.AutomaticControl
 				globals.MyStation.AutomaticControl = switchMessage.On
+				LogSwitchStateChanged("processCommand", switchMessage.SwitchName, originalState, switchMessage.On)
+				log.Infof("automaticControl - sending switch changed event to console")
+				gpiorelay.GetPowerstripService().SendSwitchStatusChangeEvent(switchMessage.SwitchName, switchMessage.On, 1120)
 				if globals.MyStation.AutomaticControl {
 					initializeOutletsForAutomation() // Make sure the switches conform to currently configured automation
 				}
 			} else if switchMessage.On == true {
 				log.Infof("listenForCommands turning on %s on-demand", switchMessage.SwitchName)
 				if stateChanged := Powerstrip.TurnOnOutletByName(globals.MyDevice, switchMessage.SwitchName, true); stateChanged == true {
-					ReportSwitchStateChanged("processCommand", switchMessage.SwitchName, false, true)
+					LogSwitchStateChanged("processCommand", switchMessage.SwitchName, false, true)
 				}
 			} else {
 				log.Infof("listenForCommands turning off %s on-demand", switchMessage.SwitchName)
 				if stateChanged := gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.MyDevice, switchMessage.SwitchName, true); stateChanged == true {
-					ReportSwitchStateChanged("processCommand", switchMessage.SwitchName, true, false)
+					LogSwitchStateChanged("processCommand", switchMessage.SwitchName, true, false)
 				}
 			}
 			break
@@ -174,8 +178,8 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 
 func ChangeStageTo(StageName string) {
 	log.Infof("ChangeStageTo %s", StageName)
-	globals.MyStation.CurrentStage = StageName
-	globals.MySite.Stations[0].CurrentStage = StageName
+	globals.MyStation.Automation.CurrentStage = StageName
+	globals.MySite.Stations[0].Automation.CurrentStage = StageName
 	globals.CurrentStageSchedule = findSchedule(StageName)
 	globals.WriteConfig(globals.PersistentStoreMountPoint, "", "config.json")
 	if globals.MyStation.AutomaticControl {
@@ -260,12 +264,12 @@ func initializeOutletsForAutomation() {
 		log.Debugf("automation: initializeOutletsForAutomation - no outlets attached")
 		return
 	}
-	log.Infof("automation: initializeOutletsForAutomation currentStage %s", globals.MyStation.CurrentStage)
+	log.Infof("automation: initializeOutletsForAutomation currentStage %s", globals.MyStation.Automation.CurrentStage)
 
 	ControlLight(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		*globals.MyStation,
 		globals.CurrentStageSchedule,
 		&globals.LocalCurrentState,
@@ -275,7 +279,7 @@ func initializeOutletsForAutomation() {
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
 		globals.CurrentStageSchedule,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		globals.ExternalCurrentState,
 		&globals.LocalCurrentState,
 		&globals.LastWaterTemp,
@@ -283,7 +287,7 @@ func initializeOutletsForAutomation() {
 	ControlHeat(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		globals.CurrentStageSchedule,
 		globals.ExternalCurrentState,
 		&globals.LocalCurrentState,
@@ -293,7 +297,7 @@ func initializeOutletsForAutomation() {
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
 		globals.CurrentStageSchedule,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		globals.ExternalCurrentState,
 		&globals.LocalCurrentState,
 		&globals.LastHumidity,
@@ -301,17 +305,17 @@ func initializeOutletsForAutomation() {
 	ControlOxygenation(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		gpiorelay.GetPowerstripService())
 	ControlRootWater(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		gpiorelay.GetPowerstripService())
 	ControlAirflow(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.CurrentStage,
+		globals.MyStation.Automation.CurrentStage,
 		gpiorelay.GetPowerstripService())
 }
 
@@ -342,7 +346,7 @@ func makeControlDecisions(once_only bool) {
 				ControlLight(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					*globals.MyStation,
 					globals.CurrentStageSchedule,
 					&globals.LocalCurrentState,
@@ -352,7 +356,7 @@ func makeControlDecisions(once_only bool) {
 				ControlHeat(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					globals.CurrentStageSchedule,
 					globals.ExternalCurrentState,
 					&globals.LocalCurrentState,
@@ -363,7 +367,7 @@ func makeControlDecisions(once_only bool) {
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
 					globals.CurrentStageSchedule,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					globals.ExternalCurrentState,
 					&globals.LocalCurrentState,
 					&globals.LastWaterTemp,
@@ -373,7 +377,7 @@ func makeControlDecisions(once_only bool) {
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
 					globals.CurrentStageSchedule,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					globals.ExternalCurrentState,
 					&globals.LocalCurrentState,
 					&globals.LastHumidity,
@@ -382,19 +386,19 @@ func makeControlDecisions(once_only bool) {
 				ControlOxygenation(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlRootWater(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlAirflow(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.CurrentStage,
+					globals.MyStation.Automation.CurrentStage,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 			}

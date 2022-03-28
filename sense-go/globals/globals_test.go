@@ -135,7 +135,7 @@ func TestReadFromPersistentStore(t *testing.T) {
 	}
 	config := Site{}
 	stageSchedule := StageSchedule{}
-	MyStation = &Station{CurrentStage: IDLE}
+	MyStation = &Station{}
 
 	tests := []struct {
 		name    string
@@ -149,8 +149,6 @@ func TestReadFromPersistentStore(t *testing.T) {
 			args:    args{storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 	}
-
-	MyStation.CurrentStage = IDLE
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

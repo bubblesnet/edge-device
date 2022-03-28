@@ -155,7 +155,7 @@ func TestTurnOnOutletByName(t *testing.T) {
 	}
 }
 
-func Test_isOutletOn(t *testing.T) {
+func Test_IsOutletOn(t *testing.T) {
 	type args struct {
 		name string
 	}
@@ -169,8 +169,8 @@ func Test_isOutletOn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := PowerstripSvc.isOutletOn(globals.MyDevice, tt.args.name); got != tt.want {
-				t.Errorf("isOutletOn() = %#v, want %#v", got, tt.want)
+			if got := PowerstripSvc.IsOutletOn(globals.MyDevice, tt.args.name); got != tt.want {
+				t.Errorf("IsOutletOn() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

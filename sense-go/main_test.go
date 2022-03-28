@@ -38,37 +38,37 @@ globals.CurrentStageSchedule.EnvironmentalTargets.Temperature
 globals.LastTemp
 globals.ExternalCurrentState.TempF
 */
-func testHeat(t *testing.T) {
+func testHeat(t *testing.T) { //				,
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	// all set
 	globals.LastTemp = 80
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 79
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 80
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 83
-	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage, globals.CurrentStageSchedule,
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 }
@@ -196,7 +196,7 @@ func Test_runDistanceWatcher(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			distancesensor.RunDistanceWatcher(true)
+			distancesensor.RunDistanceWatcher(true, true)
 		})
 	}
 }

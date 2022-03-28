@@ -12,7 +12,7 @@ type PowerstripService interface {
 	InitRpioPins(MyDevice *globals.EdgeDevice, RunningOnUnsupportedHardware bool)
 	TurnAllOn(MyDevice *globals.EdgeDevice, timeout time.Duration)
 	TurnOffOutletByName(MyDevice *globals.EdgeDevice, name string, force bool) (stateChanged bool)
-	isOutletOn(MyDevice *globals.EdgeDevice, name string) bool
+	IsOutletOn(MyDevice *globals.EdgeDevice, name string) bool
 	TurnOnOutletByName(MyDevice *globals.EdgeDevice, name string, force bool) (stateChanged bool)
 	ReportAll(MyDevice *globals.EdgeDevice, timeout time.Duration)
 	TurnAllOff(MyDevice *globals.EdgeDevice, timeout time.Duration)

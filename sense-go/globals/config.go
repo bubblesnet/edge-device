@@ -25,6 +25,26 @@ type Site struct {
 	Stations           []Station `json:"stations,omitempty"`
 }
 
+// AutomationSettings is the set of automation parameters that belong to this station.
+type AutomationSettings struct {
+	AutomationSettingsID    int64    `json:"automation_settingsid"`
+	CurrentStage            string   `json:"current_stage"`
+	StageOptions            []string `json:"stage_options"`
+	CurrentLightingSchedule string   `json:"current_lighting_schedule"`
+	LightingScheduleOptions []string `json:"lighting_schedule_options"`
+	LightOnStartHour        int      `json:"light_on_start_hour"`
+	TargetTemperature       float64  `json:"target_temperature"`
+	TemperatureMin          float64  `json:"temperature_min"`
+	TemperatureMax          float64  `json:"temperature_max"`
+	HumidityMin             float64  `json:"humidity_min"`
+	HumidityMax             float64  `json:"humidity_max"`
+	TargetHumidity          float64  `json:"target_humidity"`
+	HumidityTargetRangeLow  float64  `json:"humidity_target_range_low"`
+	HumidityTargetRangeHigh float64  `json:"humidity_target_range_high"`
+	CurrentLightType        string   `json:"current_light_type"`
+	LightTypeOptions        []string `json:"light_type_options"`
+}
+
 // Station is a grow-unit, typically either a cabinet or a tent.  A station
 // contains multiple edge devices, typically Raspberry Pi.  It's the enclosing physical
 // structure for one or more plants.
@@ -63,9 +83,10 @@ type Station struct {
 	Relay                  bool            `json:"relay,omitempty,omitempty"`
 	EdgeDevices            []EdgeDevice    `json:"edge_devices,omitempty"`
 	StageSchedules         []StageSchedule `json:"stage_schedules,omitempty"`
-	CurrentStage           string          `json:"current_stage"`
-	LightOnHour            int             `json:"light_on_hour"`
-	TamperSpec             Tamper          `json:"tamper,omitempty"`
+	//	CurrentStage           string          `json:"current_stage"`
+	LightOnHour int                `json:"light_on_hour"`
+	TamperSpec  Tamper             `json:"tamper,omitempty"`
+	Automation  AutomationSettings `json:"automation_settings"`
 }
 
 // EdgeDevice is a single-board-computer that, with the other
@@ -215,13 +236,13 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
 		fmt.Printf("StageSchedule[%d] = %#v\n", i, MyStation.StageSchedules[i])
-		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
+		if MyStation.StageSchedules[i].Name == MyStation.Automation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
-			fmt.Printf("Current stage is %s - schedule is %#v", MyStation.CurrentStage, currentStageSchedule)
+			fmt.Printf("Current stage is %s - schedule is %#v", MyStation.Automation.CurrentStage, currentStageSchedule)
 			return nil
 		}
 	}
-	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.CurrentStage)
+	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.Automation.CurrentStage)
 
 	fmt.Printf("%s\n", errstr)
 	log.Error(errstr)
@@ -312,23 +333,24 @@ func ValidateConfigurable() (err error) {
 	if t, ok := interface{}(MySite).(Site); ok == false {
 		fmt.Printf("ValidateConfigurable mysite.site context %s should be %T, is %T\n", "MySite", t, MySite)
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
-		return errors.New("bad global")
+		return errors.New("bad global MySite")
 	}
 	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
 		fmt.Printf("ValidateConfigurable MySite.ControllerHostName context %s should be %T, is %T value %s length %d\n",
 			"MySite.ControllerHostName", t, MySite.ControllerHostName, t, len(t))
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
-		return errors.New("bad global")
+		fmt.Printf("\n\n%#v\n\n", MySite)
+		return errors.New("bad global MySite.ControllerHostName")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigurable MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
 		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort)
-		return errors.New("bad global")
+		return errors.New("bad global MySite.ControllerAPIPort")
 	}
 	if t, ok := interface{}(MyDevice).(*EdgeDevice); ok == false || t == nil {
 		fmt.Printf("ValidateConfigurable EdgeDevice context %s should be %T, is %T value %#v\n", "MyDevice", t, MyDevice, t)
 		log.Errorf(" context %s should be %T, is %T", "MyDevice", t, MyDevice)
-		return errors.New("bad global")
+		return errors.New("bad global MyDevice")
 	}
 	if t, ok := interface{}(MyDevice.DeviceID).(int64); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigurable MyDevice.DeviceID context %s should be %T, is %T value %d\n", "MyDevice.DeviceID", t, MyDevice.DeviceID, t)
@@ -448,8 +470,8 @@ func ValidateConfigured(situation string) (err error) {
 		return errors.New("0 length MyStation.StageSchedules")
 
 	}
-	if t, ok := interface{}(MyStation.CurrentStage).(string); ok == false || len(t) <= 0 {
-		fmt.Printf("nil, or empty MyStation.CurrentStage\n")
+	if t, ok := interface{}(MyStation.Automation.CurrentStage).(string); ok == false || len(t) <= 0 {
+		fmt.Printf("nil, or empty MyStation.Automation.CurrentStage\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		if situation != "test" {
 			time.Sleep(60 * time.Second)
@@ -564,7 +586,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 }
 
 func WriteConfig(storeMountPoint string, relativePath string, fileName string) (err error) {
-	log.Infof("WriteConfig stage now %s", MySite.Stations[0].CurrentStage)
+	log.Infof("WriteConfig stage now %s", MySite.Stations[0].Automation.CurrentStage)
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
 
 	if err != nil {

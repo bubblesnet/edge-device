@@ -38,7 +38,7 @@ func (m *MockPowerStrip) TurnOffOutletByName(MyDevice *globals.EdgeDevice, name 
 	return (false)
 }
 
-func (m *MockPowerStrip) isOutletOn(MyDevice *globals.EdgeDevice, name string) bool {
+func (m *MockPowerStrip) IsOutletOn(MyDevice *globals.EdgeDevice, name string) bool {
 	return false
 }
 

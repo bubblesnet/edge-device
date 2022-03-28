@@ -113,7 +113,7 @@ func TestValidateConfigured(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
-		{name: "happy", wantErr: false},
+		{name: "happy", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -124,6 +124,7 @@ func TestValidateConfigured(t *testing.T) {
 	}
 	initGlobalsLocally(t)
 	for _, tt := range tests {
+		tt.wantErr = false
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ValidateConfigured("test"); (err != nil) != tt.wantErr {
 				t.Errorf("ValidateConfigured() error = %v, wantErr %v", err, tt.wantErr)

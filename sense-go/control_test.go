@@ -88,16 +88,16 @@ func TestControlLight(t *testing.T) {
 
 func testLight(t *testing.T) {
 	for x := 0; x < len(stages); x++ {
-		globals.MyStation = &globals.Station{CurrentStage: stages[x]}
+		globals.MyStation = &globals.Station{}
 		for i := 0; i < len(stages); i++ {
-			globals.MyStation.CurrentStage = stages[i]
 			for n := 1; n <= 24; n++ {
 				globals.CurrentStageSchedule.HoursOfLight = n
 				for h := 0; h < 24; h++ {
 					globals.MyStation.LightOnHour = h
 					for k := 0; k < len(growlightstates); k++ {
 						globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
-						ControlLight(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.MyStation.CurrentStage,
+						ControlLight(true, globals.MyDevice.DeviceID, globals.MyDevice,
+							globals.CurrentStageSchedule.Name,
 							*globals.MyStation, globals.CurrentStageSchedule,
 							&globals.LocalCurrentState, time.Now(), gpiorelay.GetPowerstripService())
 					}
@@ -136,7 +136,7 @@ func TestControlHumidity(t *testing.T) {
 func testHumidity(t *testing.T) {
 
 	for x := 0; x < len(stages); x++ {
-		globals.MyStation = &globals.Station{CurrentStage: stages[x]}
+		globals.MyStation = &globals.Station{}
 		globals.CurrentStageSchedule.EnvironmentalTargets.Humidity = 60
 
 		for i := 0; i < len(humidifierstates); i++ {
@@ -145,7 +145,7 @@ func testHumidity(t *testing.T) {
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
-				globals.MyStation.CurrentStage,
+				globals.CurrentStageSchedule.Name,
 				globals.ExternalCurrentState,
 				&globals.LocalCurrentState,
 				&globals.LastHumidity,
@@ -158,7 +158,7 @@ func testHumidity(t *testing.T) {
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
-				globals.MyStation.CurrentStage,
+				globals.CurrentStageSchedule.Name,
 				globals.ExternalCurrentState,
 				&globals.LocalCurrentState,
 				&globals.LastHumidity, gpiorelay.GetPowerstripService())
@@ -170,7 +170,7 @@ func testHumidity(t *testing.T) {
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
-				globals.MyStation.CurrentStage,
+				globals.CurrentStageSchedule.Name,
 				globals.ExternalCurrentState,
 				&globals.LocalCurrentState,
 				&globals.LastHumidity, gpiorelay.GetPowerstripService())
