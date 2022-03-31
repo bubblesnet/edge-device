@@ -12,6 +12,7 @@
   "stations":[
     {
       "stationid":1,
+      "current_stage":"vegetative",
       "time_between_pictures_in_seconds":60,
       "time_between_sensor_polling_in_seconds":30,
       "humidifier":true,
