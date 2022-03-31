@@ -28,46 +28,68 @@ type Site struct {
 	Stations           []Station `json:"stations,omitempty"`
 }
 
-/**
-A station is a grow-unit, typically either a cabinet or a tent.  A station
-contains multiple edge devices, typically Raspberry Pi.
-*/
+// AutomationSettings is the set of automation parameters that belong to this station.
+type AutomationSettings struct {
+	AutomationSettingsID    int64    `json:"automation_settingsid"`
+	CurrentStage            string   `json:"current_stage"`
+	StageOptions            []string `json:"stage_options"`
+	CurrentLightingSchedule string   `json:"current_lighting_schedule"`
+	LightingScheduleOptions []string `json:"lighting_schedule_options"`
+	TargetTemperature       float64  `json:"target_temperature"`
+	TemperatureMin          float64  `json:"temperature_min"`
+	TemperatureMax          float64  `json:"temperature_max"`
+	TargetWaterTemperature  float64  `json:"target_water_temperature"`
+	WaterTemperatureMin     float64  `json:"water_temperature_min"`
+	WaterTemperatureMax     float64  `json:"water_temperature_max"`
+	HumidityMin             float64  `json:"humidity_min"`
+	HumidityMax             float64  `json:"humidity_max"`
+	TargetHumidity          float64  `json:"target_humidity"`
+	HumidityTargetRangeLow  float64  `json:"humidity_target_range_low"`
+	HumidityTargetRangeHigh float64  `json:"humidity_target_range_high"`
+	CurrentLightType        string   `json:"current_light_type"`
+	LightTypeOptions        []string `json:"light_type_options"`
+}
+
+// Station is a grow-unit, typically either a cabinet or a tent.  A station
+// contains multiple edge devices, typically Raspberry Pi.  It's the enclosing physical
+// structure for one or more plants.
 type Station struct {
-	StationID              int64           `json:"stationid"`
-	HeightSensor           bool            `json:"height_sensor,omitempty"`
-	Humidifier             bool            `json:"humidifier,omitempty"`
-	HumiditySensor         bool            `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool            `json:"humidity_sensor_external,omitempty"`
-	Heater                 bool            `json:"heater,omitempty"`
-	ThermometerTop         bool            `json:"thermometer_top,omitempty"`
-	ThermometerMiddle      bool            `json:"thermometer_middle,omitempty"`
-	ThermometerBottom      bool            `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal    bool            `json:"thermometer_external,omitempty"`
-	ThermometerWater       bool            `json:"thermometer_water,omitempty"`
-	WaterPump              bool            `json:"waterPump,omitempty"`
-	AirPump                bool            `json:"airPump,omitempty"`
-	LightSensorInternal    bool            `json:"light_sensor_internal,omitempty"`
-	LightSensorExternal    bool            `json:"light_sensor_external,omitempty"`
-	StationDoorSensor      bool            `json:"station_door_sensor,omitempty"`
-	OuterDoorSensor        bool            `json:"outer_door_sensor,omitempty"`
-	MovementSensor         bool            `json:"movement_sensor,omitempty"`
-	PressureSensor         bool            `json:"pressure_sensors,omitempty"`
-	RootPhSensor           bool            `json:"root_ph_sensor,omitempty"`
-	EnclosureType          string          `json:"enclosure_type,omitempty"`
-	WaterLevelSensor       bool            `json:"water_level_sensor,omitempty"`
-	IntakeFan              bool            `json:"intakeFan,omitempty"`
-	ExhaustFan             bool            `json:"exhaustFan,omitempty"`
-	HeatLamp               bool            `json:"heatLamp,omitempty"`
-	HeatingPad             bool            `json:"heatingPad,omitempty"`
-	LightBloom             bool            `json:"lightBloom,omitempty"`
-	LightVegetative        bool            `json:"lightVegetative,omitempty"`
-	LightGerminate         bool            `json:"lightGerminate,omitempty"`
-	Relay                  bool            `json:"relay,omitempty,omitempty"`
-	EdgeDevices            []EdgeDevice    `json:"edge_devices,omitempty"`
-	StageSchedules         []StageSchedule `json:"stage_schedules,omitempty"`
-	CurrentStage           string          `json:"current_stage,omitempty"`
-	LightOnHour            int             `json:"light_on_hour"`
-	TamperSpec             Tamper          `json:"tamper,omitempty"`
+	StationID              int64              `json:"stationid"`
+	AutomaticControl       bool               `json:"automatic_control,omitempty"`
+	HeightSensor           bool               `json:"height_sensor,omitempty"`
+	Humidifier             bool               `json:"humidifier,omitempty"`
+	HumiditySensor         bool               `json:"humidity_sensor_internal,omitempty"`
+	ExternalHumiditySensor bool               `json:"humidity_sensor_external,omitempty"`
+	Heater                 bool               `json:"heater,omitempty"`
+	WaterHeater            bool               `json:"water_heater,omitempty"`
+	ThermometerTop         bool               `json:"thermometer_top,omitempty"`
+	ThermometerMiddle      bool               `json:"thermometer_middle,omitempty"`
+	ThermometerBottom      bool               `json:"thermometer_bottom,omitempty"`
+	ThermometerExternal    bool               `json:"thermometer_external,omitempty"`
+	ThermometerWater       bool               `json:"thermometer_water,omitempty"`
+	WaterPump              bool               `json:"waterPump,omitempty"`
+	AirPump                bool               `json:"airPump,omitempty"`
+	LightSensorInternal    bool               `json:"light_sensor_internal,omitempty"`
+	LightSensorExternal    bool               `json:"light_sensor_external,omitempty"`
+	StationDoorSensor      bool               `json:"station_door_sensor,omitempty"`
+	OuterDoorSensor        bool               `json:"outer_door_sensor,omitempty"`
+	MovementSensor         bool               `json:"movement_sensor,omitempty"`
+	PressureSensor         bool               `json:"pressure_sensors,omitempty"`
+	RootPhSensor           bool               `json:"root_ph_sensor,omitempty"`
+	EnclosureType          string             `json:"enclosure_type,omitempty"`
+	WaterLevelSensor       bool               `json:"water_level_sensor,omitempty"`
+	IntakeFan              bool               `json:"intakeFan,omitempty"`
+	ExhaustFan             bool               `json:"exhaustFan,omitempty"`
+	HeatLamp               bool               `json:"heatLamp,omitempty"`
+	HeatingPad             bool               `json:"heatingPad,omitempty"`
+	LightBloom             bool               `json:"lightBloom,omitempty"`
+	LightVegetative        bool               `json:"lightVegetative,omitempty"`
+	LightGerminate         bool               `json:"lightGerminate,omitempty"`
+	Relay                  bool               `json:"relay,omitempty,omitempty"`
+	EdgeDevices            []EdgeDevice       `json:"edge_devices,omitempty"`
+	StageSchedules         []StageSchedule    `json:"stage_schedules,omitempty"`
+	TamperSpec             Tamper             `json:"tamper,omitempty"`
+	Automation             AutomationSettings `json:"automation_settings"`
 }
 
 /**
@@ -151,7 +173,6 @@ type Configuration1 struct {
 	UserID                            int64            `json:"userid"`
 	DeviceID                          int64            `json:"deviceid"`
 	Stage                             string           `json:"stage,omitempty"`
-	LightOnHour                       int              `json:"light_on_hour,omitempty"`
 	StageSchedules                    []StageSchedule  `json:"stage_schedules,omitempty"`
 	Camera                            PiCam            `json:"camera,omitempty"`
 	DeviceSettings                    Station          `json:"device_settings"`
@@ -253,13 +274,14 @@ func ReadFromPersistentStore(storeMountPoint string, relativePath string, fileNa
 	}
 	fmt.Printf("MyStation = %v", MyStation)
 	for i := 0; i < len(MyStation.StageSchedules); i++ {
-		if MyStation.StageSchedules[i].Name == MyStation.CurrentStage {
+		fmt.Printf("StageSchedule[%d] = %#v\n", i, MyStation.StageSchedules[i])
+		if MyStation.StageSchedules[i].Name == MyStation.Automation.CurrentStage {
 			*currentStageSchedule = MyStation.StageSchedules[i]
-			log.Infof("Current stage is %s - schedule is %v", MyStation.CurrentStage, currentStageSchedule)
+			fmt.Printf("Current stage is %s - schedule is %#v", currentStageSchedule.Name, currentStageSchedule)
 			return nil
 		}
 	}
-	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.CurrentStage)
+	errstr := fmt.Sprintf("ERROR: No schedule for stage (%s)", MyStation.Automation.CurrentStage)
 	log.Error(errstr)
 	return errors.New(errstr)
 }

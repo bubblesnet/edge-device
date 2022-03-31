@@ -160,10 +160,11 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 	}
 	bloomlight := false
 
-	if CurrentStage == "germination" || CurrentStage == "seedling" || CurrentStage == "vegetative" || CurrentStage == "blooming" {
+	if CurrentStage == globals.GERMINATION || CurrentStage == globals.SEEDLING ||
+		CurrentStage == globals.VEGETATIVE || CurrentStage == globals.BLOOMING {
 		// If it's time for grow light veg to be on
-		if inRange(MyStation.LightOnHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.LightOnHour)
+		if inRange(CurrentStageSchedule.LightOnStartHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
+			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, false, true)
 			}
@@ -171,7 +172,7 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		} else {
 			// If it's time for grow light veg to be off
 			if LocalCurrentState.GrowLightBloom == true {
-				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.LightOnHour)
+				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
 			}
 			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
@@ -251,7 +252,7 @@ func ControlWaterTemp(force bool,
 		(*LocalCurrentState).WaterHeater = false
 		(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
 		log.Infof("automation: ControlWaterTemp water temp %f is already too high %f", ExternalCurrentState.WaterTempF, highLimit)
-	} else {                                            // NOT TOO HOT
+	} else { // NOT TOO HOT
 		if ExternalCurrentState.WaterTempF < lowLimit { // TOO COLD
 			if *LastWaterTemp > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("automation: ControlWaterTemp turning on %s because Water Temp (%.3f) just fell below (%.2f/%.1f/%.2f) on way up from %.2f", globals.WATERHEATER, ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
@@ -323,7 +324,7 @@ func ControlHeat(force bool,
 		(*LocalCurrentState).Heater = false
 		(*LocalCurrentState).HeaterPad = false
 		(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
-	} else {                                       // NOT TOO HOT
+	} else { // NOT TOO HOT
 		if ExternalCurrentState.TempF < lowLimit { // TOO COLD
 			//			log.Infof("automation: ControlHeat TOO COLD %.3f < lowLimit %.2f", ExternalCurrentState.TempF, lowLimit)
 			if *LastTemp > lowLimit { // JUST BECAME TOO COLD
@@ -392,7 +393,7 @@ func ControlHumidity(force bool,
 			LogSwitchStateChanged("ControlHeat", globals.HUMIDIFIER, true, false)
 		} // MAKE SURE HUMIDIFIER IS OFF
 		(*LocalCurrentState).Humidifier = false
-	} else {                                          // NOT TOO HOT
+	} else { // NOT TOO HOT
 		if ExternalCurrentState.Humidity < lowLimit { // TOO COLD
 			if *LastHumidity > lowLimit { // JUST BECAME TOO COLD
 				log.Infof("automation: ControlHumidity turning on %s because Humidity %.3f just fell below low (%.3f/%.1f/%.3f) on way down from %.3f", globals.HUMIDIFIER, ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)

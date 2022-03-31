@@ -93,7 +93,7 @@ func testLight(t *testing.T) {
 			for n := 1; n <= 24; n++ {
 				globals.CurrentStageSchedule.HoursOfLight = n
 				for h := 0; h < 24; h++ {
-					globals.MyStation.LightOnHour = h
+					globals.MyStation.Automation.LightOnStartHour = h
 					for k := 0; k < len(growlightstates); k++ {
 						globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
 						ControlLight(true, globals.MyDevice.DeviceID, globals.MyDevice,

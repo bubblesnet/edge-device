@@ -67,13 +67,13 @@ const HUMIDIFIER string = "humidifier"
 const HEATER string = "heater"
 const WATERHEATER string = "waterHeater"
 
-const GERMINATION string = "germination"
+const GERMINATION string = "germinate"
 const SEEDLING string = "seedling"
 const VEGETATIVE string = "vegetative"
-const BLOOMING string = "blooming"
+const BLOOMING string = "bloom"
 const HARVEST string = "harvest"
-const CURING string = "curing"
-const DRYING string = "drying"
+const CURING string = "cure"
+const DRYING string = "dry"
 const IDLE string = "idle"
 
 var CurrentStageSchedule StageSchedule

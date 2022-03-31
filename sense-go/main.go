@@ -178,8 +178,8 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 
 func ChangeStageTo(StageName string) {
 	log.Infof("ChangeStageTo %s", StageName)
-	globals.MyStation.Automation.CurrentStage = StageName
-	globals.MySite.Stations[0].Automation.CurrentStage = StageName
+	globals.MyStation.CurrentStage = StageName
+	globals.MySite.Stations[0].CurrentStage = StageName
 	globals.CurrentStageSchedule = findSchedule(StageName)
 	globals.WriteConfig(globals.PersistentStoreMountPoint, "", "config.json")
 	if globals.MyStation.AutomaticControl {
@@ -264,12 +264,12 @@ func initializeOutletsForAutomation() {
 		log.Debugf("automation: initializeOutletsForAutomation - no outlets attached")
 		return
 	}
-	log.Infof("automation: initializeOutletsForAutomation currentStage %s", globals.MyStation.Automation.CurrentStage)
+	log.Infof("automation: initializeOutletsForAutomation currentStage %s", globals.MyStation.CurrentStage)
 
 	ControlLight(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		*globals.MyStation,
 		globals.CurrentStageSchedule,
 		&globals.LocalCurrentState,
@@ -279,7 +279,7 @@ func initializeOutletsForAutomation() {
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
 		globals.CurrentStageSchedule,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		globals.ExternalCurrentState,
 		&globals.LocalCurrentState,
 		&globals.LastWaterTemp,
@@ -287,7 +287,7 @@ func initializeOutletsForAutomation() {
 	ControlHeat(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		globals.CurrentStageSchedule,
 		globals.ExternalCurrentState,
 		&globals.LocalCurrentState,
@@ -297,7 +297,7 @@ func initializeOutletsForAutomation() {
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
 		globals.CurrentStageSchedule,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		globals.ExternalCurrentState,
 		&globals.LocalCurrentState,
 		&globals.LastHumidity,
@@ -305,17 +305,17 @@ func initializeOutletsForAutomation() {
 	ControlOxygenation(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		gpiorelay.GetPowerstripService())
 	ControlRootWater(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		gpiorelay.GetPowerstripService())
 	ControlAirflow(true,
 		globals.MyDevice.DeviceID,
 		globals.MyDevice,
-		globals.MyStation.Automation.CurrentStage,
+		globals.MyStation.CurrentStage,
 		gpiorelay.GetPowerstripService())
 }
 
@@ -346,7 +346,7 @@ func makeControlDecisions(once_only bool) {
 				ControlLight(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					*globals.MyStation,
 					globals.CurrentStageSchedule,
 					&globals.LocalCurrentState,
@@ -356,7 +356,7 @@ func makeControlDecisions(once_only bool) {
 				ControlHeat(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					globals.CurrentStageSchedule,
 					globals.ExternalCurrentState,
 					&globals.LocalCurrentState,
@@ -367,7 +367,7 @@ func makeControlDecisions(once_only bool) {
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
 					globals.CurrentStageSchedule,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					globals.ExternalCurrentState,
 					&globals.LocalCurrentState,
 					&globals.LastWaterTemp,
@@ -377,7 +377,7 @@ func makeControlDecisions(once_only bool) {
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
 					globals.CurrentStageSchedule,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					globals.ExternalCurrentState,
 					&globals.LocalCurrentState,
 					&globals.LastHumidity,
@@ -386,19 +386,19 @@ func makeControlDecisions(once_only bool) {
 				ControlOxygenation(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlRootWater(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlAirflow(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
-					globals.MyStation.Automation.CurrentStage,
+					globals.MyStation.CurrentStage,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 			}

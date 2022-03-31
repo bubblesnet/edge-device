@@ -12,7 +12,6 @@
   "stations":[
     {
       "stationid":1,
-      "light_on_hour":0,
       "time_between_pictures_in_seconds":60,
       "time_between_sensor_polling_in_seconds":30,
       "humidifier":true,
@@ -388,7 +387,7 @@
             "water_temperature":0
           },
           "hours_of_light":0,
-          "name":"drying"
+          "name":"dry"
         },
         {
           "environmental_targets":{
@@ -397,7 +396,7 @@
             "water_temperature":0
           },
           "hours_of_light":0,
-          "name":"curing"
+          "name":"cure"
         }
       ],
       "automation_settings":{
@@ -405,7 +404,6 @@
         "stationid_station":1,
         "current_stage":"vegetative",
         "current_lighting_schedule":"24 off",
-        "light_on_start_hour":0,
         "target_temperature":75.5,
         "temperature_min":20,
         "temperature_max":90,
