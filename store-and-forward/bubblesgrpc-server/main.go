@@ -28,6 +28,16 @@ var BubblesnetBuildNumberString = ""
 var BubblesnetBuildTimestamp = ""
 var BubblesnetGitHash = ""
 
+type MessageHeader struct {
+	DeviceId          int64  `json:"deviceid"`
+	StationId         int64  `json:"stationid"`
+	SiteId            int64  `json:"siteid"`
+	ContainerName     string `json:"container_name"`
+	ExecutableVersion string `json:"executable_version"`
+	EventTimestamp    int64  `json:"event_timestamp"`
+	MessageType       string `json:"message_type"`
+}
+
 const (
 	port              = ":50051"
 	messageBucketName = "MessageBucket"
@@ -47,6 +57,8 @@ type server struct {
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
 	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	// This asynchronicity is a joint where data can leak out and get lost if either of these methods fail
+	// They should at least be independently asynchronous
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
 		parseMessageForCurrentState(in.GetData())
@@ -174,10 +186,19 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 }
 
 func postIt(message []byte) (err error) {
-	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDeviceID)
+	var messageHeader MessageHeader
+	apiName := "measurement"
+	if err1 := json.Unmarshal(message, &messageHeader); err1 != nil {
+		log.Errorf("error unmarshalling message pre post #+v", err1)
+	} else {
+		log.Infof("message type %s", messageHeader.MessageType)
+		if messageHeader.MessageType != "measurement" {
+			log.Infof("non-measurement message %s", string(message))
+		}
+	}
+	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
 	//	log.Infof("Sending to %s", url)
-	resp, err := http.Post(url,
-		"application/json", bytes.NewBuffer(message))
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(message))
 	if err != nil {
 		log.Errorf("post error %v", err)
 		return err

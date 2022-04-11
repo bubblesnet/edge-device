@@ -384,10 +384,13 @@ def get_sequence():
 
 def send_message(msg):
     global my_site
+    logging.info("siteid "+format(my_site['siteid'], 'd')+" stationid "+format(my_station['stationid'], 'd')+" deviceid "+format(my_device['deviceid'], 'd'))
     seq = get_sequence()
     millis = int(time.time() * 1000)
     msg['sample_timestamp'] = int(millis)
     msg['deviceid'] = my_device['deviceid']
+    msg['stationid'] = my_station['stationid']
+    msg['siteid'] = my_site['siteid']
     msg['container_name'] = "sense-python"
     msg['executable_version'] = "9.9.10"
     json_bytes = str.encode(json.dumps(msg))

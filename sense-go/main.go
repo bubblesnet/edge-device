@@ -566,7 +566,7 @@ func startGoRoutines(onceOnly bool) {
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
 		log.Info("automation: MovementSensor configured for this device, starting")
 
-		go accelerometer.RunTamperDetector(onceOnly)
+		go accelerometer.GetTamperDetectorService().RunTamperDetector(onceOnly)
 	} else {
 		log.Warnf("MovementSensor (adxl345) not configured for this device - skipping tamper detection")
 	}

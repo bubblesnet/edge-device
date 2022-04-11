@@ -13,23 +13,23 @@ import (
 const badTestMessage = "dkdlkdkdkdk"
 const emptyTestMessage = "{}"
 
-func initTests(t *testing.T) (err error){
+func initTests(t *testing.T) (err error) {
 	log.ConfigureTestLogging("fatal,error,warn,info,debug,", ".", t)
 	storeMountPoint := "/config"
 	fmt.Printf("GOOS = %s GOARCH = %s", runtime.GOOS, runtime.GOARCH)
-	if  runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" || (runtime.GOARCH != "arm" && runtime.GOARCH != "arm64") {
 		storeMountPoint = "./testdata"
 		databaseFilename = "./testmessages.db"
 	} else {
 		fmt.Printf("WTF!!!")
 	}
-	if MyDeviceID, err =  ReadMyDeviceId(storeMountPoint, "", "deviceid"); err != nil {
-		fmt.Printf("ReadMyDeviceId error %v", err )
+	if MyDeviceID, err = ReadMyDeviceId(storeMountPoint, "", "deviceid"); err != nil {
+		fmt.Printf("ReadMyDeviceId error %v", err)
 		return err
 	}
 
-	if err := ReadFromPersistentStore(storeMountPoint, "", "config.json",&MySite,&stageSchedule); err != nil {
-		fmt.Printf("Read config error %v", err )
+	if err := ReadCompleteSiteFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule); err != nil {
+		fmt.Printf("Read config error %v", err)
 		return err
 	}
 
@@ -65,12 +65,10 @@ func xxxx_forwardMessages(t *testing.T) {
 	t.Logf("done")
 }
 
-
-
 func Test_saveState(t *testing.T) {
 	type args struct {
 		bucketName string
-		onceOnly bool
+		onceOnly   bool
 	}
 	tests := []struct {
 		name    string
@@ -78,17 +76,16 @@ func Test_saveState(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		 {name: "good", args: args{bucketName: "StateBucket", onceOnly: true},  wantErr: false},
+		{name: "good", args: args{bucketName: "StateBucket", onceOnly: true}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-//			if err := saveStateDaemon(tt.args.bucketName, tt.args.onceOnly); (err != nil) != tt.wantErr {
-//				t.Errorf("saveStateDaemon() error = %v, wantErr %v", err, tt.wantErr)
-//			}
+			//			if err := saveStateDaemon(tt.args.bucketName, tt.args.onceOnly); (err != nil) != tt.wantErr {
+			//				t.Errorf("saveStateDaemon() error = %v, wantErr %v", err, tt.wantErr)
+			//			}
 		})
 	}
 }
-
 
 func Test_server_GetState(t *testing.T) {
 	type fields struct {
@@ -157,4 +154,3 @@ func Test_server_StoreAndForward(t *testing.T) {
 		})
 	}
 }
-

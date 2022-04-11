@@ -24,12 +24,12 @@ import (
 	"log"
 	"time"
 
-	pb "../bubblesgrpc-server/bubblesgrpc"
+	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	"google.golang.org/grpc"
 )
 
 const (
-	address     = "localhost:50051"
+	address = "localhost:50051"
 )
 
 func main() {
