@@ -10,7 +10,7 @@ import (
 )
 
 func init_config() {
-	MyDeviceID = 70000007
+	MyDeviceID = 70000008
 }
 
 func TestSlugs(t *testing.T) {
@@ -93,7 +93,7 @@ func Test_getConfigFromServer(t *testing.T) {
 	MySite.ControllerAPIPort = 3003
 	MySite.ControllerHostName = "localhost"
 	MySite.UserID = 90000009
-	MyDevice = &EdgeDevice{DeviceID: int64(70000007)}
+	MyDevice = &EdgeDevice{DeviceID: int64(70000008)}
 
 	ci := false
 	if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" { /// TODO this is AWFUL CI hack
@@ -135,7 +135,7 @@ func TestReadFromPersistentStore(t *testing.T) {
 	}
 	config := Site{}
 	stageSchedule := StageSchedule{}
-	MyStation = &Station{CurrentStage: IDLE}
+	MyStation = &Station{}
 
 	tests := []struct {
 		name    string
@@ -149,8 +149,6 @@ func TestReadFromPersistentStore(t *testing.T) {
 			args:    args{storeMountPoint: "/notavaliddirectoryname", relativePath: "", fileName: "config.json", site: &config, currentStageSchedule: &stageSchedule},
 			wantErr: true},
 	}
-
-	MyStation.CurrentStage = IDLE
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

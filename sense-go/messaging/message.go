@@ -15,6 +15,8 @@ func getNowMillis() int64 {
 
 type ADCSensorMessage struct {
 	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
 	ContainerName     string  `json:"container_name"`
 	ExecutableVersion string  `json:"executable_version"`
 	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
@@ -32,6 +34,8 @@ type ADCSensorMessage struct {
 
 type GenericSensorMessage struct {
 	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
 	ContainerName     string  `json:"container_name"`
 	ExecutableVersion string  `json:"executable_version"`
 	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
@@ -46,6 +50,8 @@ type GenericSensorMessage struct {
 
 type DistanceSensorMessage struct {
 	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
 	ContainerName     string  `json:"container_name"`
 	ExecutableVersion string  `json:"executable_version"`
 	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
@@ -62,6 +68,8 @@ type DistanceSensorMessage struct {
 
 type PhMessage struct {
 	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
 	ContainerName     string  `json:"container_name"`
 	ExecutableVersion string  `json:"executable_version"`
 	SampleTimestamp   int64   `json:"sample_timestamp"`
@@ -76,6 +84,8 @@ type PhMessage struct {
 
 type TamperEventMessage struct {
 	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
 	ContainerName     string  `json:"container_name"`
 	ExecutableVersion string  `json:"executable_version"`
 	SampleTimestamp   int64   `json:"sample_timestamp"`
@@ -94,6 +104,7 @@ type TamperEventMessage struct {
 type SwitchStatusChangeMessage struct {
 	DeviceId          int64  `json:"deviceid"`
 	StationId         int64  `json:"stationid"`
+	SiteId            int64  `json:"siteid"`
 	ContainerName     string `json:"container_name"`
 	ExecutableVersion string `json:"executable_version"`
 	EventTimestamp    int64  `json:"event_timestamp"`
@@ -101,8 +112,11 @@ type SwitchStatusChangeMessage struct {
 	SwitchName        string `json:"switch_name"`
 	On                bool   `json:"on"`
 }
+
 type PictureTakenMessage struct {
 	DeviceId          int64  `json:"deviceid"`
+	StationId         int64  `json:"stationid"`
+	SiteId            int64  `json:"siteid"`
 	ContainerName     string `json:"container_name"`
 	ExecutableVersion string `json:"executable_version"`
 	EventTimestamp    int64  `json:"event_timestamp,omitempty"`
@@ -113,6 +127,7 @@ func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStat
 	msg := SwitchStatusChangeMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
+		SiteId:        globals.MySite.SiteID,
 		ContainerName: globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -128,6 +143,8 @@ func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStat
 func NewPictureTakenMessage() (pmsg *PictureTakenMessage) {
 	msg := PictureTakenMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
+		StationId:     globals.MyStation.StationID,
+		SiteId:        globals.MySite.SiteID,
 		ContainerName: globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -142,6 +159,8 @@ func NewPictureTakenMessage() (pmsg *PictureTakenMessage) {
 func NewGenericSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *GenericSensorMessage) {
 	msg := GenericSensorMessage{
 		DeviceId:        globals.MyDevice.DeviceID,
+		StationId:       globals.MyStation.StationID,
+		SiteId:          globals.MySite.SiteID,
 		ContainerName:   globals.ContainerName,
 		MeasurementName: measurement_name,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
@@ -162,6 +181,8 @@ func NewGenericSensorMessage(sensor_name string, measurement_name string, value 
 func NewADCSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, channel int, gain int, rate int) (pmsg *ADCSensorMessage) {
 	msg := ADCSensorMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
+		StationId:     globals.MyStation.StationID,
+		SiteId:        globals.MySite.SiteID,
 		ContainerName: globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -185,6 +206,8 @@ func NewADCSensorMessage(sensor_name string, measurement_name string, value floa
 func NewDistanceSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, distanceCm float64, distanceIn float64) (pmsg *DistanceSensorMessage) {
 	msg := DistanceSensorMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
+		StationId:     globals.MyStation.StationID,
+		SiteId:        globals.MySite.SiteID,
 		ContainerName: globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
@@ -207,6 +230,8 @@ func NewDistanceSensorMessage(sensor_name string, measurement_name string, value
 func NewTamperSensorMessage(sensor_name string, value float64, units string, direction string, moveX float64, moveY float64, moveZ float64) (pmsg *TamperEventMessage) {
 	msg := TamperEventMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
+		StationId:     globals.MyStation.StationID,
+		SiteId:        globals.MySite.SiteID,
 		ContainerName: globals.ContainerName,
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,

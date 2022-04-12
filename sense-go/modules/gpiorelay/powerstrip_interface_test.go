@@ -29,7 +29,7 @@ func TestInitRpioPins(t *testing.T) {
 	//	globals.Config.ACOutlets = [8]globals.ACOutlet{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.InitRpioPins()
+			PowerstripSvc.InitRpioPins(globals.MyDevice, false)
 		})
 	}
 }
@@ -46,7 +46,7 @@ func TestTurnAllOff(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.TurnAllOff(tt.args.timeout)
+			PowerstripSvc.TurnAllOff(globals.MyDevice, tt.args.timeout)
 		})
 	}
 }
@@ -55,16 +55,17 @@ func TestSendSwitchStatusChangeEvent(t *testing.T) {
 	type args struct {
 		switchName string
 		on         bool
+		sequence   int32
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{name: "happy", args: args{switchName: "heater", on: true}},
+		{name: "happy", args: args{switchName: "heater", on: true, sequence: 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.SendSwitchStatusChangeEvent(tt.args.switchName, tt.args.on)
+			PowerstripSvc.SendSwitchStatusChangeEvent(tt.args.switchName, tt.args.on, tt.args.sequence)
 		})
 	}
 }
@@ -81,7 +82,7 @@ func TestTurnAllOn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.TurnAllOn(tt.args.timeout)
+			PowerstripSvc.TurnAllOn(globals.MyDevice, tt.args.timeout)
 		})
 	}
 }
@@ -115,7 +116,7 @@ func TestTurnOffOutletByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.TurnOffOutletByName(tt.args.name, false)
+			PowerstripSvc.TurnOffOutletByName(globals.MyDevice, tt.args.name, false)
 		})
 	}
 }
@@ -149,12 +150,12 @@ func TestTurnOnOutletByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.TurnOnOutletByName(tt.args.name, false)
+			PowerstripSvc.TurnOnOutletByName(globals.MyDevice, tt.args.name, false)
 		})
 	}
 }
 
-func Test_isOutletOn(t *testing.T) {
+func Test_IsOutletOn(t *testing.T) {
 	type args struct {
 		name string
 	}
@@ -168,8 +169,8 @@ func Test_isOutletOn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := PowerstripSvc.isOutletOn(tt.args.name); got != tt.want {
-				t.Errorf("isOutletOn() = %#v, want %#v", got, tt.want)
+			if got := PowerstripSvc.IsOutletOn(globals.MyDevice, tt.args.name); got != tt.want {
+				t.Errorf("IsOutletOn() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -183,7 +184,7 @@ func Test_runPinToggler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.RunPinToggler(true)
+			PowerstripSvc.RunPinToggler(globals.MyDevice, true)
 		})
 	}
 }

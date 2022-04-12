@@ -1,21 +1,3 @@
-/*
- *
- * Copyright 2015 gRPC authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 ///go:generate protoc -I ../bubblesgrpc --go_out=plugins=grpc:../bubblesgrpc ../bubblesgrpc/bubblesgrpc.proto
 
 // Package main implements a server for SensorStoreAndForward service.
@@ -46,6 +28,16 @@ var BubblesnetBuildNumberString = ""
 var BubblesnetBuildTimestamp = ""
 var BubblesnetGitHash = ""
 
+type MessageHeader struct {
+	DeviceId          int64  `json:"deviceid"`
+	StationId         int64  `json:"stationid"`
+	SiteId            int64  `json:"siteid"`
+	ContainerName     string `json:"container_name"`
+	ExecutableVersion string `json:"executable_version"`
+	EventTimestamp    int64  `json:"event_timestamp"`
+	MessageType       string `json:"message_type"`
+}
+
 const (
 	port              = ":50051"
 	messageBucketName = "MessageBucket"
@@ -65,6 +57,8 @@ type server struct {
 // StoreAndForward implements bubblesgrpc.StoreAndForward
 func (s *server) StoreAndForward(_ context.Context, in *pb.SensorRequest) (*pb.SensorReply, error) {
 	log.Debugf("Received: sequence %v - %s", in.GetSequence(), in.GetData())
+	// This asynchronicity is a joint where data can leak out and get lost if either of these methods fail
+	// They should at least be independently asynchronous
 	go func() {
 		_ = addRecord(messageBucketName, in.GetData(), in.GetSequence())
 		parseMessageForCurrentState(in.GetData())
@@ -140,8 +134,9 @@ func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetSta
 	//	if in.GetSequence() %5 == 0 {
 	//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
 	//	} else {
-	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity)}
-	//		log.Infof("GetState returning %v", ret)
+
+	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity), WaterTempF: float32(ExternalCurrentState.WaterTempF)}
+	//	log.Infof("GetState returning %#v", ret)
 	return &ret, nil
 	//	}
 }
@@ -191,10 +186,19 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 }
 
 func postIt(message []byte) (err error) {
-	url := fmt.Sprintf("http://%s:%d/api/measurement/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDeviceID)
+	var messageHeader MessageHeader
+	apiName := "measurement"
+	if err1 := json.Unmarshal(message, &messageHeader); err1 != nil {
+		log.Errorf("error unmarshalling message pre post #+v", err1)
+	} else {
+		log.Infof("message type %s", messageHeader.MessageType)
+		if messageHeader.MessageType != "measurement" {
+			log.Infof("non-measurement message %s", string(message))
+		}
+	}
+	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
 	//	log.Infof("Sending to %s", url)
-	resp, err := http.Post(url,
-		"application/json", bytes.NewBuffer(message))
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(message))
 	if err != nil {
 		log.Errorf("post error %v", err)
 		return err
@@ -244,7 +248,7 @@ func main() {
 	}
 
 	WaitForConfigFile(storeMountPoint, "", "config.json")
-	err = ReadFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
+	err = ReadCompleteSiteFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
 
 	fmt.Printf("MySite = %v", MySite)
 	fmt.Printf("stageSchedule = %v", stageSchedule)
@@ -276,4 +280,33 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func WaitForConfigFile(storeMountPoint string, relativePath string, fileName string) {
+	fmt.Printf("WaitForConfigFile %s %s %s\n", storeMountPoint, relativePath, fileName)
+	for index := 0; index <= 60; index++ {
+		if exists, err := ConfigFileExists(storeMountPoint, "", "config.json"); (exists == true) && (err == nil) {
+			fmt.Printf("apparently config.json exists\n")
+			return
+		}
+		if index == 60 {
+			fmt.Printf("waited too long for file %s to be downloaded. Probably no connection.  Exiting\n", fileName)
+			os.Exit(1)
+		}
+		fmt.Printf("Sleeping 60 seconds waiting for someone to bring us a /config/config.json\n")
+		time.Sleep(60 * time.Second)
+	}
+}
+
+func ConfigFileExists(storeMountPoint string, relativePath string, fileName string) (exists bool, err error) {
+	fmt.Printf("ConfigFileExists\n")
+	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
+	if relativePath == "" {
+		fullpath = storeMountPoint + "/" + fileName
+	}
+	if _, err := os.Stat(fullpath); err != nil {
+		return false, err
+
+	}
+	return true, nil
 }

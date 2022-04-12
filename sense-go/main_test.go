@@ -3,8 +3,8 @@ package main
 import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
-
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
+	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
 	"bubblesnet/edge-device/sense-go/modules/phsensor"
 
 	"errors"
@@ -35,91 +35,48 @@ func TestControlHeat(t *testing.T) {
 
 /*
 globals.CurrentStageSchedule.EnvironmentalTargets.Temperature
-globals.Lasttemp
+globals.LastTemp
 globals.ExternalCurrentState.TempF
 */
-func testHeat(t *testing.T) {
+func testHeat(t *testing.T) { //				,
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
 	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	// all set
-	globals.Lasttemp = 80
+	globals.LastTemp = 80
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
-	globals.Lasttemp = 79
+	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 77
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
-	globals.Lasttemp = 79
+	globals.LastTemp = 79
 	globals.ExternalCurrentState.TempF = 79
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
-	globals.Lasttemp = 81
+	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 80
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
-	globals.Lasttemp = 81
+	globals.LastTemp = 81
 	globals.ExternalCurrentState.TempF = 83
-	ControlHeat(true)
+	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
+		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
-}
-func TestControlHumidity(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "all"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testHumidity(t)
-		})
-	}
 }
 
 /*
-globals.Lasthumidity = globals.ExternalCurrentState.Humidity
+globals.LastHumidity = globals.ExternalCurrentState.Humidity
 globals.CurrentStageSchedule.EnvironmentalTargets.Humidity
 */
-var humidifierstates = []bool{true, false}
-
-func testHumidity(t *testing.T) {
-
-	globals.CurrentStageSchedule.EnvironmentalTargets.Humidity = 60
-
-	for i := 0; i < len(humidifierstates); i++ {
-		globals.Lasthumidity = 59
-		globals.ExternalCurrentState.Humidity = 50
-		ControlHumidity(true)
-	}
-
-	for i := 0; i < len(humidifierstates); i++ {
-		globals.Lasthumidity = 61
-		globals.ExternalCurrentState.Humidity = 67
-		ControlHumidity(true)
-	}
-
-	for i := 0; i < len(humidifierstates); i++ {
-		globals.Lasthumidity = 60
-		globals.ExternalCurrentState.Humidity = 60
-		ControlHumidity(true)
-	}
-}
-
-func TestControlLight(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "happy"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testLight(t)
-		})
-	}
-}
 
 /*
 globals.MySite.Stage
@@ -130,39 +87,23 @@ globals.LocalCurrentState.GrowLightVeg
 "seedling"
 "vegetative"
 */
-var stages = []string{
-	globals.GERMINATION, globals.SEEDLING, globals.VEGETATIVE, globals.IDLE,
-}
-var growlightstates = []bool{
-	true, false,
-}
-
-func testLight(t *testing.T) {
-	globals.MyStation = &globals.Station{CurrentStage: globals.IDLE}
-	for i := 0; i < len(stages); i++ {
-		globals.MyStation.CurrentStage = stages[i]
-		for n := 1; n <= 24; n++ {
-			globals.CurrentStageSchedule.HoursOfLight = n
-			for h := 0; h < 24; h++ {
-				globals.MyStation.LightOnHour = h
-				for k := 0; k < len(growlightstates); k++ {
-					globals.LocalCurrentState.GrowLightVeg = growlightstates[k]
-					ControlLight(true)
-				}
-			}
-		}
+func initGlobalsLocally(t *testing.T) {
+	globals.MyDeviceID = 70000008
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		t.Errorf("getConfigFromServer() error = %#v", err)
+	}
+	if globals.MyStation == nil {
+		t.Error("mystation is nil")
 	}
 }
 
 func Test_moduleShouldBeHere(t *testing.T) {
-	globals.MyDeviceID = 70000008
-	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
-		log.Errorf("ReadCompleteSiteFromPersistentStore() error = %#v", err)
+	initGlobalsLocally(t)
 
-	}
 	type args struct {
 		containerName   string
 		mydeviceid      int64
+		myStation       *globals.Station
 		deviceInStation bool
 		moduleType      string
 	}
@@ -171,62 +112,31 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		args                args
 		wantShouldBePresent bool
 	}{
-		{name: "happy", wantShouldBePresent: true, args: args{containerName: "sense-python", mydeviceid: globals.MyDeviceID, deviceInStation: true, moduleType: "bme280"}},
-		{name: "unhappy", wantShouldBePresent: false, args: args{containerName: "sense-python", mydeviceid: 70000006, deviceInStation: true, moduleType: "bme280"}},
+		{name: "happy",
+			wantShouldBePresent: true,
+			args: args{
+				containerName:   "sense-python",
+				mydeviceid:      globals.MyDeviceID,
+				myStation:       globals.MyStation,
+				deviceInStation: true,
+				moduleType:      "bme280",
+			},
+		},
+		{name: "unhappy",
+			wantShouldBePresent: false,
+			args: args{
+				containerName:   "sense-python",
+				mydeviceid:      70000006,
+				myStation:       globals.MyStation,
+				deviceInStation: true,
+				moduleType:      "bme280",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
+			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.myStation, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
 				t.Errorf("moduleShouldBeHere(%#v) = %#v, want %#v", tt.args, gotShouldBePresent, tt.wantShouldBePresent)
-			}
-		})
-	}
-}
-
-func Test_inRange(t *testing.T) {
-	type args struct {
-		starthour    int
-		numhours     int
-		currenthours int
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{name: "insingleday", args: args{starthour: 5, numhours: 5, currenthours: 7}, want: true},
-		{name: "outlowsingleday", args: args{starthour: 5, numhours: 5, currenthours: 3}, want: false},
-		{name: "outhighsingleday", args: args{starthour: 5, numhours: 5, currenthours: 14}, want: false},
-		{name: "inacrossdayfirstday", args: args{starthour: 20, numhours: 10, currenthours: 21}, want: true},
-		{name: "inacrossdaysecondday", args: args{starthour: 20, numhours: 10, currenthours: 2}, want: true},
-		{name: "outacrossdayfirstday", args: args{starthour: 20, numhours: 10, currenthours: 18}, want: false},
-		{name: "outacrossdaysecondday", args: args{starthour: 20, numhours: 10, currenthours: 11}, want: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := inRange(tt.args.starthour, tt.args.numhours, tt.args.currenthours); got != tt.want {
-				t.Errorf("inRange() = %#v, want %#v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_isRelayAttached(t *testing.T) {
-	type args struct {
-		deviceid int64
-	}
-	tests := []struct {
-		name                string
-		args                args
-		wantRelayIsAttached bool
-	}{
-		{name: "happy", args: args{deviceid: 70000008}, wantRelayIsAttached: true},
-		{name: "sad", args: args{deviceid: 70000006}, wantRelayIsAttached: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if gotRelayIsAttached := isRelayAttached(tt.args.deviceid); gotRelayIsAttached != tt.wantRelayIsAttached {
-				t.Errorf("isRelayAttached() = %#v, want %#v", gotRelayIsAttached, tt.wantRelayIsAttached)
 			}
 		})
 	}
@@ -286,7 +196,7 @@ func Test_runDistanceWatcher(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			distancesensor.RunDistanceWatcher(true)
+			distancesensor.RunDistanceWatcher(true, true)
 		})
 	}
 }
@@ -312,20 +222,7 @@ func Test_runTamperDetector(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			accelerometer.RunTamperDetector(true)
-		})
-	}
-}
-
-func Test_setEnvironmentalControlString(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "happy"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			setEnvironmentalControlString()
+			accelerometer.GetTamperDetectorService().RunTamperDetector(true)
 		})
 	}
 }
@@ -426,7 +323,7 @@ func Test_setupGPIO(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setupGPIO()
+			setupGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
 		})
 	}
 }
@@ -561,7 +458,7 @@ func Test_processCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResub, err := processCommand(tt.args.msg)
+			gotResub, err := processCommand(tt.args.msg, gpiorelay.GetPowerstripService())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("processCommand() error = %#v, wantErr %#v", err, tt.wantErr)
 				return

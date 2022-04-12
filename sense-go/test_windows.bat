@@ -1,7 +1,7 @@
 set GOPATH=%GOPATH%;c:\Users\rodley\documents\go;c:\Users\rodley\go
 echo %GOPATH%
-set GOOS=linux
-set GOARCH=arm
+set GOOS=windows
+set GOARCH=amd64
 set GOARM=7
 set CGO_ENABLED="1"
 set GITHASH=""
@@ -16,4 +16,5 @@ for /f "tokens=*" %%a in ('time /t') do (
     set TIMESTAMP=%TIMESTAMP% %%a'
 )
 set TIMESTAMP=%TIMESTAMP: =_%
-go build -ldflags="-X 'main.BubblesnetBuildNumberString=201' -X 'lmain.BubblesnetVersionMajorString=2' -X 'main.BubblesnetVersionMinorString=1' -X 'main.BubblesnetVersionPatchString=1'  -X 'main.BubblesnetGitHash=%GITHASH%' -X main.BubblesnetBuildTimestamp=%TIMESTAMP%" -o build ./...
+go build -ldflags="-X 'main.BubblesnetBuildNumberString=201' -X 'main.BubblesnetVersionMajorString=2' -X 'main.BubblesnetVersionMinorString=1' -X 'main.BubblesnetVersionPatchString=1'  -X 'main.BubblesnetGitHash=%GITHASH%' -X main.BubblesnetBuildTimestamp=%TIMESTAMP%" -o build ./...
+go test ./...

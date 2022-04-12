@@ -57,6 +57,8 @@ message GetStateReply {
   string result = 3;
   float tempF = 4;
   float humidity = 5;
+  float externalTempF = 6;
+  float waterTempF = 7;
 }
 
 // The request message

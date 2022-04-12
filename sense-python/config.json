@@ -5,7 +5,6 @@
   "userid": 90000009,
   "deviceid": 70000007,
   "stage": "germination",
-  "light_on_hour": 5,
   "stage_schedules": [
     {
       "name": "germination",

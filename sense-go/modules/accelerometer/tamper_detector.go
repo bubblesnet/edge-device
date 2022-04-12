@@ -18,7 +18,17 @@ import (
 	"time"
 )
 
-func RunTamperDetector(onceOnly bool) {
+var singletonTamperDetectorService = RealTamperDetector{Real: true}
+
+type RealTamperDetector struct {
+	Real bool
+}
+
+func GetTamperDetectorService() TamperDetectorService {
+	return &singletonTamperDetectorService
+}
+
+func (r *RealTamperDetector) RunTamperDetector(onceOnly bool) {
 	log.Info("runTamperDetector")
 	adxl345Adaptor := raspi.NewAdaptor()
 	adxl345 := i2c.NewADXL345Driver(adxl345Adaptor)

@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewADCSensorMessage(t *testing.T) {
+	initGlobalsLocally(t)
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 90000009}
 	type args struct {
 		sensor_name      string
@@ -55,6 +56,7 @@ func TestNewADCSensorMessage(t *testing.T) {
 }
 
 func TestNewDistanceSensorMessage(t *testing.T) {
+	initGlobalsLocally(t)
 	type args struct {
 		sensor_name      string
 		measurement_name string
@@ -99,6 +101,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 }
 
 func TestNewGenericSensorMessage(t *testing.T) {
+	initGlobalsLocally(t)
 	type args struct {
 		sensor_name      string
 		measurement_name string
@@ -138,8 +141,15 @@ func TestNewGenericSensorMessage(t *testing.T) {
 		})
 	}
 }
+func initGlobalsLocally(t *testing.T) {
+	globals.MyDeviceID = 70000008
+	if err := globals.ReadCompleteSiteFromPersistentStore("../testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+		t.Errorf("getConfigFromServer() error = %#v", err)
+	}
+}
 
 func TestNewTamperSensorMessage(t *testing.T) {
+	initGlobalsLocally(t)
 	type args struct {
 		sensor_name      string
 		measurement_name string
@@ -197,6 +207,65 @@ func Test_getNowMillis(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getNowMillis(); got != tt.want {
 				t.Errorf("getNowMillis() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewSwitchStatusChangeMessage(t *testing.T) {
+	initGlobalsLocally(t)
+	testmsg := SwitchStatusChangeMessage{
+		DeviceId:          70000008,
+		StationId:         1,
+		ContainerName:     "sense-go",
+		ExecutableVersion: "..  ",
+		EventTimestamp:    getNowMillis(),
+		MessageType:       "switch_event",
+		SwitchName:        "testswitch",
+		On:                true,
+	}
+	type args struct {
+		switch_name string
+		on          bool
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantPmsg *SwitchStatusChangeMessage
+	}{
+		// TODO: Add test cases.
+		{name: "happy", args: args{switch_name: "testswitch", on: true}, wantPmsg: &testmsg},
+	}
+	for _, tt := range tests {
+		testmsg.EventTimestamp = getNowMillis()
+		t.Run(tt.name, func(t *testing.T) {
+			if gotPmsg := NewSwitchStatusChangeMessage(tt.args.switch_name, tt.args.on); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				t.Errorf("NewSwitchStatusChangeMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
+			}
+		})
+	}
+}
+
+func TestNewPictureTakenMessage(t *testing.T) {
+	initGlobalsLocally(t)
+	testmsg := PictureTakenMessage{
+		DeviceId:          70000008,
+		ContainerName:     "sense-go",
+		ExecutableVersion: "..  ",
+		EventTimestamp:    getNowMillis(),
+		MessageType:       "picture_event",
+	}
+	tests := []struct {
+		name     string
+		wantPmsg *PictureTakenMessage
+	}{
+		{name: "happy", wantPmsg: &testmsg},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testmsg.EventTimestamp = getNowMillis()
+			if gotPmsg := NewPictureTakenMessage(); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				t.Errorf("NewPictureTakenMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
 			}
 		})
 	}

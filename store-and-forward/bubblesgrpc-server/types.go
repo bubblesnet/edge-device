@@ -10,6 +10,7 @@ type externalState struct {
 	PlantHeightIn    float64 `json:"plant_height_in,omitempty"`
 	WaterTempF       float64 `json:"water_tempF,omitempty"`
 	TempF            float64 `json:"tempF,omitempty"`
+	ExternalTempF    float64 `json:"externalTempF,omitempty"`
 	Humidity         float64 `json:"humidity,omitempty"`
 	PressureInternal float64 `json:"pressure_internal,omitempty"`
 	LightInternal    float64 `json:"light_internal,omitempty"`
@@ -19,6 +20,7 @@ var ExternalCurrentState = externalState{
 	PlantHeightIn:    HEIGHTNOTSET,
 	WaterTempF:       TEMPNOTSET,
 	TempF:            TEMPNOTSET,
+	ExternalTempF:    TEMPNOTSET,
 	Humidity:         HUMIDITYNOTSET,
 	LightInternal:    LIGHTNOTSET,
 	PressureInternal: PRESSURENOTSET,

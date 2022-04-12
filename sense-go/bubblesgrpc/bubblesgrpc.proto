@@ -22,6 +22,7 @@ package bubblesgrpc;
 
 // The service definition.
 service SensorStoreAndForward {
+  //
   rpc StoreAndForward (SensorRequest) returns (SensorReply) {}
   rpc GetState (GetStateRequest) returns (GetStateReply) {}
   rpc GetRecordList (GetRecordListRequest) returns (GetRecordListReply) {}
@@ -56,6 +57,8 @@ message GetStateReply {
   string result = 3;
   float tempF = 4;
   float humidity = 5;
+  float externalTempF = 6;
+  float waterTempF = 7;
 }
 
 // The request message

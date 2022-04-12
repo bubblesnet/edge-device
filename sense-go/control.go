@@ -7,125 +7,187 @@ import (
 	"time"
 )
 
-func setEnvironmentalControlString() {
-	globals.LocalCurrentState.EnvironmentalControl = ""
-	if globals.LocalCurrentState.Heater == true {
-		globals.LocalCurrentState.EnvironmentalControl += "HEATING "
+func isPowerstripAttached(deviceid int64) (relayIsAttached bool) {
+	if globals.MyDeviceID == deviceid && len(globals.MyDevice.ACOutlets) > 0 {
+		return true
+	}
+	return false
+}
+
+func setEnvironmentalControlString(LocalCurrentState *globals.LocalState) (environmentalControlString string) {
+	EnvironmentalControl := ""
+	if (*LocalCurrentState).Heater == true {
+		EnvironmentalControl += "HEATING "
 	} else {
-		globals.LocalCurrentState.EnvironmentalControl += "COOLING "
+		(*LocalCurrentState).EnvironmentalControl += "COOLING "
 	}
-	if globals.LocalCurrentState.Humidifier == true {
-		globals.LocalCurrentState.EnvironmentalControl += "HUMIDIFYING "
+	if (*LocalCurrentState).Humidifier == true {
+		EnvironmentalControl += "HUMIDIFYING "
 	} else {
-		globals.LocalCurrentState.EnvironmentalControl += "DRYING "
+		EnvironmentalControl += "DRYING "
 	}
+	return EnvironmentalControl
 }
 
-func ControlOxygenation(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlOxygenation - no relay attached")
-		return
+func ControlOxygenation(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, CurrentStage string, Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
+	somethingChanged = false
+	if !isPowerstripAttached(DeviceID) {
+		log.Debugf("automation: ControlOxygenation - no outlets attached")
+		return somethingChanged
 	}
-	switch globals.MyStation.CurrentStage {
+	switch CurrentStage {
 	case globals.IDLE:
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.AIRPUMP, false)
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.AIRPUMP, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlOxygenation", globals.AIRPUMP, true, false)
+		}
 		break
 	case globals.GERMINATION:
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.AIRPUMP, false)
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.AIRPUMP, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlOxygenation", globals.AIRPUMP, true, false)
+		}
 		break
 	default:
-		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.AIRPUMP, force)
+		if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.AIRPUMP, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlOxygenation", globals.AIRPUMP, false, true)
+		}
 		break
 	}
-
+	return somethingChanged
 }
 
-func ControlRootWater(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlRootWater - no relay attached")
-		return
+func ControlRootWater(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, CurrentStage string, Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
+	somethingChanged = false
+	if !isPowerstripAttached(DeviceID) {
+		log.Debugf("automation: ControlRootWater - no outlets attached")
+		return somethingChanged
 	}
 
-	if globals.MyStation.CurrentStage == globals.IDLE {
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
-		return
-	}
-	switch globals.MyStation.CurrentStage {
+	switch CurrentStage {
 	case globals.IDLE:
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERPUMP, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlRootWater", globals.WATERPUMP, true, false)
+		}
 		break
 	case globals.GERMINATION:
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.WATERPUMP, false)
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERPUMP, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlRootWater", globals.WATERPUMP, true, false)
+		}
 		break
 	default:
-		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.WATERPUMP, force)
+		if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.WATERPUMP, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlRootWater", globals.WATERPUMP, false, true)
+		}
 		break
 	}
-
+	return somethingChanged
 }
 
-func ControlAirflow(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlAirflow - no relay attached")
+func ControlAirflow(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, CurrentStage string, Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
+	somethingChanged = false
+	if !isPowerstripAttached(DeviceID) {
+		log.Debugf("automation: ControlAirflow - no outlets attached")
 		return
 	}
 
-	switch globals.MyStation.CurrentStage {
+	TurnFansOn := false
+	TurnFansOff := false
+	switch CurrentStage {
 	case globals.GERMINATION:
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.OUTLETFAN, false)
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.INLETFAN, false)
+		TurnFansOff = true
 		break
 	case globals.IDLE:
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.OUTLETFAN, false)
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.INLETFAN, false)
+		TurnFansOff = true
 		break
 	default:
-		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.OUTLETFAN, force)
-		gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.INLETFAN, force)
+		TurnFansOn = true
 		break
 	}
 
+	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) {
+		TurnFansOff = true
+		TurnFansOn = false
+	}
+
+	if TurnFansOn == true {
+		if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.OUTLETFAN, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlAirflow", globals.OUTLETFAN, false, true)
+		}
+		if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.INLETFAN, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlAirflow", globals.INLETFAN, false, true)
+		}
+	} else {
+		if TurnFansOff == true {
+			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.OUTLETFAN, false); somethingChanged == true {
+				LogSwitchStateChanged("ControlAirflow", globals.OUTLETFAN, true, false)
+			}
+			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.INLETFAN, false); somethingChanged == true {
+				LogSwitchStateChanged("ControlAirflow", globals.INLETFAN, true, false)
+			}
+		}
+	}
+
+	return somethingChanged
 }
 
-func ControlLight(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlLight - no relay attached")
+func LogSwitchStateChanged(functionName string, switchName string, originalState bool, newState bool) {
+	log.Infof("StateChange: switch %s from %v to %v via %s", switchName, originalState, newState, functionName)
+}
+
+func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, CurrentStage string,
+	MyStation globals.Station, CurrentStageSchedule globals.StageSchedule,
+	LocalCurrentState *globals.LocalState, currentTime time.Time, Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
+
+	somethingChanged = false
+	if !isPowerstripAttached(DeviceID) {
+		log.Debugf("automation: ControlLight - no outlets attached")
+		return somethingChanged
+	}
+	if CurrentStage == globals.IDLE {
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTVEG, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlLight", globals.GROWLIGHTVEG, true, false)
+		}
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
+		}
 		return
 	}
-	if globals.MyStation.CurrentStage == globals.IDLE {
-		//		log.Debugf("ControlList - stage is idle, turning off")
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.GROWLIGHTVEG, false)
-		gpiorelay.GetPowerstripService().TurnOffOutletByName(globals.GROWLIGHTBLOOM, false)
-		return
-	}
-	localTimeHours := time.Now().Hour()
+	localTimeHours := currentTime.Hour()
 	offsetHours := 5
 	if localTimeHours-offsetHours < 0 {
 		localTimeHours = 24 + (localTimeHours - offsetHours)
 	} else {
 		localTimeHours = localTimeHours - offsetHours
 	}
-	veglight := false
+	bloomlight := false
 
-	if globals.MyStation.CurrentStage == "germination" || globals.MyStation.CurrentStage == "seedling" || globals.MyStation.CurrentStage == "vegetative" {
+	if CurrentStage == globals.GERMINATION || CurrentStage == globals.SEEDLING ||
+		CurrentStage == globals.VEGETATIVE || CurrentStage == globals.BLOOMING {
 		// If it's time for grow light veg to be on
-		if inRange(globals.MyStation.LightOnHour, globals.CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.GROWLIGHTVEG, force)
-
-			veglight = true
+		if inRange(CurrentStageSchedule.LightOnStartHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
+			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
+			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
+				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, false, true)
+			}
+			bloomlight = true
 		} else {
 			// If it's time for grow light veg to be off
-			gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.GROWLIGHTVEG, force)
-			veglight = false
+			if LocalCurrentState.GrowLightBloom == true {
+				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
+			}
+			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
+				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
+			}
+			bloomlight = false
 		}
 	} else {
 	}
-	if veglight && !globals.LocalCurrentState.GrowLightVeg {
-		log.Infof("Turned veg light ON")
-	} else if !veglight && globals.LocalCurrentState.GrowLightVeg {
-		log.Infof("Turned veg light OFF")
+	if bloomlight && !LocalCurrentState.GrowLightBloom {
+		log.Infof("automation: ControlLight Turned veg light ON")
+	} else if !bloomlight && LocalCurrentState.GrowLightBloom {
+		log.Infof("automation: ControlLight Turned veg light OFF")
 	}
-	globals.LocalCurrentState.GrowLightVeg = veglight
+	(*LocalCurrentState).GrowLightBloom = bloomlight
+	return somethingChanged
 }
 
 func inRange(starthour int, numhours int, currenthours int) bool {
@@ -148,111 +210,213 @@ func inRange(starthour int, numhours int, currenthours int) bool {
 	}
 }
 
-func ControlHeat(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlHeat - no relay attached")
-		return
-	}
-	//	log.Infof("ControlHeat - current stage is %s", globals.MyStation.CurrentStage)
-	if globals.MyStation.CurrentStage == globals.IDLE {
-		log.Debugf("ControlHeat - stage is idle, turning off")
-		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS OFFFF
-		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS OFF
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATER, false) // MAKE SURE HEAT IS OFF
-		return
-	}
+func ControlWaterTemp(force bool,
+	DeviceID int64,
+	MyDevice *globals.EdgeDevice,
+	StageSchedule globals.StageSchedule,
+	CurrentStage string,
+	ExternalCurrentState globals.ExternalState,
+	LocalCurrentState *globals.LocalState,
+	LastWaterTemp *float32,
+	Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
 
-	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
-	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
+	somethingChanged = false
 
-	//	log.Infof("checking temp %f for stage %s with highLimit %f, lowLimit %f", globals.ExternalCurrentState.TempF, globals.MyStation.CurrentStage, highLimit,lowLimit)
-	if globals.ExternalCurrentState.TempF == globals.TEMPNOTSET {
-		log.Debugf("TEMPNOTSET ExternalCurrentState.TempF %f - ignoring", globals.ExternalCurrentState.TempF)
-		return
+	if !isPowerstripAttached(DeviceID) {
+		log.Infof("automation: ControlWaterTemp - no outlets attached")
+		return somethingChanged
 	}
-	if globals.ExternalCurrentState.TempF > highLimit { // TOO HOT
-		if globals.Lasttemp < highLimit { // JUST BECAME TOO HOT
-			log.Infof("Temp just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.TempF)
+	if CurrentStage == globals.IDLE {
+		log.Infof("automation: ControlWaterTemp - stage is idle, turning off")
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERHEATER, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlWaterTemp", globals.WATERHEATER, true, false)
+		} // MAKE SURE HEAT IS OFF
+		return somethingChanged
+	}
+	if ExternalCurrentState.TempF == globals.TEMPNOTSET {
+		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.WaterTempF %.3f - ignoring", ExternalCurrentState.WaterTempF)
+		return somethingChanged
+	}
+	// Go from 62 to 68
+	highLimit := StageSchedule.EnvironmentalTargets.WaterTemperature + 3.0
+	lowLimit := StageSchedule.EnvironmentalTargets.WaterTemperature - 3.0
+	if ExternalCurrentState.WaterTempF > highLimit {
+		if *LastWaterTemp < highLimit { // JUST BECAME TOO HOT
+			log.Infof("automation: ControlWaterTemp turning off %s because WaterTemp (%.3f) just rolled over (%.2f/%.3f/%.2f) on way up", globals.WATERHEATER, ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit)
 			force = true
 		}
-		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATLAMP, force) // MAKE SURE HEAT IS OFF
-		//		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATPAD, force)  // MAKE SURE HEAT IS OFF
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HEATER, force) // MAKE SURE HEAT IS OFF
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERHEATER, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlWaterTemp", globals.WATERHEATER, true, false)
+		}
 
-		globals.LocalCurrentState.Heater = false
-		globals.LocalCurrentState.HeaterPad = false
-		setEnvironmentalControlString()
+		(*LocalCurrentState).WaterHeater = false
+		(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
+		log.Infof("automation: ControlWaterTemp water temp %f is already too high %f", ExternalCurrentState.WaterTempF, highLimit)
 	} else { // NOT TOO HOT
-		if globals.ExternalCurrentState.TempF < lowLimit { // TOO COLD
-			if globals.Lasttemp > lowLimit { // JUST BECAME TOO COLD
-				log.Infof("Temp just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.TempF)
+		if ExternalCurrentState.WaterTempF < lowLimit { // TOO COLD
+			if *LastWaterTemp > lowLimit { // JUST BECAME TOO COLD
+				log.Infof("automation: ControlWaterTemp turning on %s because Water Temp (%.3f) just fell below (%.2f/%.1f/%.2f) on way up from %.2f", globals.WATERHEATER, ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 				force = true
 			}
-			//			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATLAMP, false) // MAKE SURE HEAT IS ON
-			//			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATPAD, false)  // MAKE SURE HEAT IS ON
-			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HEATER, false) // MAKE SURE HEAT IS ON
+			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.WATERHEATER, force); somethingChanged == true {
+				LogSwitchStateChanged("ControlWaterTemp", globals.WATERHEATER, false, true)
+			} // MAKE SURE HEAT IS ON
 
-			globals.LocalCurrentState.Heater = true
-			globals.LocalCurrentState.HeaterPad = true
+			(*LocalCurrentState).WaterHeater = true
 		} else { // JUST RIGHT
-			if globals.Lasttemp < lowLimit {
-				log.Infof("Temp just entered sweet spot on way up - %f", globals.ExternalCurrentState.TempF)
+			if *LastWaterTemp < lowLimit {
+				log.Infof("automation: ControlWaterTemp Water Temp (%.3f) just entered sweet spot (%.2f/%.1f/%.2f) on way up from %.2f", ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 			} else {
-				if globals.Lasttemp > highLimit {
-					log.Infof("Temp just entered sweet spot on way down - %f", globals.ExternalCurrentState.TempF)
+				if *LastWaterTemp > highLimit {
+					log.Infof("automation: ControlWaterTemp Water Temp (%.3f) just entered sweet spot (%.2f/%.1f/%.2f) on way down from %.3f", ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 				} else {
+					log.Infof("automation: ControlWaterTemp Water Temp (%.3f) living in the sweet spot (%.2f/%.1f/%.2f) on way down from %.3f", ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 				}
 			}
 		}
 	}
-	setEnvironmentalControlString()
-	globals.Lasttemp = globals.ExternalCurrentState.TempF
+	*LastWaterTemp = ExternalCurrentState.WaterTempF
+	return somethingChanged
 }
 
-func ControlHumidity(force bool) {
-	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("ControlHumidity - no relay attached")
-		return
-	}
-	if globals.MyStation.CurrentStage == globals.IDLE {
-		//		log.Debugf("ControlHumidity - stage is idle, turning off")
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HUMIDIFIER, false) // MAKE SURE HUMIDIFIER IS OFF
-		return
-	}
-	highLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity + 5.0
-	lowLimit := globals.CurrentStageSchedule.EnvironmentalTargets.Humidity - 5.0
+func ControlHeat(force bool,
+	DeviceID int64,
+	MyDevice *globals.EdgeDevice,
+	CurrentStage string,
+	CurrentStageSchedule globals.StageSchedule,
+	ExternalCurrentState globals.ExternalState,
+	LocalCurrentState *globals.LocalState,
+	LastTemp *float32,
+	Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
 
-	if globals.ExternalCurrentState.Humidity == globals.HUMIDITYNOTSET {
-		//		log.Debugf("HUMIDITYNOTSET ExternalCurrentState.Humidity %f - ignoring", globals.ExternalCurrentState.Humidity))
-		return
+	somethingChanged = false
+	if !isPowerstripAttached(DeviceID) {
+		log.Debugf("automation: ControlHeat - no outlets attached")
+		return somethingChanged
 	}
-	if globals.ExternalCurrentState.Humidity > highLimit { // TOO HUMID
-		if globals.Lasthumidity < highLimit { // JUST BECAME TOO HUMID
-			log.Infof("Humidity just rolled over %f on way up %f", highLimit, globals.ExternalCurrentState.Humidity)
+	//	log.Infof("automation: ControlHeat - current stage is %s", globals.MyStation.CurrentStage)
+	if CurrentStage == globals.IDLE {
+		log.Debugf("automation: ControlHeat - stage is idle, turning off")
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HEATER, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlHeat", globals.HEATER, true, false)
+		} // MAKE SURE HEAT IS OFF
+		return somethingChanged
+	}
+
+	highLimit := CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
+	lowLimit := CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
+
+	//	log.Infof("automation: checking temp %.3f for stage %s with highLimit %.3f, lowLimit %.3f", globals.ExternalCurrentState.TempF, globals.MyStation.CurrentStage, highLimit,lowLimit)
+	if ExternalCurrentState.TempF == globals.TEMPNOTSET {
+		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempF %.3f - ignoring", ExternalCurrentState.TempF)
+		return somethingChanged
+	}
+	if ExternalCurrentState.TempF > highLimit { // TOO HOT
+		log.Infof("automation: ControlHeat turning off %s because internal temp %.3f is over high limit %.3f on way up", globals.HEATER, ExternalCurrentState.TempF, highLimit)
+		if globals.LastTemp < highLimit { // JUST BECAME TOO HOT
+			log.Infof("automation: ControlHeat turning off %s because internal temp %.3f just exceeded high limit %.3f on way up", globals.HEATER, ExternalCurrentState.TempF, highLimit)
 			force = true
 		}
-		gpiorelay.PowerstripSvc.TurnOffOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS OFF
-		globals.LocalCurrentState.Humidifier = false
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HEATER, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlHeat", globals.HEATER, true, false)
+		} // MAKE SURE HEAT IS OFF
+
+		(*LocalCurrentState).Heater = false
+		(*LocalCurrentState).HeaterPad = false
+		(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
 	} else { // NOT TOO HOT
-		if globals.ExternalCurrentState.Humidity < lowLimit { // TOO COLD
-			if globals.Lasthumidity > lowLimit { // JUST BECAME TOO COLD
-				log.Infof("Humidity just fell below %f on way down - %f", lowLimit, globals.ExternalCurrentState.Humidity)
+		if ExternalCurrentState.TempF < lowLimit { // TOO COLD
+			//			log.Infof("automation: ControlHeat TOO COLD %.3f < lowLimit %.2f", ExternalCurrentState.TempF, lowLimit)
+			if *LastTemp > lowLimit { // JUST BECAME TOO COLD
+				log.Infof("automation: ControlHeat turning on %s because internal temp %.3f just fell below low limit %.3f on way down", globals.HEATER, ExternalCurrentState.TempF, lowLimit)
 				force = true
 			}
-			gpiorelay.GetPowerstripService().TurnOnOutletByName(globals.HUMIDIFIER, force) // MAKE SURE HUMIDIFIER IS ON
+			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.HEATER, false); somethingChanged == true {
+				LogSwitchStateChanged("ControlHeat", globals.HEATER, false, true)
+			} // MAKE SURE HEAT IS ON
 
-			globals.LocalCurrentState.Humidifier = true
+			(*LocalCurrentState).Heater = true
+			(*LocalCurrentState).HeaterPad = true
 		} else { // JUST RIGHT
-			if globals.Lasthumidity < lowLimit {
-				log.Infof("Humidity just entered sweet spot on way up - %f", globals.ExternalCurrentState.Humidity)
+			log.Infof("automation: ControlHeat JUST RIGHT %.3f", ExternalCurrentState.TempF)
+			if *LastTemp < lowLimit {
+				log.Infof("automation: ControlHeat Temp just entered sweet spot on way up - %.3f", ExternalCurrentState.TempF)
 			} else {
-				if globals.Lasthumidity > highLimit {
-					log.Infof("Humidity just entered sweet spot on way down - %f", globals.ExternalCurrentState.Humidity)
+				if *LastTemp > highLimit {
+					log.Infof("automation: ControlHeat Temp just entered sweet spot on way down - %.3f", ExternalCurrentState.TempF)
 				} else {
 				}
 			}
 		}
 	}
-	setEnvironmentalControlString()
-	globals.Lasthumidity = globals.ExternalCurrentState.Humidity
+
+	(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
+	*LastTemp = ExternalCurrentState.TempF
+	return somethingChanged
+}
+
+func ControlHumidity(force bool,
+	DeviceID int64,
+	MyDevice *globals.EdgeDevice,
+	StageSchedule globals.StageSchedule,
+	CurrentStage string,
+	ExternalCurrentState globals.ExternalState,
+	LocalCurrentState *globals.LocalState,
+	LastHumidity *float32,
+	Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
+
+	somethingChanged = false
+	if !isPowerstripAttached(DeviceID) {
+		log.Debugf("automation: ControlHumidity - no outlets attached")
+		return somethingChanged
+	}
+	if CurrentStage == globals.IDLE {
+		//		log.Debugf("automation: ControlHumidity - stage is idle, turning off")
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HUMIDIFIER, false); somethingChanged == true {
+			LogSwitchStateChanged("ControlHumidity", globals.HUMIDIFIER, true, false)
+		} // MAKE SURE HUMIDIFIER IS OFF
+		return somethingChanged
+	}
+	highLimit := StageSchedule.EnvironmentalTargets.Humidity + 5.0
+	lowLimit := StageSchedule.EnvironmentalTargets.Humidity - 5.0
+
+	if ExternalCurrentState.Humidity == globals.HUMIDITYNOTSET {
+		//		log.Debugf("automation: HUMIDITYNOTSET ExternalCurrentState.Humidity %.3f - ignoring", globals.ExternalCurrentState.Humidity))
+		return somethingChanged
+	}
+	if ExternalCurrentState.Humidity > highLimit { // TOO HUMID
+		if *LastHumidity < highLimit { // JUST BECAME TOO HUMID
+			log.Infof("automation: ControlHumidity turning off %s because Humidity %.3f just exceeded (%.3f/%.1f/%.3f) on way up from %.3f", globals.HUMIDIFIER, ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+			force = true
+		}
+		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HUMIDIFIER, force); somethingChanged == true {
+			LogSwitchStateChanged("ControlHeat", globals.HUMIDIFIER, true, false)
+		} // MAKE SURE HUMIDIFIER IS OFF
+		(*LocalCurrentState).Humidifier = false
+	} else { // NOT TOO HOT
+		if ExternalCurrentState.Humidity < lowLimit { // TOO COLD
+			if *LastHumidity > lowLimit { // JUST BECAME TOO COLD
+				log.Infof("automation: ControlHumidity turning on %s because Humidity %.3f just fell below low (%.3f/%.1f/%.3f) on way down from %.3f", globals.HUMIDIFIER, ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+				force = true
+			}
+			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.HUMIDIFIER, force); somethingChanged == true {
+				LogSwitchStateChanged("ControlHumidity", globals.HUMIDIFIER, false, true)
+			} // MAKE SURE HUMIDIFIER IS ON
+
+			(*LocalCurrentState).Humidifier = true
+		} else { // JUST RIGHT
+			if *LastHumidity < lowLimit {
+				log.Infof("automation: ControlHumidity Humidity %.3f just entered sweet spot (%.3f/%.1f/%.3f) on way up from %.3f", ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+			} else {
+				if *LastHumidity > highLimit {
+					log.Infof("automation: ControlHumidity Humidity %.3f just entered sweet spot (%.3f/%.1f/%.3f) on way down from %.3f", ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+				} else {
+				}
+			}
+		}
+	}
+
+	(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
+	*LastHumidity = ExternalCurrentState.Humidity
+	return somethingChanged
 }
