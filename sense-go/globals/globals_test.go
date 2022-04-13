@@ -61,7 +61,6 @@ func TestGetSequence(t *testing.T) {
 		name string
 		want int32
 	}{
-		// TODO: Add test cases.
 		{name: "happy", want: 1},
 	}
 	for _, tt := range tests {
@@ -171,7 +170,6 @@ func TestReportDeviceFailed(t *testing.T) {
 		name string
 		args args
 	}{
-		// TODO: Add test cases.
 		{name: "happy", args: args{devicename: "testdevice"}},
 		{name: "devicefailed", args: args{devicename: "testdevice"}},
 	}

@@ -1,5 +1,7 @@
 package main
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	"bytes"
 	"encoding/json"
@@ -146,10 +148,6 @@ type StageSchedule struct {
 	LightOnStartHour     int                 `json:"light_on_start_hour"`
 	HoursOfLight         int                 `json:"hours_of_light"`
 	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
-}
-
-/// TODO: Delete this
-type ControlState struct {
 }
 
 type PiCam struct {

@@ -1,5 +1,7 @@
 package globals
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"github.com/go-playground/log"

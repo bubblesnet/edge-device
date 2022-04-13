@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# copyright and license inspection - no issues 4/13/22
+
+
 import adafruit_platformdetect
 
 detector = adafruit_platformdetect.Detector()

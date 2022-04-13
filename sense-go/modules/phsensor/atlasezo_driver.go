@@ -1,6 +1,9 @@
+//go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
 package phsensor
+
+/// TODO copyright and license inspection - 4/13/22 - figure out where this code came from
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
@@ -12,13 +15,7 @@ import (
 )
 
 const (
-	atlasEZOAddress            = 0x63
-	bmp280RegisterControl      = 0xf4
-	bmp280RegisterConfig       = 0xf5
-	bmp280RegisterPressureData = 0xf7
-	bmp280RegisterTempData     = 0xfa
-	bmp280RegisterCalib00      = 0x88
-	bmp280SeaLevelPressure     = 1013.25
+	atlasEZOAddress = 0x63
 )
 
 type bmp280CalibrationCoefficients struct {
@@ -66,7 +63,6 @@ func NewAtlasEZODriver(c i2c.Connector, options ...func(i2c.Config)) *AtlasEZODr
 		option(b)
 	}
 
-	// TODO: expose commands to API
 	return b
 }
 

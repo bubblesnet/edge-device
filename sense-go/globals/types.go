@@ -1,5 +1,7 @@
 package globals
 
+// copyright and license inspection - no issues 4/13/22
+
 const TEMPNOTSET float32 = -100.5
 const HUMIDITYNOTSET float32 = -100.5
 

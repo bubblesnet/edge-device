@@ -1,5 +1,7 @@
 package messaging
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"fmt"

@@ -233,7 +233,6 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 		args     args
 		wantPmsg *SwitchStatusChangeMessage
 	}{
-		// TODO: Add test cases.
 		{name: "happy", args: args{switch_name: "testswitch", on: true}, wantPmsg: &testmsg},
 	}
 	for _, tt := range tests {

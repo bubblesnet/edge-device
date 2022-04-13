@@ -3,6 +3,8 @@
 
 package a2dconverter
 
+// copyright and license inspection - no issues 4/13/22
+
 import "fmt"
 
 func RunADCPoller(onceOnly bool, waitInSeconds int) (err error) {

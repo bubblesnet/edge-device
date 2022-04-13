@@ -3,6 +3,8 @@
 // Package main implements a server for SensorStoreAndForward service.
 package main
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
@@ -260,16 +262,6 @@ func main() {
 	go func() {
 		_ = forwardMessages(messageBucketName, false)
 	}()
-	/*	go func() {
-			_ = forwardMessages(stateBucketName, false)
-		}()
-		go func() {
-			_ = saveStateDaemon(stateBucketName, false)
-		}()
-
-	*/
-
-	//	go StartApiServer()
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

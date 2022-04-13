@@ -20,6 +20,8 @@ import smbus2
 import time
 import logging
 
+""" TODO license inspection """
+
 # Define some constants from the datasheet
 
 DEVICE = 0x23  # Default device I2C address

@@ -1,5 +1,7 @@
 package main
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"

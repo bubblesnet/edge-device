@@ -3,6 +3,8 @@
 
 package a2dconverter
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
 	"bubblesnet/edge-device/sense-go/globals"
@@ -13,23 +15,8 @@ import (
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
 	"golang.org/x/net/context"
-	//	"google.golang.org/grpc"
 	"time"
 )
-
-/*
-type ADCSensorMessage struct {
-	ContainerName string `json:"container_name"`
-	ExecutableVersion string `json:"executable_version"`
-	MessageType string `json:"message_type"`
-	ModuleName string `json:"sensor_name"`
-	ChannelNumber int `json:"channel_number,omitempty"`
-	Voltage float64 `json:"value,omitempty"`
-	Units string	`json:"units"`
-	Gain    int	`json:"gain,omitempty"`
-	Rate    int	`json:"rate,omitempty"`
-}
-*/
 
 const WaterLevelChannelIndex = 1
 
@@ -45,8 +32,6 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 	adcMessage.BusId = config.bus_id
 	for channel := 0; channel < 4; channel++ {
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
-
-		//		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, 860)
 		if err == nil {
 			log.Debugf("Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 

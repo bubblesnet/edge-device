@@ -19,7 +19,6 @@ func Test_etapeInchesFromVolts(t *testing.T) {
 		wantInches float64
 		wantError  bool
 	}{
-		// TODO: Add test cases.
 		{name: "Bottom", args: args{voltage: MinVoltage, slope: Etape_slope, yintercept: Etape_y_intercept}, wantInches: 1.49, wantError: false},
 		{name: "Low", args: args{voltage: 1.77, slope: Etape_slope, yintercept: Etape_y_intercept}, wantInches: 2.85, wantError: false},
 		{name: "Medium", args: args{voltage: 2.09, slope: Etape_slope, yintercept: Etape_y_intercept}, wantInches: 6.49, wantError: false},

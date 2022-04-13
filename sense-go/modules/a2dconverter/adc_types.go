@@ -1,5 +1,7 @@
 package a2dconverter
 
+// copyright and license inspection - no issues 4/13/22
+
 type ChannelConfig struct {
 	gain int
 	rate int

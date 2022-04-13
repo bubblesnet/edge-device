@@ -1,5 +1,7 @@
 package main
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
@@ -9,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"time"
 )
+
 var SequenceNumber int32 = 0
 
 const address = "store-and-forward:50051"
@@ -23,6 +26,7 @@ func GetSequenceNumber() int32 {
 	}
 	return SequenceNumber
 }
+
 /*
 func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
 	ret := "SampleTimestamp,SampleTimestampS,DistanceIn,Ph,TempF,Humidity,Pressure,Light,GrowLightVeg,Heater,HeaterPad,Humidifier\n"
@@ -45,12 +49,13 @@ func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
 }
 */
 
-func getContentDisposition( format string ) string {
+func getContentDisposition(format string) string {
 	t := time.Now()
 	filename := fmt.Sprintf("%d-%02d-%02dT%02d_%02d_%02d-00_00.%s", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), format)
 	content_dispostion := fmt.Sprintf("attachment; filename=%s", filename)
 	return content_dispostion
 }
+
 /*
 func StartApiServer() {
 	log.Infof("StartApiServer"))
@@ -87,9 +92,9 @@ func StartApiServer() {
 
 type getRecordsRequest struct {
 	BucketName string `json:"bucket_name"`
-	Year int `json:"year"`
-	Month int `json:"month"`
-	Day int `json:"day"`
+	Year       int    `json:"year"`
+	Month      int    `json:"month"`
+	Day        int    `json:"day"`
 }
 
 func requestStateList() (string, error) {
@@ -103,7 +108,7 @@ func requestStateList() (string, error) {
 	defer conn.Close()
 	c := pb.NewSensorStoreAndForwardClient(conn)
 
-	var getRecsReq = getRecordsRequest {
+	var getRecsReq = getRecordsRequest{
 		BucketName: stateBucketName,
 		Year:       2020,
 		Month:      2,

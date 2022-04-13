@@ -75,7 +75,6 @@ func Test_saveState(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{name: "good", args: args{bucketName: "StateBucket", onceOnly: true}, wantErr: false},
 	}
 	for _, tt := range tests {

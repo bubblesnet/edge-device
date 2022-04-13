@@ -1,5 +1,7 @@
 package main
 
+// copyright and license inspection - no issues 4/13/22
+
 import (
 	log "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/lawg"
 	"fmt"
@@ -81,7 +83,7 @@ func initDb(databaseFilename string) {
 	makeBuckets([]string{messageBucketName, stateBucketName})
 }
 
-func deleteBucketIfExist(bucketName string) (error) {
+func deleteBucketIfExist(bucketName string) error {
 	log.Debugf("deleteBucketIfExist %s\n", bucketName)
 	// Start a writable transaction.
 	log.Debugf(" begin writeabledb is %v", writeableDb)
@@ -177,56 +179,6 @@ func deleteFromBucket(bucketName string, key []byte) error {
 	return nil
 }
 
-/*
-func clearDatabase( bucketName string ) {
-	fmt.Printf("claerDatabase %s", bucketName)
-	var deleteThem []string
-
-	prefix := ""
-	log.Infof("Deleting records prefixed %s", prefix ))
-
-	_ = writeableDb.View(func(tx *bolt.Tx) error {
-		// Assume bucket exists and has keys
-		c := tx.Bucket([]byte(bucketName)).Cursor()
-		// Iterate over the 90's.
-		log.Debug("Deleting - let's seek")
-//		for k, _ := c.Seek([]byte(prefix)); k != nil && bytes.HasPrefix(k, []byte(prefix)); k, _ = c.Next()
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-				log.Debugf("found key=%s", k))
-				deleteThem = append(deleteThem, string(k))
-		}
-		log.Debug("Done finding")
-
-		return nil
-	})
-	for _, element := range deleteThem {
-		log.Debug("Deleting key %s", element )
-		_ = deleteFromBucket(stateBucketName, []byte(element))
-	}
-	log.Debug("Done finding")
-}
-
-
-func deletePriorTo( bucketName string, unixtime int64 ) {
-
-	var max = fmt.Sprintf("%20.20d", unixtime )
-	min := []byte("0")
-	log.Infof("Deleting records between %s and %s", min, max))
-
-	_ = writeableDb.View(func(tx *bolt.Tx) error {
-		// Assume bucket exists and has keys
-		c := tx.Bucket([]byte(bucketName)).Cursor()
-		// Iterate over the 90's.
-		log.Debug("Deleting - let's seek")
-		for k, v := c.Seek(min); k != nil && bytes.Compare(k, []byte(max)) <= 0; k, v = c.Next() {
-			log.Debugf("Deleting key %s: %s", k, v))
-		}
-
-		return nil
-	})
-}
-*/
-
 func getStatesAsJson(tx *bolt.Tx) (err error) {
 
 	log.Debugf("pid %d getRecordList getStates", os.Getpid())
@@ -247,31 +199,6 @@ func getStatesAsJson(tx *bolt.Tx) (err error) {
 	log.Debugf("getStates - got %d records", count)
 	return nil
 }
-
-/*
-func getStatesAsCsv(tx *bolt.Tx) error {
-	log.Debugf("pid %d getRecordList getStates", os.Getpid()))
-	b := tx.Bucket([]byte(stateBucketName))
-	count := 0
-	log.Debugf("getRecordList foreach"))
-	_ = b.ForEach(func(k, v []byte) error {
-		count = count + 1
-		csvx = csvx + "\n" + string(v)
-		return nil
-	})
-	log.Debugf("getStates - got %d records", count ))
-	return nil
-}
-
-func getStateAsCsv( bucketName string, year int, month int, day int) (string, error) {
-	csv := ""
-	log.Debugf("pid %d getRecordList getStateAsCsv", os.Getpid()))
-	csvx = ""
-	err := writeableDb.View(getStatesAsCsv)
-	log.Debugf("getStateAsCsv Returning nothing %v", err))
-	return csv, nil
-}
-*/
 
 func getStateAsJson(_ string, _ int, _ int, _ int) (string, error) {
 	csv := ""

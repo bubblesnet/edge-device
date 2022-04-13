@@ -1,5 +1,7 @@
 package a2dconverter
 
+// copyright and license inspection - no issues 4/13/22
+
 const MinInches = 0.0
 const MaxInches = 12.5
 const MaxVoltage = 2.65
