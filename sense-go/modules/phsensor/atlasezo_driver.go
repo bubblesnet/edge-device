@@ -1,9 +1,33 @@
 //go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package phsensor
 
-/// TODO copyright and license inspection - 4/13/22 - figure out where this code came from
+/// TODO copyright and license inspection - 4/13/22 - recheck - figure out where this code came from
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
@@ -81,7 +105,7 @@ func (d *AtlasEZODriver) Connection() gobot.Connection {
 	return d.connector.(gobot.Connection)
 }
 
-// Start initializes the BMP280 and loads the calibration coefficients.
+// Start initializes the EZO pH
 func (d *AtlasEZODriver) Start() (err error) {
 	bus := d.GetBusOrDefault(d.connector.GetDefaultBus())
 	address := d.GetAddressOrDefault(atlasEZOAddress)
