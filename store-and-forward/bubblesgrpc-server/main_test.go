@@ -46,7 +46,7 @@ func initTests(t *testing.T) (err error) {
 	} else {
 		fmt.Printf("WTF!!!")
 	}
-	if MyDeviceID, err = ReadMyDeviceId(storeMountPoint, "", "deviceid"); err != nil {
+	if MyDeviceID, err = ReadMyDeviceId(); err != nil {
 		fmt.Printf("ReadMyDeviceId error %v", err)
 		return err
 	}

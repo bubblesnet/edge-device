@@ -49,7 +49,7 @@ func Test_uploadFile(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	globals.MySite.ControllerHostName = "192.168.21.237"
+	globals.MySite.ControllerAPIHostName = "192.168.21.237"
 	globals.MySite.ControllerAPIPort = 3003
 	globals.MySite.UserID = 90000009
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 70000008}

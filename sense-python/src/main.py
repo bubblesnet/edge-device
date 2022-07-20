@@ -27,6 +27,7 @@ import json
 import logging
 import time
 import traceback
+import os
 
 try:
     import bme280
@@ -109,12 +110,7 @@ def wait_for_config(filename):
 
 def read_deviceid(filename):
     deviceid = -1
-    with open(filename) as f:
-        for line in f:
-            logging.info("line = %s " % line )
-            deviceid = int(line)
-        return (deviceid)
-
+    return int(os.environ['DEVICEID'])
 
 def validate_config():
     b = 'stations' in my_site
@@ -143,11 +139,12 @@ def read_config(fullpath):
         return True
 
 
-def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
+def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name, address):
     global lastTemp
+    logging.info("append_bme280_temp address %s" % address)
     try:
-        calibration_params = bme280.load_calibration_params(i2cbus, 0x76)
-        data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
+        calibration_params = bme280.load_calibration_params(i2cbus, address)
+        data = bme280.sample(i2cbus, address, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
         msg['units'] = 'C'
@@ -171,11 +168,11 @@ def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name):
         logging.debug(traceback.format_exc())
 
 
-def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name):
+def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name, address):
     global lastHumidity
     try:
-        calibration_params = bme280.load_calibration_params(i2cbus, 0x76)
-        data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
+        calibration_params = bme280.load_calibration_params(i2cbus, address)
+        data = bme280.sample(i2cbus, address, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
         msg['units'] = '%'
@@ -198,11 +195,11 @@ def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name):
         logging.debug(traceback.format_exc())
 
 
-def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name):
+def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name, address):
     global lastPressure
     try:
-        calibration_params = bme280.load_calibration_params(i2cbus, 0x76)
-        data = bme280.sample(i2cbus, 0x76, compensation_params=calibration_params)
+        calibration_params = bme280.load_calibration_params(i2cbus, address)
+        data = bme280.sample(i2cbus, address, compensation_params=calibration_params)
         msg['sensor_name'] = sensor_name
         msg['measurement_name'] = measurement_name
         msg['units'] = 'hPa'
@@ -242,6 +239,12 @@ def is_our_device(module_type):
 
     return False
 
+def get_our_device(module_type):
+    for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == module_type:
+            return module
+
+    return
 
 def bh1750_names():
     global my_site
@@ -272,6 +275,15 @@ def bme280_names():
 
     print(my_device)
     for module in my_device['modules']:
+        if module['container_name'] == 'sense-python' and module['module_type'] == "bmp280":
+            for included_sensor in module['included_sensors']:
+                if 'temp' in included_sensor['measurement_name']:
+                    temperature_sensor_name = included_sensor['sensor_name']
+                    temperature_measurement_name = included_sensor['measurement_name']
+                if 'pressure' in included_sensor['measurement_name']:
+                    pressure_sensor_name = included_sensor['sensor_name']
+                    pressure_measurement_name = included_sensor['measurement_name']
+
         if module['container_name'] == 'sense-python' and module['module_type'] == "bme280":
                 for included_sensor in module['included_sensors']:
                     if 'temp' in included_sensor['measurement_name']:
@@ -351,6 +363,7 @@ def report_polled_sensor_parameters(i2cbus):
     #    logging.debug("reportPolledSensorParameters")
 
     if is_our_device('bh1750'):
+        module = get_our_device('bh1750')
         msg = {
             'message_type': 'measurement'
         }
@@ -362,17 +375,30 @@ def report_polled_sensor_parameters(i2cbus):
         except Exception as ee:
             logging.error(ee)
 
+    if is_our_device('bmp280'):
+        module = get_our_device('bmp280')
+
+        logging.info("found a bmp280 - no humidity!")
+        msg = {'message_type': 'measurement'}
+        append_bme280_temp(i2cbus, msg, temperature_sensor_name, temperature_measurement_name, int(module['address'],0))
+        send_message(msg)
+
+        msg = {'message_type': 'measurement'}
+        append_bme280_pressure(i2cbus, msg, pressure_sensor_name, pressure_measurement_name, int(module['address'],0))
+        send_message(msg)
+
     if is_our_device('bme280'):
+        module = get_our_device('bme280')
         msg = {'message_type': 'measurement'}
-        append_bme280_temp(i2cbus, msg, temperature_sensor_name, temperature_measurement_name)
+        append_bme280_temp(i2cbus, msg, temperature_sensor_name, temperature_measurement_name, int(module['address'],0))
         send_message(msg)
 
         msg = {'message_type': 'measurement'}
-        append_bme280_humidity(i2cbus, msg, humidity_sensor_name, humidity_measurement_name)
+        append_bme280_humidity(i2cbus, msg, humidity_sensor_name, humidity_measurement_name, int(module['address'],0))
         send_message(msg)
 
         msg = {'message_type': 'measurement'}
-        append_bme280_pressure(i2cbus, msg, pressure_sensor_name, pressure_measurement_name)
+        append_bme280_pressure(i2cbus, msg, pressure_sensor_name, pressure_measurement_name, int(module['address'],0))
         send_message(msg)
 
     if is_our_device('ads1115'):

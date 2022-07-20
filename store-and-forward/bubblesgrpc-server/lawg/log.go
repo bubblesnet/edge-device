@@ -156,7 +156,7 @@ func ConfigureLogging(LogLevel string, PersistentOutputDirectory string) {
 
 	if PersistentOutputDirectory != "" {
 		var err error
-		LogF, err = os.OpenFile(PersistentOutputDirectory+"/icebreaker_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		LogF, err = os.OpenFile(PersistentOutputDirectory+"/bubblesnet_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			llog.Fatalf("error opening file: %v", err)
 		}

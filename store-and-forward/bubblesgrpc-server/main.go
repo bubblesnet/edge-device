@@ -43,6 +43,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -222,7 +223,7 @@ func postIt(message []byte) (err error) {
 			log.Infof("non-measurement message %s", string(message))
 		}
 	}
-	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerAPIHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
 	//	log.Infof("Sending to %s", url)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(message))
 	if err != nil {
@@ -266,7 +267,7 @@ func main() {
 		databaseFilename = "./messages.db"
 	}
 	var err error
-	MyDeviceID, err = ReadMyDeviceId("/config", "", "deviceid")
+	MyDeviceID, err = ReadMyDeviceId()
 	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 	if err != nil {
 		fmt.Printf("error read device %v\n", err)
@@ -275,6 +276,14 @@ func main() {
 
 	WaitForConfigFile(storeMountPoint, "", "config.json")
 	err = ReadCompleteSiteFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
+	var nilerr error
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+	MySite.UserID, _ = strconv.ParseInt(os.Getenv("USERID"), 10, 64)
+	d := EdgeDevice{DeviceID: MyDeviceID}
+	MyDevice = &d
 
 	fmt.Printf("MySite = %v", MySite)
 	fmt.Printf("stageSchedule = %v", stageSchedule)

@@ -63,6 +63,12 @@ func StartEzo(once_only bool) {
 
 var lastPh = float64(0.0)
 
+var calibrationAdjustment = 0.0
+
+func applyCalibration(raw float64) (calibrated float64) {
+	return (raw + calibrationAdjustment)
+}
+
 func ReadPh(once_only bool) error {
 	ezoDriver := NewAtlasEZODriver(raspi.NewAdaptor())
 	err := ezoDriver.Start()
@@ -81,6 +87,8 @@ func ReadPh(once_only bool) error {
 			e = err
 			break
 		} else {
+
+			ph = applyCalibration(ph)
 			direction := ""
 			if ph > lastPh {
 				direction = "up"

@@ -51,7 +51,7 @@ func TestReadMyDeviceId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotId, err := ReadMyDeviceId(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName)
+			gotId, err := ReadMyDeviceId()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReadMyDeviceId() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -88,7 +88,7 @@ func TestReadServerHostname(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHostname, err := ReadMyServerHostname(tt.args.storeMountPoint, tt.args.relativePath, tt.args.fileName)
+			gotHostname, err := ReadMyAPIServerHostname()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReadMyDeviceId() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -96,16 +96,16 @@ func TestGetSequence(t *testing.T) {
 }
 
 func nextGlobalMisConfig() {
-	if MySite.ControllerAPIPort == 3003 && MySite.ControllerHostName == "localhost" && MySite.UserID == 90000009 {
+	if MySite.ControllerAPIPort == 3003 && MySite.ControllerAPIHostName == "localhost" && MySite.UserID == 90000009 {
 		MySite.ControllerAPIPort = 0
 	} else {
 		if MySite.ControllerAPIPort == 0 {
 			MySite.ControllerAPIPort = 3003
-			MySite.ControllerHostName = "localhost"
+			MySite.ControllerAPIHostName = "localhost"
 			MySite.UserID = -1
 		} else {
 			MySite.ControllerAPIPort = 3003
-			MySite.ControllerHostName = "blahblah"
+			MySite.ControllerAPIHostName = "blahblah"
 			MySite.UserID = 90000009
 		}
 	}
@@ -113,7 +113,7 @@ func nextGlobalMisConfig() {
 
 func Test_getConfigFromServer(t *testing.T) {
 	MySite.ControllerAPIPort = 3003
-	MySite.ControllerHostName = "localhost"
+	MySite.ControllerAPIHostName = "localhost"
 	MySite.UserID = 90000009
 	MyDevice = &EdgeDevice{DeviceID: int64(70000008)}
 

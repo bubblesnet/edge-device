@@ -32,9 +32,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/log"
+	//	_type "google.golang.org/genproto/googleapis/identity/accesscontextmanager/type"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -43,12 +45,14 @@ import (
 // Site is the Top-level object in the data hierarchy.  A site is identified by the user/owner
 // and contains multiple stations.
 type Site struct {
-	SiteID             int64     `json:"siteid"`
-	UserID             int64     `json:"userid"`
-	ControllerHostName string    `json:"controller_hostname"`
-	ControllerAPIPort  int       `json:"controller_api_port"`
-	LogLevel           string    `json:"log_level,omitempty"`
-	Stations           []Station `json:"stations,omitempty"`
+	SiteID                     int64     `json:"siteid"`
+	UserID                     int64     `json:"userid"`
+	ControllerAPIHostName      string    // Removed json because hosts come from env. `json:"controller_hostname"`
+	ControllerActiveMQHostName string    // Removed json because hosts come from env. `json:"controller_activemq_hostname"`
+	ControllerAPIPort          int       // Removed json because hosts come from env. `json:"controller_api_port"`
+	ControllerActiveMQPort     int       // Removed json because hosts come from env. `json:"controller_activemq_port"`
+	LogLevel                   string    `json:"log_level,omitempty"`
+	Stations                   []Station `json:"stations,omitempty"`
 }
 
 // AutomationSettings is the set of automation parameters that belong to this station.
@@ -194,32 +198,16 @@ type ACOutlet struct {
 }
 
 // ReadMyDeviceId reads the deviceid of this device from the config directory
-func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string) (id int64, err error) {
-	log.Debug("ReadMyDeviceId")
-	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
-	if relativePath == "" {
-		fullpath = storeMountPoint + "/" + fileName
-	}
-	fmt.Printf("readConfig from %s\n", fullpath)
-	file, _ := ioutil.ReadFile(fullpath)
-	idstring := strings.TrimSpace(string(file))
-
-	id, err = strconv.ParseInt(idstring, 10, 64)
-	return id, err
+func ReadMyDeviceId() (id int64, err error) {
+	retval, _ := strconv.ParseInt(os.Getenv("DEVICEID"), 10, 64)
+	log.Infof("ReadMyDeviceId returning %d", retval)
+	return retval, nil
 }
 
-// ReadMyServerHostname reads the name/ip of the server from the config directory
-func ReadMyServerHostname(storeMountPoint string, relativePath string, fileName string) (serverHostname string, err error) {
-	log.Debug("ReadMyServerHostname")
-	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
-	if relativePath == "" {
-		fullpath = storeMountPoint + "/" + fileName
-	}
-	fmt.Printf("ReadMyServerHostname from %s\n", fullpath)
-	file, _ := ioutil.ReadFile(fullpath)
-	serverHostname = strings.TrimSpace(string(file))
-
-	return serverHostname, err
+// ReadMyAPIServerHostname reads the name/ip of the server from the config directory
+func ReadMyAPIServerHostname() (serverHostname string, err error) {
+	log.Debug("ReadMyAPIServerHostname")
+	return os.Getenv("API_HOST"), nil
 }
 
 // ReadCompleteSiteFromPersistentStore reads a complete site configuration from the specified mount-point/relativePath/fileName
@@ -277,6 +265,13 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 // setMyStationAndMyDevice sets the globally accessible vars MyStation and MyDevice from a full
 // site configuration.  Convenience function to keep from accessing site every time
 func setMyStationAndMyDevice(site Site) (success bool) {
+	var nilerr error
+
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+
 	//	fmt.Printf("data = %#v\n", *site)
 	found := false
 	//	fmt.Printf("searching %d stations\n", len(site.Stations))
@@ -360,12 +355,12 @@ func ValidateConfigurable() (err error) {
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		return errors.New("bad global MySite")
 	}
-	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf("ValidateConfigurable MySite.ControllerHostName context %s should be %T, is %T value %s length %d\n",
-			"MySite.ControllerHostName", t, MySite.ControllerHostName, t, len(t))
-		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
+	if t, ok := interface{}(MySite.ControllerAPIHostName).(string); ok == false || len(t) == 0 {
+		fmt.Printf("ValidateConfigurable MySite.ControllerAPIHostName context %s should be %T, is %T value %s length %d\n",
+			"MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName, t, len(t))
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName)
 		fmt.Printf("\n\n%#v\n\n", MySite)
-		return errors.New("bad global MySite.ControllerHostName")
+		return errors.New("bad global MySite.ControllerAPIHostName")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigurable MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
@@ -388,6 +383,13 @@ func ValidateConfigurable() (err error) {
 // ValidateConfigured checks that the configuration is present and implements all interfaces and that all checkable
 // values are within limits.
 func ValidateConfigured(situation string) (err error) {
+	var nilerr error
+
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %#v", err)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
@@ -421,22 +423,22 @@ func ValidateConfigured(situation string) (err error) {
 		}
 		return errors.New("<0 MySite.UserID")
 	}
-	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf("ValidateConfigured (%s) MySite.ControllerHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
-		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
+	if t, ok := interface{}(MySite.ControllerAPIHostName).(string); ok == false || len(t) == 0 {
+		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName, t)
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		if situation != "test" {
 			time.Sleep(60 * time.Second)
 		}
-		return errors.New("nil or wrong type MySite.ControllerHostName")
+		return errors.New("nil or wrong type MySite.ControllerAPIHostName")
 	}
-	if MySite.ControllerHostName == "localhost" {
-		fmt.Printf("MySite.ControllerHostName cannot be localhost\n")
+	if MySite.ControllerAPIHostName == "localhost" {
+		fmt.Printf("MySite.ControllerAPIHostName cannot be localhost\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		if situation != "test" {
 			time.Sleep(60 * time.Second)
 		}
-		return errors.New("MySite.ControllerHostName cannot be localhost")
+		return errors.New("MySite.ControllerAPIHostName cannot be localhost")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", situation, "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
@@ -547,6 +549,12 @@ func ValidateConfigured(situation string) (err error) {
 // directory.
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	fmt.Printf("\n\nGetConfigFromServer\n")
+	var nilerr error
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+
 	if err = ValidateConfigurable(); err != nil {
 		log.Errorf("GetConfigFromServer error %#v", err)
 		return err
@@ -564,7 +572,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return errors.New("bad global")
 	}
 
-	url := fmt.Sprintf("http://%s:%d/api/config/site/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDevice.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/config/site/%8.8d/%8.8d", MySite.ControllerAPIHostName, MySite.ControllerAPIPort, MySite.UserID, MyDevice.DeviceID)
 	fmt.Printf("Sending to %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
