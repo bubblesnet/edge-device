@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
 package globals
 
 import (
@@ -61,7 +84,6 @@ func TestGetSequence(t *testing.T) {
 		name string
 		want int32
 	}{
-		// TODO: Add test cases.
 		{name: "happy", want: 1},
 	}
 	for _, tt := range tests {
@@ -74,16 +96,16 @@ func TestGetSequence(t *testing.T) {
 }
 
 func nextGlobalMisConfig() {
-	if MySite.ControllerAPIPort == 3003 && MySite.ControllerHostName == "localhost" && MySite.UserID == 90000009 {
+	if MySite.ControllerAPIPort == 3003 && MySite.ControllerAPIHostName == "localhost" && MySite.UserID == 90000009 {
 		MySite.ControllerAPIPort = 0
 	} else {
 		if MySite.ControllerAPIPort == 0 {
 			MySite.ControllerAPIPort = 3003
-			MySite.ControllerHostName = "localhost"
+			MySite.ControllerAPIHostName = "localhost"
 			MySite.UserID = -1
 		} else {
 			MySite.ControllerAPIPort = 3003
-			MySite.ControllerHostName = "blahblah"
+			MySite.ControllerAPIHostName = "blahblah"
 			MySite.UserID = 90000009
 		}
 	}
@@ -91,7 +113,7 @@ func nextGlobalMisConfig() {
 
 func Test_getConfigFromServer(t *testing.T) {
 	MySite.ControllerAPIPort = 3003
-	MySite.ControllerHostName = "localhost"
+	MySite.ControllerAPIHostName = "localhost"
 	MySite.UserID = 90000009
 	MyDevice = &EdgeDevice{DeviceID: int64(70000008)}
 
@@ -171,7 +193,6 @@ func TestReportDeviceFailed(t *testing.T) {
 		name string
 		args args
 	}{
-		// TODO: Add test cases.
 		{name: "happy", args: args{devicename: "testdevice"}},
 		{name: "devicefailed", args: args{devicename: "testdevice"}},
 	}

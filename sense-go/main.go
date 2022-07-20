@@ -1,4 +1,30 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package main
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -18,6 +44,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -197,19 +224,19 @@ func findSchedule(StageName string) (stageSchedule globals.StageSchedule) {
 }
 func listenForCommands(isUnitTest bool) (err error) {
 	topicName := fmt.Sprintf("/topic/%8.8d/%8.8d", globals.MySite.UserID, globals.MyDevice.DeviceID)
-	hostPort := fmt.Sprintf("%s:%d", globals.MySite.ControllerHostName, 61613)
+	hostPort := fmt.Sprintf("%s:%d", globals.MySite.ControllerAPIHostName, globals.MySite.ControllerActiveMQPort)
 	log.Infof("listenForCommands at %s topic %s", hostPort, topicName)
 
 	var options func(*stomp.Conn) error = func(*stomp.Conn) error {
 		stomp.ConnOpt.Login("userid", "userpassword")
-		stomp.ConnOpt.Host(globals.MySite.ControllerHostName)
+		stomp.ConnOpt.Host(globals.MySite.ControllerAPIHostName)
 		stomp.ConnOpt.RcvReceiptTimeout(30 * time.Second)
 		stomp.ConnOpt.HeartBeat(60*time.Second, 60*time.Second) // I put this but seems no impact
 		return nil
 	}
 
 	for j := 0; ; j++ {
-		log.Debugf("stomp.Dial %s at %d - if this is the last message you see, open the firewall port 61613 on ActiveMQ host", hostPort, getNowMillis())
+		log.Debugf("stomp.Dial %s at %d - if this is the last message you see, open the firewall port %d on ActiveMQ host", hostPort, getNowMillis(), globals.MySite.ControllerActiveMQPort)
 		stompConn, err := stomp.Dial("tcp", hostPort, options)
 		if err != nil {
 			log.Errorf("listenForCommands dial error %#v", err)
@@ -430,18 +457,20 @@ func initGlobals(testing bool) {
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
 	var err error
-	globals.MyDeviceID, err = globals.ReadMyDeviceId(globals.PersistentStoreMountPoint, "", "deviceid")
+	globals.MyDeviceID, err = globals.ReadMyDeviceId()
 	if err != nil {
 		fmt.Printf("error read device %#v\n", err)
 		return
 	}
-	globals.MySite.ControllerHostName, err = globals.ReadMyServerHostname(globals.PersistentStoreMountPoint, "", "hostname")
+	globals.MySite.ControllerAPIHostName, err = globals.ReadMyAPIServerHostname()
 	if err != nil {
 		fmt.Printf("error read serverHostname %#v\n", err)
 		return
 	}
+	globals.MySite.ControllerActiveMQHostName = globals.MySite.ControllerAPIHostName /// TODO fix this hack - pass host through from env
+
 	// Read the configuration file
-	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerHostName)
+	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerAPIHostName)
 	readConfigFromDisk()
 	// Get a NEW config file from server and save to disk
 	if err := globals.GetConfigFromServer(globals.PersistentStoreMountPoint, "", "config.json"); err != nil {
@@ -478,21 +507,31 @@ func initGlobals(testing bool) {
 func readConfigFromDisk() {
 	if err := globals.ReadCompleteSiteFromPersistentStore(globals.PersistentStoreMountPoint, "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
 		fmt.Printf("ReadCompleteSiteFromPersistentStore failed - using default config\n")
-		//		globals.MySite.ControllerHostName = serverHostname
-		globals.MySite.ControllerAPIPort = 3003
-		nodeEnv := os.Getenv("NODE_ENV")
-		switch nodeEnv {
-		case "PRODUCTION":
-			globals.MySite.ControllerAPIPort = 3001
-			break
-		case "DEV":
-			globals.MySite.ControllerAPIPort = 3003
-			break
-		case "TEST":
-			globals.MySite.ControllerAPIPort = 3002
-			break
-		}
-		globals.MySite.UserID = 90000009
+		//		globals.MySite.ControllerAPIHostName = serverHostname
+		//		globals.MySite.ControllerAPIPort = 3003
+		//		nodeEnv := os.Getenv("NODE_ENV")
+		/*
+			switch nodeEnv {
+			case "PRODUCTION":
+				globals.MySite.ControllerAPIPort = 3001
+				globals.MySite.ControllerActiveMQPort = 61611
+				break
+			case "DEV":
+				globals.MySite.ControllerAPIPort = 3003
+				globals.MySite.ControllerActiveMQPort = 61613
+				break
+			case "TEST":
+				globals.MySite.ControllerAPIPort = 3002
+				globals.MySite.ControllerActiveMQPort = 61612
+				break
+			}
+		*/
+		var nilerr error
+		globals.MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+		globals.MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+		globals.MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+		globals.MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+		globals.MySite.UserID, _ = strconv.ParseInt(os.Getenv("USERID"), 10, 64)
 		d := globals.EdgeDevice{DeviceID: globals.MyDeviceID}
 		globals.MyDevice = &d
 		//		fmt.Printf("\ngetconfigfromserver config = %#v\n\n", globals.MySite)
@@ -560,7 +599,7 @@ func startGoRoutines(onceOnly bool) {
 
 		go gonewire.ReadOneWire()
 	} else {
-		log.Warnf("Water Temperature (DS18B20) not configured for this device - skipping water level")
+		log.Warnf("Water Temperature (DS18B20) not configured for this device - skipping water temperature")
 	}
 
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
@@ -581,7 +620,7 @@ func startGoRoutines(onceOnly bool) {
 			}
 		}()
 	} else {
-		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
+		log.Warnf("WaterLevelSensor (ads1115) not configured for this device - skipping A to D conversion (water level ...) because globals.MyStation.WaterLevelSensor == %#v", globals.MyStation.WaterLevelSensor)
 	}
 	log.Info("root ph")
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.RootPhSensor, "ezoph") {

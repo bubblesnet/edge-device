@@ -1,7 +1,33 @@
 //go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package a2dconverter
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -13,23 +39,8 @@ import (
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
 	"golang.org/x/net/context"
-	//	"google.golang.org/grpc"
 	"time"
 )
-
-/*
-type ADCSensorMessage struct {
-	ContainerName string `json:"container_name"`
-	ExecutableVersion string `json:"executable_version"`
-	MessageType string `json:"message_type"`
-	ModuleName string `json:"sensor_name"`
-	ChannelNumber int `json:"channel_number,omitempty"`
-	Voltage float64 `json:"value,omitempty"`
-	Units string	`json:"units"`
-	Gain    int	`json:"gain,omitempty"`
-	Rate    int	`json:"rate,omitempty"`
-}
-*/
 
 const WaterLevelChannelIndex = 1
 
@@ -45,8 +56,6 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 	adcMessage.BusId = config.bus_id
 	for channel := 0; channel < 4; channel++ {
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
-
-		//		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, 860)
 		if err == nil {
 			log.Debugf("Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 

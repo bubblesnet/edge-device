@@ -5,7 +5,6 @@ RUN apt-get install -y vim
 
 COPY ca-certificates.crt /etc/ssl/certs/
 COPY build/sense-go /go/bin
-COPY build/gonewire /go/bin
 # ADD config.json /go
 
 RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/sense-go; ls -la /go/bin'

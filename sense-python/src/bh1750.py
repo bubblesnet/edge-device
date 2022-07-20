@@ -1,4 +1,8 @@
-#!/usr/bin/python
+# This is how I found this code and a second look produced
+# no further license or copyright information so I present
+# the code below as-found.
+#
+#
 # ---------------------------------------------------------------------
 #    ___  ___  _ ____
 #   / _ \/ _ \(_) __/__  __ __
@@ -19,6 +23,8 @@
 import smbus2
 import time
 import logging
+
+
 
 # Define some constants from the datasheet
 

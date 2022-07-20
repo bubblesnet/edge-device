@@ -1,7 +1,33 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 ///go:generate protoc -I ../bubblesgrpc --go_out=plugins=grpc:../bubblesgrpc ../bubblesgrpc/bubblesgrpc.proto
 
 // Package main implements a server for SensorStoreAndForward service.
 package main
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
@@ -17,6 +43,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -196,7 +223,7 @@ func postIt(message []byte) (err error) {
 			log.Infof("non-measurement message %s", string(message))
 		}
 	}
-	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerAPIHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
 	//	log.Infof("Sending to %s", url)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(message))
 	if err != nil {
@@ -240,7 +267,7 @@ func main() {
 		databaseFilename = "./messages.db"
 	}
 	var err error
-	MyDeviceID, err = ReadMyDeviceId("/config", "", "deviceid")
+	MyDeviceID, err = ReadMyDeviceId()
 	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 	if err != nil {
 		fmt.Printf("error read device %v\n", err)
@@ -249,6 +276,14 @@ func main() {
 
 	WaitForConfigFile(storeMountPoint, "", "config.json")
 	err = ReadCompleteSiteFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
+	var nilerr error
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+	MySite.UserID, _ = strconv.ParseInt(os.Getenv("USERID"), 10, 64)
+	d := EdgeDevice{DeviceID: MyDeviceID}
+	MyDevice = &d
 
 	fmt.Printf("MySite = %v", MySite)
 	fmt.Printf("stageSchedule = %v", stageSchedule)
@@ -260,16 +295,6 @@ func main() {
 	go func() {
 		_ = forwardMessages(messageBucketName, false)
 	}()
-	/*	go func() {
-			_ = forwardMessages(stateBucketName, false)
-		}()
-		go func() {
-			_ = saveStateDaemon(stateBucketName, false)
-		}()
-
-	*/
-
-	//	go StartApiServer()
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
