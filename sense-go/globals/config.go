@@ -83,42 +83,44 @@ type AutomationSettings struct {
 // structure for one or more plants.
 type Station struct {
 	StationID              int64              `json:"stationid"`
-	AutomaticControl       bool               `json:"automatic_control,omitempty"`
-	HeightSensor           bool               `json:"height_sensor,omitempty"`
-	Humidifier             bool               `json:"humidifier,omitempty"`
-	HumiditySensor         bool               `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool               `json:"humidity_sensor_external,omitempty"`
-	Heater                 bool               `json:"heater,omitempty"`
-	WaterHeater            bool               `json:"water_heater,omitempty"`
-	ThermometerTop         bool               `json:"thermometer_top,omitempty"`
-	ThermometerMiddle      bool               `json:"thermometer_middle,omitempty"`
-	ThermometerBottom      bool               `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal    bool               `json:"thermometer_external,omitempty"`
-	ThermometerWater       bool               `json:"thermometer_water,omitempty"`
-	WaterPump              bool               `json:"waterPump,omitempty"`
-	AirPump                bool               `json:"airPump,omitempty"`
-	LightSensorInternal    bool               `json:"light_sensor_internal,omitempty"`
-	LightSensorExternal    bool               `json:"light_sensor_external,omitempty"`
-	StationDoorSensor      bool               `json:"station_door_sensor,omitempty"`
-	OuterDoorSensor        bool               `json:"outer_door_sensor,omitempty"`
-	MovementSensor         bool               `json:"movement_sensor,omitempty"`
-	PressureSensor         bool               `json:"pressure_sensors,omitempty"`
-	RootPhSensor           bool               `json:"root_ph_sensor,omitempty"`
+	AutomaticControl       bool               `json:"automatic_control"`
+	HeightSensor           bool               `json:"height_sensor"`
+	Humidifier             bool               `json:"humidifier"`
+	HumiditySensor         bool               `json:"humidity_sensor_internal"`
+	ExternalHumiditySensor bool               `json:"humidity_sensor_external"`
+	Heater                 bool               `json:"heater"`
+	WaterHeater            bool               `json:"water_heater"`
+	ThermometerTop         bool               `json:"thermometer_top"`
+	ThermometerMiddle      bool               `json:"thermometer_middle"`
+	ThermometerBottom      bool               `json:"thermometer_bottom"`
+	ThermometerExternal    bool               `json:"thermometer_external"`
+	ThermometerWater       bool               `json:"thermometer_water"`
+	WaterPump              bool               `json:"waterPump"`
+	AirPump                bool               `json:"airPump"`
+	LightSensorInternal    bool               `json:"light_sensor_internal"`
+	LightSensorExternal    bool               `json:"light_sensor_external"`
+	StationDoorSensor      bool               `json:"station_door_sensor"`
+	OuterDoorSensor        bool               `json:"outer_door_sensor"`
+	MovementSensor         bool               `json:"movement_sensor"`
+	PressureSensor         bool               `json:"pressure_sensors"`
+	RootPhSensor           bool               `json:"root_ph_sensor"`
 	EnclosureType          string             `json:"enclosure_type,omitempty"`
-	WaterLevelSensor       bool               `json:"water_level_sensor,omitempty"`
-	IntakeFan              bool               `json:"intakeFan,omitempty"`
-	ExhaustFan             bool               `json:"exhaustFan,omitempty"`
-	HeatLamp               bool               `json:"heatLamp,omitempty"`
-	HeatingPad             bool               `json:"heatingPad,omitempty"`
-	LightBloom             bool               `json:"lightBloom,omitempty"`
-	LightVegetative        bool               `json:"lightVegetative,omitempty"`
-	LightGerminate         bool               `json:"lightGerminate,omitempty"`
-	Relay                  bool               `json:"relay,omitempty,omitempty"`
+	WaterLevelSensor       bool               `json:"water_level_sensor"`
+	IntakeFan              bool               `json:"intakeFan"`
+	ExhaustFan             bool               `json:"exhaustFan"`
+	HeatLamp               bool               `json:"heatLamp"`
+	HeatingPad             bool               `json:"heatingPad"`
+	LightBloom             bool               `json:"lightBloom"`
+	LightVegetative        bool               `json:"lightVegetative"`
+	LightGerminate         bool               `json:"lightGerminate"`
+	Relay                  bool               `json:"relay"`
 	EdgeDevices            []EdgeDevice       `json:"edge_devices,omitempty"`
 	StageSchedules         []StageSchedule    `json:"stage_schedules,omitempty"`
 	TamperSpec             Tamper             `json:"tamper,omitempty"`
 	Automation             AutomationSettings `json:"automation_settings"`
 	CurrentStage           string             `json:"current_stage"`
+	VOCSensor              bool               `json:"voc_sensor"`
+	CO2Sensor              bool               `json:"co2_sensor"`
 }
 
 // EdgeDevice is a single-board-computer that, with the other
@@ -282,6 +284,7 @@ func setMyStationAndMyDevice(site Site) (success bool) {
 			if MyDeviceID == site.Stations[stationIndex].EdgeDevices[deviceIndex].DeviceID {
 				//				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 				MyStation = &site.Stations[stationIndex]
+				log.Infof("MyStation is %#v", MyStation)
 				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
 				found = true
 				return true
@@ -589,24 +592,27 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	}
 
 	fmt.Printf("\n\nconfig response from server %s\n\n\n", string(body))
-
+	// body is good here
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %#v\n", err)
 		return errors.New("err on site")
 	}
+	fmt.Printf("newconfig = %+v\n\n", newconfig)
 
 	if newconfig.Stations == nil {
 		fmt.Printf("No stations\n")
 		log.Fatalf("stations is nil!!!")
 	}
 	MySite.Stations = newconfig.Stations
+	fmt.Printf("before setMyStation %+v", MySite)
 
 	success := setMyStationAndMyDevice(MySite)
 	if !success {
 		fmt.Printf("No station\n")
 		return errors.New("NO station!!")
 	}
+	fmt.Printf("after setMyStation %+v", MySite)
 	//	js, _ := json.Marshal(MySite)
 	//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
 	if err = ValidateConfigured("getConfigFromServer"); err != nil {
@@ -619,9 +625,9 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 }
 
 func WriteConfig(storeMountPoint string, relativePath string, fileName string) (err error) {
-	log.Infof("WriteConfig stage now %s", MySite.Stations[0].CurrentStage)
+	fmt.Printf("WriteConfig MySite %+v\n\n", MySite)
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
-
+	fmt.Printf("\n\nWriteConfig sighx siteBytes %s\n\n", string(siteBytes[:]))
 	if err != nil {
 		log.Errorf("error marshalling MySite %#v", err)
 		return err
@@ -637,6 +643,6 @@ func WriteConfig(storeMountPoint string, relativePath string, fileName string) (
 		return err
 	}
 
-	fmt.Printf("received site\n\n")
+	fmt.Printf("WriteConfig wrote config\n\n")
 	return nil
 }

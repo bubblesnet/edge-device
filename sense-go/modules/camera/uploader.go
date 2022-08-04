@@ -43,8 +43,8 @@ import (
 	"strings"
 )
 
-func SendPictureTakenEvent() {
-	dm := messaging.NewPictureTakenMessage()
+func SendPictureTakenEvent(PictureFilename string, PictureDatetimeMillis int64) {
+	dm := messaging.NewPictureTakenMessage(PictureFilename, PictureDatetimeMillis)
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "picture", Data: string(bytearray)}
 	_, err = globals.Client.StoreAndForward(context.Background(), &message)
@@ -66,7 +66,7 @@ func uploadFile(name string) (err error) {
 	}
 	url := fmt.Sprintf("http://%s:%d/api/video/%8.8d/%8.8d/upload", globals.MySite.ControllerAPIHostName,
 		globals.MySite.ControllerAPIPort, globals.MySite.UserID, globals.MyDevice.DeviceID)
-	//	log.Debugf("Uploading to api at %s", url)
+	log.Infof("Uploading to api at %s", url)
 	request, err := newfileUploadRequest(url, extraParams, "filename", name)
 	if err != nil {
 		log.Errorf("uploadFile 1 fatal %#v", err)

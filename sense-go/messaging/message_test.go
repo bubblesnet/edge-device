@@ -286,7 +286,7 @@ func TestNewPictureTakenMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testmsg.EventTimestamp = getNowMillis()
-			if gotPmsg := NewPictureTakenMessage(); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+			if gotPmsg := NewPictureTakenMessage("blah.jpg", 0); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				t.Errorf("NewPictureTakenMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
 			}
 		})

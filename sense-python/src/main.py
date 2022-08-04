@@ -355,14 +355,38 @@ def append_axl345_data(msg):
     msg['value'] = False
 
 
+def any_thermometers_enabled(my_station) :
+    if my_station['thermometer_top']:
+        return True
+    if my_station['thermometer_middle']:
+        return True
+    if my_station['thermometer_bottom']:
+        return True
+    if my_station['thermometer_external']:
+        return True
+    return False
+
+def any_humidity_enabled(my_station) :
+    if my_station['humidity_sensor_internal']:
+        return True
+    if my_station['humidity_sensor_external']:
+        return True
+    return False
+
+def any_pressure( my_station ) :
+    if my_station['pressure_sensors']:
+        return True
+    return False
+
 def report_polled_sensor_parameters(i2cbus):
     global my_site
+    global my_station
     global light_sensor_name
     global light_measurement_name
 
-    #    logging.debug("reportPolledSensorParameters")
+    logging.debug("reportPolledSensorParameters")
 
-    if is_our_device('bh1750'):
+    if is_our_device('bh1750') and (my_station['light_sensor_internal'] or my_station['light_sensor_external']):
         module = get_our_device('bh1750')
         msg = {
             'message_type': 'measurement'
@@ -375,7 +399,7 @@ def report_polled_sensor_parameters(i2cbus):
         except Exception as ee:
             logging.error(ee)
 
-    if is_our_device('bmp280'):
+    if is_our_device('bmp280') and (any_thermometers_enabled(my_station) or any_humidity_enabled(my_station) or any_pressure(my_station)):
         module = get_our_device('bmp280')
 
         logging.info("found a bmp280 - no humidity!")
@@ -387,7 +411,7 @@ def report_polled_sensor_parameters(i2cbus):
         append_bme280_pressure(i2cbus, msg, pressure_sensor_name, pressure_measurement_name, int(module['address'],0))
         send_message(msg)
 
-    if is_our_device('bme280'):
+    if is_our_device('bme280') and (any_thermometers_enabled(my_station) or any_humidity_enabled(my_station) or any_pressure(my_station)):
         module = get_our_device('bme280')
         msg = {'message_type': 'measurement'}
         append_bme280_temp(i2cbus, msg, temperature_sensor_name, temperature_measurement_name, int(module['address'],0))
@@ -406,7 +430,7 @@ def report_polled_sensor_parameters(i2cbus):
         append_adc_data(msg)
         send_message(msg)
 
-    if is_our_device('adxl345'):
+    if is_our_device('adxl345') and my_station['movement_sensor']:
         msg = {'message_type': 'measurement'}
         append_axl345_data(msg)
         send_message(msg)

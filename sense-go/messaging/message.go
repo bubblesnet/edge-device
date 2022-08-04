@@ -73,6 +73,70 @@ type GenericSensorMessage struct {
 	Direction         string  `json:"direction"`
 }
 
+type VOCSensorMessage struct {
+	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
+	ContainerName     string  `json:"container_name"`
+	ExecutableVersion string  `json:"executable_version"`
+	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
+	MessageType       string  `json:"message_type"`
+	SensorName        string  `json:"sensor_name"`
+	MeasurementName   string  `json:"measurement_name"`
+	Value             float64 `json:"value,omitempty"`
+	FloatValue        float64 `json:"floatvalue,omitempty"`
+	Units             string  `json:"units"`
+	Direction         string  `json:"direction"`
+}
+
+type CCS811CurrentMessage struct {
+	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
+	ContainerName     string  `json:"container_name"`
+	ExecutableVersion string  `json:"executable_version"`
+	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
+	MessageType       string  `json:"message_type"`
+	SensorName        string  `json:"sensor_name"`
+	MeasurementName   string  `json:"measurement_name"`
+	Value             float64 `json:"value,omitempty"`
+	FloatValue        float64 `json:"floatvalue,omitempty"`
+	Units             string  `json:"units"`
+	Direction         string  `json:"direction"`
+}
+
+type CCS811VoltageMessage struct {
+	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
+	ContainerName     string  `json:"container_name"`
+	ExecutableVersion string  `json:"executable_version"`
+	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
+	MessageType       string  `json:"message_type"`
+	SensorName        string  `json:"sensor_name"`
+	MeasurementName   string  `json:"measurement_name"`
+	Value             float64 `json:"value,omitempty"`
+	FloatValue        float64 `json:"floatvalue,omitempty"`
+	Units             string  `json:"units"`
+	Direction         string  `json:"direction"`
+}
+
+type CO2SensorMessage struct {
+	DeviceId          int64   `json:"deviceid"`
+	StationId         int64   `json:"stationid"`
+	SiteId            int64   `json:"siteid"`
+	ContainerName     string  `json:"container_name"`
+	ExecutableVersion string  `json:"executable_version"`
+	SampleTimestamp   int64   `json:"sample_timestamp,omitempty"`
+	MessageType       string  `json:"message_type"`
+	SensorName        string  `json:"sensor_name"`
+	MeasurementName   string  `json:"measurement_name"`
+	Value             float64 `json:"value,omitempty"`
+	FloatValue        float64 `json:"floatvalue,omitempty"`
+	Units             string  `json:"units"`
+	Direction         string  `json:"direction"`
+}
+
 type DistanceSensorMessage struct {
 	DeviceId          int64   `json:"deviceid"`
 	StationId         int64   `json:"stationid"`
@@ -139,13 +203,15 @@ type SwitchStatusChangeMessage struct {
 }
 
 type PictureTakenMessage struct {
-	DeviceId          int64  `json:"deviceid"`
-	StationId         int64  `json:"stationid"`
-	SiteId            int64  `json:"siteid"`
-	ContainerName     string `json:"container_name"`
-	ExecutableVersion string `json:"executable_version"`
-	EventTimestamp    int64  `json:"event_timestamp,omitempty"`
-	MessageType       string `json:"message_type"`
+	DeviceId              int64  `json:"deviceid"`
+	StationId             int64  `json:"stationid"`
+	SiteId                int64  `json:"siteid"`
+	ContainerName         string `json:"container_name"`
+	ExecutableVersion     string `json:"executable_version"`
+	EventTimestamp        int64  `json:"event_timestamp,omitempty"`
+	PictureFilename       string `json:"picture_filename"`
+	PictureDateTimeMillis int64  `json:"picture_datetime_millis"`
+	MessageType           string `json:"message_type"`
 }
 
 func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStatusChangeMessage) {
@@ -165,7 +231,7 @@ func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStat
 
 }
 
-func NewPictureTakenMessage() (pmsg *PictureTakenMessage) {
+func NewPictureTakenMessage(PictureFilename string, PictureDatetimeMillis int64) (pmsg *PictureTakenMessage) {
 	msg := PictureTakenMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -174,11 +240,99 @@ func NewPictureTakenMessage() (pmsg *PictureTakenMessage) {
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		EventTimestamp: getNowMillis(),
-		MessageType:    "picture_event",
+		EventTimestamp:        getNowMillis(),
+		MessageType:           "picture_event",
+		PictureFilename:       PictureFilename,
+		PictureDateTimeMillis: PictureDatetimeMillis,
 	}
 	return &msg
 
+}
+
+func NewVOCSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *VOCSensorMessage) {
+	msg := VOCSensorMessage{
+		DeviceId:        globals.MyDevice.DeviceID,
+		StationId:       globals.MyStation.StationID,
+		SiteId:          globals.MySite.SiteID,
+		ContainerName:   globals.ContainerName,
+		MeasurementName: measurement_name,
+		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
+			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
+			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+		SensorName:      sensor_name,
+		SampleTimestamp: getNowMillis(),
+		MessageType:     "measurement",
+		Value:           value,
+		FloatValue:      value,
+		Units:           units,
+		Direction:       direction,
+	}
+
+	return &msg
+}
+
+func NewCO2SensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *CO2SensorMessage) {
+	msg := CO2SensorMessage{
+		DeviceId:        globals.MyDevice.DeviceID,
+		StationId:       globals.MyStation.StationID,
+		SiteId:          globals.MySite.SiteID,
+		ContainerName:   globals.ContainerName,
+		MeasurementName: measurement_name,
+		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
+			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
+			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+		SensorName:      sensor_name,
+		SampleTimestamp: getNowMillis(),
+		MessageType:     "measurement",
+		Value:           value,
+		FloatValue:      value,
+		Units:           units,
+		Direction:       direction,
+	}
+
+	return &msg
+}
+
+func NewCCS811CurrentMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *CCS811CurrentMessage) {
+	msg := CCS811CurrentMessage{
+		DeviceId:        globals.MyDevice.DeviceID,
+		StationId:       globals.MyStation.StationID,
+		SiteId:          globals.MySite.SiteID,
+		ContainerName:   globals.ContainerName,
+		MeasurementName: measurement_name,
+		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
+			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
+			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+		SensorName:      sensor_name,
+		SampleTimestamp: getNowMillis(),
+		MessageType:     "measurement",
+		Value:           value,
+		FloatValue:      value,
+		Units:           units,
+		Direction:       direction,
+	}
+	return &msg
+}
+
+func NewCCS811VoltageMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *CCS811VoltageMessage) {
+	msg := CCS811VoltageMessage{
+		DeviceId:        globals.MyDevice.DeviceID,
+		StationId:       globals.MyStation.StationID,
+		SiteId:          globals.MySite.SiteID,
+		ContainerName:   globals.ContainerName,
+		MeasurementName: measurement_name,
+		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
+			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
+			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+		SensorName:      sensor_name,
+		SampleTimestamp: getNowMillis(),
+		MessageType:     "measurement",
+		Value:           value,
+		FloatValue:      value,
+		Units:           units,
+		Direction:       direction,
+	}
+	return &msg
 }
 
 func NewGenericSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *GenericSensorMessage) {

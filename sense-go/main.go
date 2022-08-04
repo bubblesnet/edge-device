@@ -32,6 +32,7 @@ import (
 	"bubblesnet/edge-device/sense-go/modules/a2dconverter"
 	"bubblesnet/edge-device/sense-go/modules/accelerometer"
 	"bubblesnet/edge-device/sense-go/modules/camera"
+	"bubblesnet/edge-device/sense-go/modules/co2vocmeter"
 	"bubblesnet/edge-device/sense-go/modules/distancesensor"
 	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
 	gonewire "bubblesnet/edge-device/sense-go/modules/onewire"
@@ -572,7 +573,10 @@ func setupPhMonitor() {
 }
 
 func countGoRoutines() (count int) {
-	numGoroutines := 6
+	numGoroutines := 7
+	if !(globals.MyStation.VOCSensor || globals.MyStation.CO2Sensor) {
+		numGoroutines--
+	}
 	if !globals.MyStation.MovementSensor {
 		numGoroutines--
 	}
@@ -594,9 +598,16 @@ func countGoRoutines() (count int) {
 
 func startGoRoutines(onceOnly bool) {
 	log.Info("startGoRoutines")
+
+	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.CO2Sensor, "ccs811") {
+		log.Info("automation: CO2 and VOC configured for this device, starting")
+		go co2vocmeter.ReadCO2VOC()
+	} else {
+		log.Warnf("CO2 and VOC  (CCS811) not configured for this device - skipping VOC/CO2")
+	}
+
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.ThermometerWater, "DS18B20") {
 		log.Info("automation: Water Temperature configured for this device, starting")
-
 		go gonewire.ReadOneWire()
 	} else {
 		log.Warnf("Water Temperature (DS18B20) not configured for this device - skipping water temperature")
@@ -604,7 +615,6 @@ func startGoRoutines(onceOnly bool) {
 
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.MovementSensor, "adxl345") {
 		log.Info("automation: MovementSensor configured for this device, starting")
-
 		go accelerometer.GetTamperDetectorService().RunTamperDetector(onceOnly)
 	} else {
 		log.Warnf("MovementSensor (adxl345) not configured for this device - skipping tamper detection")

@@ -18,7 +18,7 @@ A collection of containers that communicate via gRPC to get edge device data to 
 * ACTIVEMQ_HOST = the DNS name or IP address of the ActiveMQ instance (activemq container on the CONTROLLER). Used by containers sense-go, storeandforward
 * ACTIVEMQ_PORT = the port the ActiveMQ server is running on (typically 61611). Used by containers storeandforward
 * API_HOST = the DNS name or IP address of the API instance (api container on the CONTROLLER). Used by containers sense-go, storeandforward
-* API_PORT = the port the API server is running on (typically 3001). Used by containers sense-go, storeandforward
+* API_PORT = the port the API server is running on (typically 4001). Used by containers sense-go, storeandforward
 * DEVICEID = the unique ID of this device in the system (e.g. 70000007) from device table in database. Used by containers sense-go, sense-python, storeandforward
 * NODE_ENV = one of PRODUCTION, DEVELOPMENT, TEST, CI typically (PRODUCTION).  Used by container store-and-forward
 * USERID = the unique ID of the user who owns this system (e.g. 90000009) from user table in database. Used by containers sense-go, storeandforward
