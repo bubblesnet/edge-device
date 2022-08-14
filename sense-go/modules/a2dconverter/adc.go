@@ -206,7 +206,7 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			} else {
 				inches = etapeInchesFromVolts(adcMessage.ChannelValues[channelIndex].Voltage, slope, yintercept)
 			}
-			measurementValue = etapeInchesToGallons(12.5, 18.0, inches)
+			measurementValue = etapeInchesToGallons(12.5, 13.5, 1.0, inches)
 			log.Infof("sendTranslatedADCSensorMessages raw %f Volts, %s %f inches, %f %s", adcMessage.ChannelValues[channelIndex].Voltage, measurementName, inches, measurementValue, measurementUnits)
 
 			direction := ""

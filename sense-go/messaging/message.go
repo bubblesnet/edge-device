@@ -202,6 +202,18 @@ type SwitchStatusChangeMessage struct {
 	On                bool   `json:"on"`
 }
 
+type DispenserStatusChangeMessage struct {
+	DeviceId          int64  `json:"deviceid"`
+	StationId         int64  `json:"stationid"`
+	SiteId            int64  `json:"siteid"`
+	ContainerName     string `json:"container_name"`
+	ExecutableVersion string `json:"executable_version"`
+	EventTimestamp    int64  `json:"event_timestamp"`
+	MessageType       string `json:"message_type"`
+	DispenserName     string `json:"dispenser_name"`
+	On                bool   `json:"on"`
+}
+
 type PictureTakenMessage struct {
 	DeviceId              int64  `json:"deviceid"`
 	StationId             int64  `json:"stationid"`
@@ -226,6 +238,23 @@ func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStat
 		EventTimestamp: getNowMillis(),
 		MessageType:    "switch_event",
 		SwitchName:     switch_name,
+		On:             on}
+	return &msg
+
+}
+
+func NewDispenserStatusChangeMessage(dispenser_name string, on bool) (pmsg *DispenserStatusChangeMessage) {
+	msg := DispenserStatusChangeMessage{
+		DeviceId:      globals.MyDevice.DeviceID,
+		StationId:     globals.MyStation.StationID,
+		SiteId:        globals.MySite.SiteID,
+		ContainerName: globals.ContainerName,
+		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
+			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
+			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
+		EventTimestamp: getNowMillis(),
+		MessageType:    "dispenser_event",
+		DispenserName:  dispenser_name,
 		On:             on}
 	return &msg
 

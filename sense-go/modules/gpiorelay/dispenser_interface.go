@@ -30,19 +30,20 @@ import (
 	"time"
 )
 
-var PowerstripSvc PowerstripService = GetPowerstripService()
+var DispenserSvc DispenserService = GetDispenserService()
 
-type PowerstripService interface {
-	SendSwitchStatusChangeEvent(switch_name string, on bool, sequence int32)
-	InitRpioPins(MyDevice *globals.EdgeDevice, RunningOnUnsupportedHardware bool)
-	TurnAllOn(MyDevice *globals.EdgeDevice, timeout time.Duration)
-	TurnOffOutletByName(MyDevice *globals.EdgeDevice, name string, force bool) (stateChanged bool)
-	IsOutletOn(MyDevice *globals.EdgeDevice, name string) bool
-	TurnOnOutletByName(MyDevice *globals.EdgeDevice, name string, force bool) (stateChanged bool)
-	ReportAll(MyDevice *globals.EdgeDevice, timeout time.Duration)
-	TurnAllOff(MyDevice *globals.EdgeDevice, timeout time.Duration)
-	TurnOnOutletByIndex(index int)
-	TurnOffOutletByIndex(index int)
-	RunPinToggler(MyDevice *globals.EdgeDevice, isTest bool)
-	IsMySwitch(MyDevice *globals.EdgeDevice, switchName string) bool
+type DispenserService interface {
+	InitRpioPins(MyStation *globals.Station, MyDevice *globals.EdgeDevice, RunningOnUnsupportedHardware bool)
+	IsDispenserOn(MyStation *globals.Station, MyDevice *globals.EdgeDevice, dispenser_name string) bool
+	IsMyDispenser(MyStation *globals.Station, MyDevice *globals.EdgeDevice, dispenserName string) bool
+	ReportAll(MyStation *globals.Station, MyDevice *globals.EdgeDevice, timeout time.Duration)
+	SendDispenserStatusChangeEvent(dispenser_name string, on bool, sequence int32)
+	SetupDispenserGPIO(MyStation *globals.Station, MyDevice *globals.EdgeDevice)
+	StartDispensing(MyStation *globals.Station, MyDevice *globals.EdgeDevice) (err error)
+	TimedDispenseSynchronous(MyStation *globals.Station, MyDevice *globals.EdgeDevice, dispenserName string, milliseconds int32) (err error)
+	TurnAllOff(MyStation *globals.Station, MyDevice *globals.EdgeDevice, timeout time.Duration)
+	TurnOffDispenserByName(MyStation *globals.Station, MyDevice *globals.EdgeDevice, dispenser_name string, force bool) (stateChanged bool)
+	TurnOffDispenserByIndex(index int)
+	TurnOnDispenserByName(MyStation *globals.Station, MyDevice *globals.EdgeDevice, dispenser_name string, force bool) (stateChanged bool)
+	TurnOnDispenserByIndex(index int)
 }

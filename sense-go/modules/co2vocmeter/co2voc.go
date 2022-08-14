@@ -137,7 +137,7 @@ func ReadCO2VOC() {
 
 	opts := ccs811.Opts{
 		Addr:               0x5a,
-		MeasurementMode:    ccs811.MeasurementModeConstant1000,
+		MeasurementMode:    ccs811.MeasurementModeConstant250,
 		InterruptWhenReady: false,
 		UseThreshold:       false,
 	}
@@ -150,184 +150,192 @@ func ReadCO2VOC() {
 	}
 	log.Info("ccs811: i2creg.Open succeeded")
 
-	ccs, err := ccs811.New(bus, &opts)
-	if err != nil {
-		log.Errorf("ccs811: Couldn't get new ccs811 bus %#v, opts %#v, err %#v", bus, opts, err)
-		return
-	}
-	log.Info("ccs811: ccs811.New succeeded")
-
-	mode, err := ccs.GetMeasurementModeRegister()
-	if err != nil {
-		log.Errorf("ccs811: Couldn't get measurement mode register err %#v", err)
-		return
-	}
-	log.Info("ccs811: ccs.GetMeasurementModeRegister succeeded")
-
-	fwData, err := ccs.GetFirmwareData()
-	if err != nil {
-		log.Errorf("ccs811: Couldn't get firmware data err %#v", err)
-		return
-	}
-	log.Info("ccs811: ccs.GetFirmwareData succeeded")
-
-	log.Infof("ccs811: ========================================================================")
-	log.Infof("ccs811: Device Information:")
-	log.Infof("ccs811: ========================================================================")
-	log.Infof("ccs811: HW Model:     %s", ccs.String())
-	log.Infof("ccs811: HW Identifier: 0x%X", fwData.HWIdentifier)
-	log.Infof("ccs811: HW Version:    0x%X", fwData.HWVersion)
-	log.Infof("ccs811: Boot Version: %s", fwData.BootVersion)
-	log.Infof("ccs811: App Version:  %s", fwData.ApplicationVersion)
-	log.Infof("ccs811: Mode:          ")
-	switch mode.MeasurementMode {
-	case ccs811.MeasurementModeIdle:
-		log.Infof("ccs811: Idle, low power mode")
-		break
-	case ccs811.MeasurementModeConstant1000:
-		log.Infof("ccs811: Constant power mode, IAQ measurement every second")
-		break
-	case ccs811.MeasurementModePulse:
-		log.Infof("ccs811: Pulse heating mode IAQ measurement every 10 seconds")
-		break
-	case ccs811.MeasurementModeLowPower:
-		log.Infof("ccs811: Low power pulse heating mode IAQ measurement every 60 seconds")
-		break
-	case ccs811.MeasurementModeConstant250:
-		log.Infof("ccs811: Constant power mode, sensor measurement every 250ms")
-		break
-	default:
-		log.Infof("ccs811: Unknown")
-		break
-	}
-
-	count := 0
-	lowestBaseLine := loadBaseline()
-	lowestBaseLineConverted := binary.LittleEndian.Uint16(lowestBaseLine)
-
-	err = ccs.SetBaseline(lowestBaseLine)
-	checkErr(err)
-
-	var val = ccs811.SensorValues{}
-	err = ccs.Sense(&val)
-	checkErr(err)
-
-	err = ccs.SetBaseline(lowestBaseLine)
-	checkErr(err)
-
 	for {
-		status, err := ccs.ReadStatus()
+		ccs, err := ccs811.New(bus, &opts)
 		if err != nil {
-			log.Errorf("ccs811: status failed %#v", err)
-			time.Sleep(5 * time.Second)
-			continue
+			log.Errorf("ccs811: Couldn't get new ccs811 bus %#v, opts %#v, err %#v", bus, opts, err)
+			return
+		}
+		log.Info("ccs811: ccs811.New succeeded")
+
+		mode, err := ccs.GetMeasurementModeRegister()
+		if err != nil {
+			log.Errorf("ccs811: Couldn't get measurement mode register err %#v", err)
+			return
+		}
+		log.Info("ccs811: ccs.GetMeasurementModeRegister succeeded")
+
+		fwData, err := ccs.GetFirmwareData()
+		if err != nil {
+			log.Errorf("ccs811: Couldn't get firmware data err %#v", err)
+			return
+		}
+		log.Info("ccs811: ccs.GetFirmwareData succeeded")
+
+		log.Infof("ccs811: ========================================================================")
+		log.Infof("ccs811: Device Information:")
+		log.Infof("ccs811: ========================================================================")
+		log.Infof("ccs811: HW Model:     %s", ccs.String())
+		log.Infof("ccs811: HW Identifier: 0x%X", fwData.HWIdentifier)
+		log.Infof("ccs811: HW Version:    0x%X", fwData.HWVersion)
+		log.Infof("ccs811: Boot Version: %s", fwData.BootVersion)
+		log.Infof("ccs811: App Version:  %s", fwData.ApplicationVersion)
+		log.Infof("ccs811: Mode:          ")
+		switch mode.MeasurementMode {
+		case ccs811.MeasurementModeIdle:
+			log.Infof("ccs811: Idle, low power mode")
+			break
+		case ccs811.MeasurementModeConstant1000:
+			log.Infof("ccs811: Constant power mode, IAQ measurement every second")
+			break
+		case ccs811.MeasurementModePulse:
+			log.Infof("ccs811: Pulse heating mode IAQ measurement every 10 seconds")
+			break
+		case ccs811.MeasurementModeLowPower:
+			log.Infof("ccs811: Low power pulse heating mode IAQ measurement every 60 seconds")
+			break
+		case ccs811.MeasurementModeConstant250:
+			log.Infof("ccs811: Constant power mode, sensor measurement every 250ms")
+			break
+		default:
+			log.Infof("ccs811: Unknown")
+			break
 		}
 
-		reportStatus(status)
+		count := 0
+		lowestBaseLine := loadBaseline()
+		lowestBaseLineConverted := binary.LittleEndian.Uint16(lowestBaseLine)
 
-		if status&STATUS_MASK_DATAREADY == STATUS_MASK_DATAREADY {
-			var sensorValues = ccs811.SensorValues{}
-			err = ccs.Sense(&sensorValues)
+		err = ccs.SetBaseline(lowestBaseLine)
+		checkErr(err)
+
+		var val = ccs811.SensorValues{}
+		err = ccs.Sense(&val)
+		checkErr(err)
+
+		err = ccs.SetBaseline(lowestBaseLine)
+		checkErr(err)
+
+		for {
+			status, err := ccs.ReadStatus()
 			if err != nil {
-				log.Errorf("ccs811: Sense failed %+v", err)
+				log.Errorf("ccs811: status failed %#v", err)
 				time.Sleep(5 * time.Second)
 				continue
 			}
 
-			//			if sensorValues.Error != nil {
-			//				log.Errorf("ccs811: sensorvalues error %#v", sensorValues.Error)
-			//				time.Sleep(5 * time.Second)
-			//				continue
-			//			}
+			reportStatus(status)
 
-			baseline, err := ccs.GetBaseline()
-			checkErr(err)
+			if status&STATUS_MASK_DATAREADY == STATUS_MASK_DATAREADY {
+				var sensorValues = ccs811.SensorValues{}
+				err = ccs.Sense(&sensorValues)
+				if err != nil {
+					log.Errorf("ccs811: Sense failed %+v", err)
+					time.Sleep(5 * time.Second)
+					continue
+				}
 
-			baselineConverted := binary.LittleEndian.Uint16(baseline)
+				//			if sensorValues.Error != nil {
+				//				log.Errorf("ccs811: sensorvalues error %#v", sensorValues.Error)
+				//				time.Sleep(5 * time.Second)
+				//				continue
+				//			}
 
-			if baselineConverted < lowestBaseLineConverted {
-				lowestBaseLine = baseline
-				lowestBaseLineConverted = baselineConverted
-				saveBaseline(baseline)
-			}
+				baseline, err := ccs.GetBaseline()
+				checkErr(err)
 
-			log.Infof("ccs811: ECO2: %d ppm", sensorValues.ECO2)
-			log.Infof("ccs811: VOC: %d ppb", sensorValues.VOC)
-			log.Infof("ccs811: Current: %d", sensorValues.RawDataCurrent)
-			log.Infof("ccs811: Voltage: %d", sensorValues.RawDataVoltage)
-			//			fmt.Println("Baseline: ", baseline, baselineConverted)
+				baselineConverted := binary.LittleEndian.Uint16(baseline)
 
-			typeId := "sensor"
+				if baselineConverted < lowestBaseLineConverted {
+					lowestBaseLine = baseline
+					lowestBaseLineConverted = baselineConverted
+					saveBaseline(baseline)
+				}
 
-			co2m, vocm, curm, voltm := getCCCS811SensorMessages(sensorValues)
-			log.Infof("ccs811: co2m = %#v", co2m)
-			bytearray, err := json.Marshal(co2m)
-			if err != nil {
-				log.Errorf("ccs811: marshal co2m error %#v", err)
-			}
-			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-			sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+				log.Infof("ccs811: ECO2: %d ppm", sensorValues.ECO2)
+				log.Infof("ccs811: VOC: %d ppb", sensorValues.VOC)
+				log.Infof("ccs811: Current: %d", sensorValues.RawDataCurrent)
+				log.Infof("ccs811: Voltage: %d", sensorValues.RawDataVoltage)
+				//			fmt.Println("Baseline: ", baseline, baselineConverted)
+
+				typeId := "sensor"
+
+				co2m, vocm, curm, voltm := getCCCS811SensorMessages(sensorValues)
+				log.Infof("ccs811: co2m = %#v", co2m)
+				bytearray, err := json.Marshal(co2m)
+				if err != nil {
+					log.Errorf("ccs811: marshal co2m error %#v", err)
+				}
+				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
+				sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+				} else {
+					log.Debugf("ccs811: co2m message reply %#v", sensorReply)
+				}
+
+				log.Infof("ccs811: vocm = %#v", vocm)
+				bytearray, err = json.Marshal(vocm)
+				if err != nil {
+					log.Errorf("ccs811: marshal vocm error %#v", err)
+				}
+				message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
+				sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+				} else {
+					log.Debugf("ccs811: vocm message reply %#v", sensorReply)
+				}
+
+				log.Infof("ccs811: curm = %#v", curm)
+				bytearray, err = json.Marshal(curm)
+				if err != nil {
+					log.Errorf("ccs811: marshal curm error %#v", err)
+				}
+				message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
+				sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+				} else {
+					log.Debugf("ccs811: curm message reply %#v", sensorReply)
+				}
+
+				log.Infof("ccs811: voltm = %#v", voltm)
+				bytearray, err = json.Marshal(voltm)
+				if err != nil {
+					log.Errorf("ccs811: marshal co2m error %#v", err)
+				}
+				message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
+				sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
+				if err != nil {
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+				} else {
+					log.Debugf("ccs811: voltm message reply %#v", sensorReply)
+				}
+
 			} else {
-				log.Debugf("ccs811: co2m message reply %#v", sensorReply)
+				log.Error("ccs811: bad status no data ready")
+				if status&STATUS_MASK_FIRMWAREMODE == STATUS_MASK_FIRMWAREMODE {
+					log.Error("ccs811: still in firmware mode - new() failed silently, keep trying!!!!!")
+					time.Sleep(5 * time.Second)
+					break
+				}
+
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			count = count + 1
+
+			if count%300 == 0 {
+				fmt.Println("setting baseline", lowestBaseLine, lowestBaseLineConverted)
+				err = ccs.SetBaseline(lowestBaseLine)
+				checkErr(err)
+
+				count = 0
 			}
 
-			log.Infof("ccs811: vocm = %#v", vocm)
-			bytearray, err = json.Marshal(vocm)
-			if err != nil {
-				log.Errorf("ccs811: marshal vocm error %#v", err)
-			}
-			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-			sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
-			} else {
-				log.Debugf("ccs811: vocm message reply %#v", sensorReply)
-			}
-
-			log.Infof("ccs811: curm = %#v", curm)
-			bytearray, err = json.Marshal(curm)
-			if err != nil {
-				log.Errorf("ccs811: marshal curm error %#v", err)
-			}
-			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-			sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
-			} else {
-				log.Debugf("ccs811: curm message reply %#v", sensorReply)
-			}
-
-			log.Infof("ccs811: voltm = %#v", voltm)
-			bytearray, err = json.Marshal(voltm)
-			if err != nil {
-				log.Errorf("ccs811: marshal co2m error %#v", err)
-			}
-			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-			sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
-			if err != nil {
-				log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
-			} else {
-				log.Debugf("ccs811: voltm message reply %#v", sensorReply)
-			}
-
-		} else {
-			log.Error("ccs811: bad status no data ready")
-			time.Sleep(5 * time.Second)
-			continue
+			time.Sleep(30 * time.Second)
 		}
-		count = count + 1
-
-		if count%300 == 0 {
-			fmt.Println("setting baseline", lowestBaseLine, lowestBaseLineConverted)
-			err = ccs.SetBaseline(lowestBaseLine)
-			checkErr(err)
-
-			count = 0
-		}
-
-		time.Sleep(30 * time.Second)
 	}
 }
 

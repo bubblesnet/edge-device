@@ -37,8 +37,10 @@ const MaxOhms = 2400.0
 const Etape_slope = 11.37795
 const Etape_y_intercept = -17.28562
 
-func etapeInchesToGallons(MaxInches float64, MaxGallons float64, inches float64) (gallons float64) {
-	return inches * (MaxGallons / MaxInches)
+func etapeInchesToGallons(MaxInches float64, MaxGallons float64, MinGallons float64, inches float64) (gallons float64) {
+	gallons = MinGallons + (inches * ((MaxGallons - MinGallons) / MaxInches))
+	//	fmt.Printf("etapeInchesToGallons gallons %.2f = MinGallons + (inches %.2f * ((MaxGallons %.2f - MinGallons %.1f) / MaxInches %.2f)) \n", gallons, inches, MaxGallons, MinGallons, MaxInches)
+	return gallons
 }
 
 func etapeInchesFromVolts(voltage float64, slope float64, yintercept float64) (inches float64) {

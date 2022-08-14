@@ -78,10 +78,10 @@ func (m *MockPowerStrip) TurnAllOff(MyDevice *globals.EdgeDevice, timeout time.D
 	print("Toggling pins OFF")
 }
 
-func (m *MockPowerStrip) TurnOnOutlet(index int) {
+func (m *MockPowerStrip) TurnOnOutletByIndex(index int) {
 }
 
-func (m *MockPowerStrip) TurnOffOutlet(index int) {
+func (m *MockPowerStrip) TurnOffOutletByIndex(index int) {
 }
 
 func (m *MockPowerStrip) RunPinToggler(MyDevice *globals.EdgeDevice, isTest bool) {

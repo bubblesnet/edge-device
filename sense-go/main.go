@@ -114,6 +114,11 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 	type MessageHeader struct {
 		Command string `json:"command"`
 	}
+	type DispenseMessage struct {
+		Command       string `json:"command"`
+		DispenserName string `json:"dispenser_name"`
+		Milliseconds  int32  `json:"milliseconds"`
+	}
 	type SwitchMessage struct {
 		Command    string `json:"command"`
 		SwitchName string `json:"switch_name"`
@@ -141,6 +146,15 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 		}
 		log.Infof("listenForCommands parsed body into StageMessage %#v", stageMessage)
 		ChangeStageTo(stageMessage.StageName)
+		break
+	case "dispense":
+		dispenseMessage := DispenseMessage{}
+		if err := json.Unmarshal(msg.Body, &dispenseMessage); err != nil {
+			log.Errorf("couldn't parse dispense message %s, %#v", msg.Body, err)
+			break
+		}
+		log.Infof("listenForCommands parsed body into DispenseMessage %#v", dispenseMessage)
+		gpiorelay.GetDispenserService().TimedDispenseSynchronous(globals.MyStation, globals.MyDevice, dispenseMessage.DispenserName, dispenseMessage.Milliseconds)
 		break
 	case "picture":
 		if globals.MyDevice.Camera.PiCamera == false {
@@ -180,7 +194,7 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 				log.Infof("automaticControl - sending switch changed event to console")
 				gpiorelay.GetPowerstripService().SendSwitchStatusChangeEvent(switchMessage.SwitchName, switchMessage.On, 1120)
 				if globals.MyStation.AutomaticControl {
-					initializeOutletsForAutomation() // Make sure the switches conform to currently configured automation
+					initializePowerstripForAutomation() // Make sure the switches conform to currently configured automation
 				}
 			} else if switchMessage.On == true {
 				log.Infof("listenForCommands turning on %s on-demand", switchMessage.SwitchName)
@@ -211,7 +225,7 @@ func ChangeStageTo(StageName string) {
 	globals.CurrentStageSchedule = findSchedule(StageName)
 	globals.WriteConfig(globals.PersistentStoreMountPoint, "", "config.json")
 	if globals.MyStation.AutomaticControl {
-		initializeOutletsForAutomation() // Make sure the switches conform to newly configured automation
+		initializePowerstripForAutomation() // Make sure the switches conform to newly configured automation
 	}
 }
 
@@ -270,15 +284,15 @@ func listenForCommands(isUnitTest bool) (err error) {
 	return nil
 }
 
-func initializeOutletsFromConfiguration() {
+func initializePowerstripFromConfiguration() {
 	ps := gpiorelay.GetPowerstripService()
 	for i := 0; i < len(globals.MyDevice.ACOutlets); i++ {
 		if globals.MyDevice.ACOutlets[i].PowerOn {
 			ps.TurnOnOutletByName(globals.MyDevice, globals.MyDevice.ACOutlets[i].Name, true)
-			ReportSwitchInitialized("initializeOutletsFromConfiguration", globals.MyDevice.ACOutlets[i].Name, true)
+			ReportSwitchInitialized("initializePowerstripFromConfiguration", globals.MyDevice.ACOutlets[i].Name, true)
 		} else {
 			ps.TurnOffOutletByName(globals.MyDevice, globals.MyDevice.ACOutlets[i].Name, true)
-			ReportSwitchInitialized("initializeOutletsFromConfiguration", globals.MyDevice.ACOutlets[i].Name, false)
+			ReportSwitchInitialized("initializePowerstripFromConfiguration", globals.MyDevice.ACOutlets[i].Name, false)
 		}
 	}
 }
@@ -287,12 +301,12 @@ func ReportSwitchInitialized(functionName string, switchName string, newState bo
 	log.Infof("StateChange: switch %s initialized to %v via %s", switchName, newState, functionName)
 }
 
-func initializeOutletsForAutomation() {
+func initializePowerstripForAutomation() {
 	if !isRelayAttached(globals.MyDevice.DeviceID) {
-		log.Debugf("automation: initializeOutletsForAutomation - no outlets attached")
+		log.Debugf("automation: initializePowerstripForAutomation - no outlets attached")
 		return
 	}
-	log.Infof("automation: initializeOutletsForAutomation currentStage %s", globals.MyStation.CurrentStage)
+	log.Infof("automation: initializePowerstripForAutomation currentStage %s", globals.MyStation.CurrentStage)
 
 	ControlLight(true,
 		globals.MyDevice.DeviceID,
@@ -539,20 +553,15 @@ func readConfigFromDisk() {
 	}
 }
 
-func setupGPIO(MyStation *globals.Station, MyDevice *globals.EdgeDevice, Powerstrip gpiorelay.PowerstripService) {
-	rpio.OpenRpio()
-	/*	defer func() {
-		rpio.CloseRpio()
-	}() */
-
+func setupPowerstripGPIO(MyStation *globals.Station, MyDevice *globals.EdgeDevice, Powerstrip gpiorelay.PowerstripService) {
 	if isRelayAttached(MyDevice.DeviceID) {
 		log.Infof("Relay is attached to device %d", MyDevice.DeviceID)
 		Powerstrip.InitRpioPins(globals.MyDevice, globals.RunningOnUnsupportedHardware())
 		Powerstrip.TurnAllOff(globals.MyDevice, 1) // turn all OFF first since initalizeOutlets doesnt
 		if globals.MyStation.AutomaticControl {
-			initializeOutletsForAutomation()
+			initializePowerstripForAutomation()
 		} else {
-			initializeOutletsFromConfiguration()
+			initializePowerstripFromConfiguration()
 		}
 		Powerstrip.SendSwitchStatusChangeEvent("automaticControl", MyStation.AutomaticControl, globals.GetSequence())
 	} else {
@@ -573,8 +582,11 @@ func setupPhMonitor() {
 }
 
 func countGoRoutines() (count int) {
-	numGoroutines := 7
+	numGoroutines := 8
 	if !(globals.MyStation.VOCSensor || globals.MyStation.CO2Sensor) {
+		numGoroutines--
+	}
+	if len(globals.MyStation.Dispensers) == 0 {
 		numGoroutines--
 	}
 	if !globals.MyStation.MovementSensor {
@@ -598,6 +610,12 @@ func countGoRoutines() (count int) {
 
 func startGoRoutines(onceOnly bool) {
 	log.Info("startGoRoutines")
+
+	if len(globals.MyStation.Dispensers) > 0 {
+		go gpiorelay.GetDispenserService().StartDispensing(globals.MyStation, globals.MyDevice)
+	} else {
+		log.Errorf("NO DISPENSERS IN MYSTATION! %+v", globals.MyStation)
+	}
 
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.CO2Sensor, "ccs811") {
 		log.Info("automation: CO2 and VOC configured for this device, starting")
@@ -692,7 +710,13 @@ func testableSubmain(isUnitTest bool) {
 	_, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	setupGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
+	rpio.OpenRpio()
+	/*	defer func() {
+		rpio.CloseRpio()
+	}() */
+
+	setupPowerstripGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
+	gpiorelay.GetDispenserService().SetupDispenserGPIO(globals.MyStation, globals.MyDevice)
 
 	setupPhMonitor()
 	numGoRoutines := countGoRoutines()

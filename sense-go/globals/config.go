@@ -115,6 +115,7 @@ type Station struct {
 	LightGerminate         bool               `json:"lightGerminate"`
 	Relay                  bool               `json:"relay"`
 	EdgeDevices            []EdgeDevice       `json:"edge_devices,omitempty"`
+	Dispensers             []Dispenser        `json:"dispensers,omitempty"`
 	StageSchedules         []StageSchedule    `json:"stage_schedules,omitempty"`
 	TamperSpec             Tamper             `json:"tamper,omitempty"`
 	Automation             AutomationSettings `json:"automation_settings"`
@@ -138,6 +139,22 @@ type EdgeDevice struct {
 	Camera                            PiCam          `json:"camera,omitempty"`
 	TimeBetweenSensorPollingInSeconds int64          `json:"time_between_sensor_polling_in_seconds,omitempty"`
 	ACOutlets                         []ACOutlet     `json:"ac_outlets,omitempty"`
+}
+
+// Dispenser is a combination of a dispenser bottle, a relay-connected dispenser-valve and an additive
+// that is loaded into the dispenser bottle.  Combines the server side tables Dispenser and Additive.
+type Dispenser struct {
+	DispenserID      int64  `json:"dispenserid"`
+	DispenserName    string `json:"dispenser_name"`
+	DeviceID         int64  `json:"deviceid_device"`
+	StationID        int64  `json:"stationid_station"`
+	AdditiveID       int64  `json:"currently_loaded_additiveid"`
+	OnOff            bool   `json:"onoff"`
+	Name             string `json:"name"`
+	Index            int    `json:"index"`
+	BCMPinNumber     int    `json:"bcm_pin_number"`
+	ManufacturerName string `json:"manufacturer_name"`
+	AdditiveName     string `json:"additive_name"`
 }
 
 // DeviceModule is typically an add-on board attached to the edge device that
