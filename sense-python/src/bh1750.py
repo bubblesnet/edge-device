@@ -69,10 +69,12 @@ def readLight(addr=DEVICE):
 
 
 def main():
+    global my_site
+
     while True:
         lightLevel = readLight()
         logging.debug("Light Level : " + format(lightLevel, '.2f') + " lx")
-        time.sleep(0.5)
+        time.sleep(my_site['time_between_sensor_polling_in_seconds'])
 
 
 if __name__ == "__main__":

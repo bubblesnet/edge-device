@@ -138,6 +138,7 @@ type EdgeDevice struct {
 	DeviceModules                     []DeviceModule `json:"modules,omitempty"`
 	Camera                            PiCam          `json:"camera,omitempty"`
 	TimeBetweenSensorPollingInSeconds int64          `json:"time_between_sensor_polling_in_seconds,omitempty"`
+	TimeBetweenPicturesInSeconds      int64          `json:"time_between_pictures_in_seconds"`
 	ACOutlets                         []ACOutlet     `json:"ac_outlets,omitempty"`
 }
 

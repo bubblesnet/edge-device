@@ -189,7 +189,8 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		CurrentStage == globals.VEGETATIVE || CurrentStage == globals.BLOOMING {
 		// If it's time for grow light veg to be on
 		if inRange(CurrentStageSchedule.LightOnStartHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
+			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM,
+				localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, false, true)
 			}
@@ -197,7 +198,8 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		} else {
 			// If it's time for grow light veg to be off
 			if LocalCurrentState.GrowLightBloom == true {
-				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
+				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM,
+					localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			}
 			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)

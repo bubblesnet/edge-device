@@ -73,7 +73,7 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 		}
 
 		//		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
-		time.Sleep(15 * time.Second)
+		time.Sleep(globals.MyDevice.TimeBetweenSensorPollingInSeconds * time.Second)
 	}
 	return err1
 }
@@ -148,7 +148,7 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 			}
 			//		readAllChannels(ads1115s[1],a1)
 		}
-		time.Sleep(15 * time.Second)
+		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 	log.Errorf("loopforever returning err = %#v", err)
 	return nil

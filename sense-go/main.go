@@ -445,7 +445,7 @@ func makeControlDecisions(once_only bool) {
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 			}
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 		i++
 		if i >= 60 {
 			i = 0
@@ -455,6 +455,17 @@ func makeControlDecisions(once_only bool) {
 		}
 	}
 	log.Infof("makeControlDecisions returning")
+}
+
+func SleepBeforeExit() {
+	snaptime := os.Getenv("SLEEP_ON_EXIT_FOR_DEBUGGING")
+	naptime, err := strconv.ParseInt(snaptime, 10, 32)
+	if err != nil {
+		log.Errorf("SLEEP_ON_EXIT_FOR_DEBUGGING %s conversion error %#v", snaptime, err)
+		naptime = 60
+	}
+	fmt.Printf("Exiting because of bad configuration - sleeping for %d seconds to allow intervention\n", naptime)
+	time.Sleep(time.Duration(naptime) * time.Second)
 }
 
 func reportVersion() {
@@ -493,8 +504,7 @@ func initGlobals(testing bool) {
 			fmt.Printf("Returning because of bad configuration\n")
 			return
 		}
-		fmt.Printf("Exiting because of bad configuration - sleeping for 60 seconds to allow intervention\n")
-		time.Sleep(60 * time.Second)
+		SleepBeforeExit()
 		os.Exit(1)
 	}
 	// Reread the configuration file
@@ -678,7 +688,11 @@ func startGoRoutines(onceOnly bool) {
 func pictureTaker(onceOnly bool) {
 	for {
 		camera.TakeAPicture()
-		time.Sleep(30 * time.Second)
+		if globals.MyDevice.TimeBetweenPicturesInSeconds <= 0 {
+			log.Errorf("globals.MyDevice.TimeBetweenPicturesInSeconds is zero, resetting to 10 minutes")
+			globals.MyDevice.TimeBetweenPicturesInSeconds = 600
+		}
+		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenPicturesInSeconds) * time.Second)
 		if onceOnly {
 			break
 		}
@@ -726,6 +740,7 @@ func testableSubmain(isUnitTest bool) {
 
 	if len(globals.DevicesFailed) > 0 {
 		log.Errorf("Exiting because of device failure %#v", globals.DevicesFailed)
+		SleepBeforeExit()
 		os.Exit(1)
 	}
 

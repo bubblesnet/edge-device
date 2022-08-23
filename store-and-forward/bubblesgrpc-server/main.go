@@ -248,11 +248,23 @@ func handleVersioningFromLoader() (err error) {
 	return nil
 }
 
+func SleepBeforeExit() {
+	snaptime := os.Getenv("SLEEP_ON_EXIT_FOR_DEBUGGING")
+	naptime, err := strconv.ParseInt(snaptime, 10, 32)
+	if err != nil {
+		log.Errorf("SLEEP_ON_EXIT_FOR_DEBUGGING %s conversion error %#v", snaptime, err)
+		naptime = 60
+	}
+	fmt.Printf("Exiting because of bad configuration - sleeping for %d seconds to allow intervention\n", naptime)
+	time.Sleep(time.Duration(naptime) * time.Second)
+}
+
 func main() {
 	log.ConfigureLogging("fatal,error,warn,info,debug,", ".")
 
 	if err := handleVersioningFromLoader(); err != nil {
 		log.Errorf("handleVersioningFromLoader %+v", err)
+		SleepBeforeExit()
 		os.Exit(222)
 	}
 	fmt.Printf("Bubblesnet %s.%s.%s build %s timestamp %s githash %s\n", BubblesnetVersionMajorString,
@@ -316,6 +328,7 @@ func WaitForConfigFile(storeMountPoint string, relativePath string, fileName str
 		}
 		if index == 60 {
 			fmt.Printf("waited too long for file %s to be downloaded. Probably no connection.  Exiting\n", fileName)
+			SleepBeforeExit()
 			os.Exit(1)
 		}
 		fmt.Printf("Sleeping 60 seconds waiting for someone to bring us a /config/config.json\n")

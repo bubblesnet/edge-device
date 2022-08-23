@@ -334,7 +334,7 @@ func ReadCO2VOC() {
 				count = 0
 			}
 
-			time.Sleep(30 * time.Second)
+			time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 		}
 	}
 }

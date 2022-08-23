@@ -98,6 +98,6 @@ func RunDistanceWatcher1(once_only bool, isUnitTest bool) {
 			return
 		}
 		//		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
-		time.Sleep(time.Duration(60) * time.Second)
+		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 }
