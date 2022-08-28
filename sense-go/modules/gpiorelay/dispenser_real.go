@@ -109,7 +109,7 @@ func (r *RealDispenser) SendDispenserStatusChangeEvent(dispenser_name string, on
 	log.Infof("Reporting switch %s status %#v", dispenser_name, on)
 	dm := messaging.NewDispenserStatusChangeMessage(dispenser_name, on)
 	bytearray, err := json.Marshal(dm)
-	message := pb.SensorRequest{Sequence: sequence, TypeId: "dispenser", Data: string(bytearray)}
+	message := pb.SensorRequest{Sequence: sequence, TypeId: globals.Grpc_message_typeid_dispenser, Data: string(bytearray)}
 	if globals.Client == nil {
 		fmt.Printf("No connection to grpc client\n")
 	} else {

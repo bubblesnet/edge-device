@@ -101,41 +101,41 @@ func parseMessageForCurrentState(message string) {
 		return
 	}
 	switch genericMessage.MessageType {
-	case "measurement":
+	case message_type_measurement:
 		switch genericMessage.MeasurementName {
-		case "plant_height":
+		case Measurement_name_plant_height:
 			if genericMessage.FloatValue != ExternalCurrentState.PlantHeightIn {
 				log.Infof("plant_height changed from %f to %f", ExternalCurrentState.PlantHeightIn, genericMessage.FloatValue)
 			}
 			ExternalCurrentState.PlantHeightIn = genericMessage.FloatValue
 			break
 
-		case "temp_water":
-			if genericMessage.FloatValue != ExternalCurrentState.WaterTempF {
-				log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTempF, genericMessage.FloatValue)
+		case Measurement_name_temp_water:
+			if genericMessage.FloatValue != ExternalCurrentState.WaterTemp {
+				log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTemp, genericMessage.FloatValue)
 			}
-			ExternalCurrentState.WaterTempF = genericMessage.FloatValue
+			ExternalCurrentState.WaterTemp = genericMessage.FloatValue
 			break
 
-		case "temp_air_middle":
-			if genericMessage.FloatValue != ExternalCurrentState.TempF {
-				log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempF, genericMessage.FloatValue)
+		case measurement_name_temp_air_middle:
+			if genericMessage.FloatValue != ExternalCurrentState.TempAirMiddle {
+				log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempAirMiddle, genericMessage.FloatValue)
 			}
-			ExternalCurrentState.TempF = genericMessage.FloatValue
+			ExternalCurrentState.TempAirMiddle = genericMessage.FloatValue
 			break
-		case "humidity_internal":
-			if genericMessage.FloatValue != ExternalCurrentState.Humidity {
-				log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.Humidity, genericMessage.FloatValue)
+		case measurement_name_humidity_internal:
+			if genericMessage.FloatValue != ExternalCurrentState.HumidityInternal {
+				log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.HumidityInternal, genericMessage.FloatValue)
 			}
-			ExternalCurrentState.Humidity = genericMessage.FloatValue
+			ExternalCurrentState.HumidityInternal = genericMessage.FloatValue
 			break
-		case "light_internal":
+		case Measurement_name_light_internal:
 			if genericMessage.FloatValue != ExternalCurrentState.LightInternal {
 				log.Infof("light_internal changed from %f to %f", ExternalCurrentState.LightInternal, genericMessage.FloatValue)
 			}
 			ExternalCurrentState.LightInternal = genericMessage.FloatValue
 			break
-		case "pressure_internal":
+		case Measurement_name_pressure_internal:
 			if genericMessage.FloatValue != ExternalCurrentState.PressureInternal {
 				log.Infof("pressure_internal changed from %f to %f", ExternalCurrentState.PressureInternal, genericMessage.FloatValue)
 			}
@@ -162,7 +162,10 @@ func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetSta
 	//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
 	//	} else {
 
-	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity), WaterTempF: float32(ExternalCurrentState.WaterTempF)}
+	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(),
+		Result: "OK", TempAirMiddle: float32(ExternalCurrentState.TempAirMiddle),
+		HumidityInternal: float32(ExternalCurrentState.HumidityInternal),
+		TempWater:        float32(ExternalCurrentState.WaterTemp), LightInternal: float32(ExternalCurrentState.LightInternal)}
 	//	log.Infof("GetState returning %#v", ret)
 	return &ret, nil
 	//	}
@@ -199,7 +202,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 		for i := 0; i < len(forwarded); i++ {
 			if err := deleteFromBucket(bucketName, []byte(forwarded[i])); err != nil {
-				log.Errorf("delete from bucket failed %v", err)
+				log.Errorf("delete frm bucket failed %v", err)
 			}
 		}
 		// delete the forwarded messages

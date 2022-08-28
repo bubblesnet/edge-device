@@ -164,7 +164,7 @@ func testHumidity(t *testing.T) {
 
 		for i := 0; i < len(humidifierstates); i++ {
 			globals.LastHumidity = 59
-			globals.ExternalCurrentState.Humidity = 50
+			globals.ExternalCurrentState.HumidityInternal = 50
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
@@ -177,7 +177,7 @@ func testHumidity(t *testing.T) {
 
 		for i := 0; i < len(humidifierstates); i++ {
 			globals.LastHumidity = 61
-			globals.ExternalCurrentState.Humidity = 67
+			globals.ExternalCurrentState.HumidityInternal = 67
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
@@ -189,7 +189,7 @@ func testHumidity(t *testing.T) {
 
 		for i := 0; i < len(humidifierstates); i++ {
 			globals.LastHumidity = 60
-			globals.ExternalCurrentState.Humidity = 60
+			globals.ExternalCurrentState.HumidityInternal = 60
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
@@ -391,7 +391,7 @@ func testWaterTemp(t *testing.T) {
 	}
 	for x := 0; x < len(stages); x++ {
 		for _, tt := range tests {
-			tt.args.ExternalCurrentState.TempF = rand.Float32() * 100.0
+			tt.args.ExternalCurrentState.TempAirMiddle = rand.Float32() * 100.0
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlWaterTemp(
 					tt.args.force,
@@ -459,7 +459,7 @@ func testHeat1(t *testing.T) {
 	}
 	for x := 0; x < len(stages); x++ {
 		for _, tt := range tests {
-			tt.args.ExternalCurrentState.TempF = 100.0 // Too high
+			tt.args.ExternalCurrentState.TempAirMiddle = 100.0 // Too high
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlHeat(
 					tt.args.force,
@@ -476,7 +476,7 @@ func testHeat1(t *testing.T) {
 				}
 			})
 
-			tt.args.ExternalCurrentState.TempF = -1.0 // Too low
+			tt.args.ExternalCurrentState.TempAirMiddle = -1.0 // Too low
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlHeat(
 					tt.args.force,

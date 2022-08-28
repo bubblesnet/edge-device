@@ -149,26 +149,30 @@ func ReadCO2VOC() {
 		return
 	}
 	log.Info("ccs811: i2creg.Open succeeded")
+	retryNaptime := 5
 
 	for {
 		ccs, err := ccs811.New(bus, &opts)
 		if err != nil {
-			log.Errorf("ccs811: Couldn't get new ccs811 bus %#v, opts %#v, err %#v", bus, opts, err)
-			return
+			log.Errorf("ccs811: Couldn't get new ccs811 bus %#v, opts %#v, err %#v - trying again in %d seconds", bus, opts, err, retryNaptime)
+			time.Sleep(time.Duration(retryNaptime) * time.Second)
+			continue
 		}
 		log.Info("ccs811: ccs811.New succeeded")
 
 		mode, err := ccs.GetMeasurementModeRegister()
 		if err != nil {
-			log.Errorf("ccs811: Couldn't get measurement mode register err %#v", err)
-			return
+			log.Errorf("ccs811: Couldn't get measurement mode register err %#v - trying again in %d seconds", err, retryNaptime)
+			time.Sleep(time.Duration(retryNaptime) * time.Second)
+			continue
 		}
 		log.Info("ccs811: ccs.GetMeasurementModeRegister succeeded")
 
 		fwData, err := ccs.GetFirmwareData()
 		if err != nil {
-			log.Errorf("ccs811: Couldn't get firmware data err %#v", err)
-			return
+			log.Errorf("ccs811: Couldn't get firmware data err %#v - trying again in %d seconds", err, retryNaptime)
+			time.Sleep(time.Duration(retryNaptime) * time.Second)
+			continue
 		}
 		log.Info("ccs811: ccs.GetFirmwareData succeeded")
 
@@ -219,8 +223,8 @@ func ReadCO2VOC() {
 		for {
 			status, err := ccs.ReadStatus()
 			if err != nil {
-				log.Errorf("ccs811: status failed %#v", err)
-				time.Sleep(5 * time.Second)
+				log.Errorf("ccs811: status failed %#v - trying again in %d seconds", err, retryNaptime)
+				time.Sleep(time.Duration(retryNaptime) * time.Second)
 				continue
 			}
 
@@ -230,8 +234,8 @@ func ReadCO2VOC() {
 				var sensorValues = ccs811.SensorValues{}
 				err = ccs.Sense(&sensorValues)
 				if err != nil {
-					log.Errorf("ccs811: Sense failed %+v", err)
-					time.Sleep(5 * time.Second)
+					log.Errorf("ccs811: Sense failed %+v - trying again in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
 					continue
 				}
 
@@ -258,70 +262,86 @@ func ReadCO2VOC() {
 				log.Infof("ccs811: Voltage: %d", sensorValues.RawDataVoltage)
 				//			fmt.Println("Baseline: ", baseline, baselineConverted)
 
-				typeId := "sensor"
+				typeId := globals.Grpc_message_typeid_sensor
 
 				co2m, vocm, curm, voltm := getCCCS811SensorMessages(sensorValues)
 				log.Infof("ccs811: co2m = %#v", co2m)
 				bytearray, err := json.Marshal(co2m)
 				if err != nil {
-					log.Errorf("ccs811: marshal co2m error %#v", err)
+					log.Errorf("ccs811: marshal co2m error %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				}
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-				sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				} else {
-					log.Debugf("ccs811: co2m message reply %#v", sensorReply)
+					//					log.Debugf("ccs811: co2m message reply %#v", sensorReply)
 				}
 
 				log.Infof("ccs811: vocm = %#v", vocm)
 				bytearray, err = json.Marshal(vocm)
 				if err != nil {
-					log.Errorf("ccs811: marshal vocm error %#v", err)
+					log.Errorf("ccs811: marshal vocm error %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				}
 				message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-				sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				} else {
-					log.Debugf("ccs811: vocm message reply %#v", sensorReply)
+					//					log.Debugf("ccs811: vocm message reply %#v", sensorReply)
 				}
 
 				log.Infof("ccs811: curm = %#v", curm)
 				bytearray, err = json.Marshal(curm)
 				if err != nil {
-					log.Errorf("ccs811: marshal curm error %#v", err)
+					log.Errorf("ccs811: marshal curm error %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				}
 				message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-				sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				} else {
-					log.Debugf("ccs811: curm message reply %#v", sensorReply)
+					//					log.Debugf("ccs811: curm message reply %#v", sensorReply)
 				}
 
 				log.Infof("ccs811: voltm = %#v", voltm)
 				bytearray, err = json.Marshal(voltm)
 				if err != nil {
-					log.Errorf("ccs811: marshal co2m error %#v", err)
+					log.Errorf("ccs811: marshal co2m error %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				}
 				message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-				sensorReply, err = globals.Client.StoreAndForward(context.Background(), &message)
+				_, err = globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
-					log.Errorf("ccs811: ReadCO2VOC ERROR %#v", err)
+					log.Errorf("ccs811: ReadCO2VOC ERROR %#v - retrying in %d seconds", err, retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				} else {
-					log.Debugf("ccs811: voltm message reply %#v", sensorReply)
+					//					log.Debugf("ccs811: voltm message reply %#v", sensorReply)
 				}
 
 			} else {
-				log.Error("ccs811: bad status no data ready")
+				log.Error("ccs811: bad status 0x%x no data ready - retrying in %d seconds", status, retryNaptime)
 				if status&STATUS_MASK_FIRMWAREMODE == STATUS_MASK_FIRMWAREMODE {
-					log.Error("ccs811: still in firmware mode - new() failed silently, keep trying!!!!!")
-					time.Sleep(5 * time.Second)
-					break
+					log.Error("ccs811: still in firmware mode - new() failed silently - retrying in %d seconds", retryNaptime)
+					time.Sleep(time.Duration(retryNaptime) * time.Second)
+					continue
 				}
 
-				time.Sleep(5 * time.Second)
+				time.Sleep(time.Duration(retryNaptime) * time.Second)
 				continue
 			}
 			count = count + 1

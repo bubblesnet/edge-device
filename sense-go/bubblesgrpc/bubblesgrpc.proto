@@ -1,4 +1,16 @@
-// copyright and license inspection - no issues 4/13/22
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 syntax = "proto3";
 
@@ -43,10 +55,11 @@ message GetStateReply {
   int32 sequence = 1;
   string type_id = 2;
   string result = 3;
-  float tempF = 4;
-  float humidity = 5;
-  float externalTempF = 6;
-  float waterTempF = 7;
+  float temp_air_middle = 4;
+  float humidity_internal = 5;
+  float temp_external = 6;
+  float temp_water = 7;
+  float light_internal = 8;
 }
 
 // The request message

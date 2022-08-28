@@ -85,7 +85,7 @@ func (gw *Gonewire) Start(ctx context.Context, frequency time.Duration) {
 					gw.errCballback(err, sensor)
 					continue
 				}
-				fmt.Printf("Curentvalue = %s\n", sensor.currentValue)
+				fmt.Printf("onewire: Curentvalue = %s\n", sensor.currentValue)
 				gw.valueChannel <- Value{
 					ID:    sensor.id,
 					Value: sensor.currentValue,
@@ -108,13 +108,13 @@ func (gw *Gonewire) OnReadError(fn func(error, *Sensor)) {
 func (gw *Gonewire) readFolder() error {
 	dir, err := os.Open(gw.directory)
 	if err != nil {
-		return fmt.Errorf("could not read dir: %w", err)
+		return fmt.Errorf("onewire: could not read dir: %w", err)
 	}
 	defer dir.Close()
 
 	subdirs, err := dir.Readdirnames(0)
 	if err != nil {
-		return fmt.Errorf("could not read sub dirs: %w", err)
+		return fmt.Errorf("onewire: could not read sub dirs: %w", err)
 	}
 
 	for _, subdir := range subdirs {
@@ -123,7 +123,7 @@ func (gw *Gonewire) readFolder() error {
 		}
 		s, err := newSensor(gw.directory, subdir)
 		if err != nil {
-			fmt.Println("could not init sensor: %w", err)
+			fmt.Println("onewire: could not init sensor: %w", err)
 			continue
 		}
 		gw.sensormap[s.id] = s

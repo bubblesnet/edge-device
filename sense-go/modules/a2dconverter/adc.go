@@ -50,14 +50,14 @@ func ReadAllChannels(index int, adcMessage *ADCMessage) (err error) {
 
 func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) (err error) {
 
-	log.Debugf("readAllChannels on address 0x%x", config.address)
+	log.Debugf("ads1115: readAllChannels on address 0x%x", config.address)
 	var err1 error
 	adcMessage.Address = config.address
 	adcMessage.BusId = config.bus_id
 	for channel := 0; channel < 4; channel++ {
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 		if err == nil {
-			log.Debugf("Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
+			log.Debugf("ads1115: Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 
 			(*adcMessage).ChannelValues[channel].ChannelNumber = channel
 			(*adcMessage).ChannelValues[channel].Voltage = value
@@ -65,15 +65,15 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 			(*adcMessage).ChannelValues[channel].Rate = config.channelConfig[channel].rate
 		} else {
 
-			log.Errorf("readAllChannels Read failed on address 0x%x channel %d %#v", config.address, channel, err)
+			log.Errorf("ads1115: readAllChannels Read failed on address 0x%x channel %d %#v", config.address, channel, err)
 
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			//			break
 		}
 
-		//		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
-		time.Sleep(globals.MyDevice.TimeBetweenSensorPollingInSeconds * time.Second)
+		time.Sleep(time.Duration(config.channelWaitMillis) * time.Millisecond)
+		//		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 	return err1
 }
@@ -98,7 +98,7 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 			i2c.WithAddress(i2cAddresses[moduleIndex]))
 		err = ads1115s[moduleIndex].Start()
 		if err != nil {
-			log.Errorf("error starting interface %#v", err)
+			log.Errorf("ads1115: error starting interface %#v", err)
 			return err
 		}
 	}
@@ -109,34 +109,34 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 			adcMessage := new(ADCMessage)
 			err := ReadAllChannels(moduleIndex, adcMessage)
 			if err != nil {
-				log.Errorf("loopforever error %#v", err)
+				log.Errorf("ads1115: loopforever error %#v", err)
 				break
 			} else {
 				for channelIndex := 0; channelIndex < len(adcMessage.ChannelValues); channelIndex++ {
 					if channelIndex == 1 && moduleIndex == 0 {
-						adcMessage.ChannelValues[channelIndex].SensorName = "water_level_sensor"
-						adcMessage.ChannelValues[channelIndex].MeasurementName = "water_level"
-						adcMessage.ChannelValues[channelIndex].MeasurementUnits = "gallons"
+						adcMessage.ChannelValues[channelIndex].SensorName = globals.Sensor_name_water_level_sensor
+						adcMessage.ChannelValues[channelIndex].MeasurementName = globals.Measurement_type_water_level
+						adcMessage.ChannelValues[channelIndex].MeasurementUnits = globals.Liquid_volume_units_gallons
 						adcMessage.ChannelValues[channelIndex].Slope = Etape_slope
 						adcMessage.ChannelValues[channelIndex].Yintercept = Etape_y_intercept
 					}
 					count++
-					log.Infof("ADCMessageCounter %d", count)
-					log.Infof("adc message for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, adcMessage)
-					direction := ""
+					log.Infof("ads1115: ADCMessageCounter %d", count)
+					log.Infof("ads1115: adc message for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, adcMessage)
+					direction := globals.Directions_none
 					if adcMessage.ChannelValues[channelIndex].Voltage > lastValues[moduleIndex][channelIndex] {
-						direction = "up"
+						direction = globals.Directions_up
 					} else if adcMessage.ChannelValues[channelIndex].Voltage < lastValues[moduleIndex][channelIndex] {
-						direction = "down"
+						direction = globals.Directions_down
 					}
 					lastValues[moduleIndex][channelIndex] = adcMessage.ChannelValues[channelIndex].Voltage
 					err, message := getADCSensorMessageForChannel(adcMessage, moduleIndex, channelIndex, direction)
-					log.Infof("adc %#v", adcMessage)
+					log.Infof("ads1115: adc %#v", adcMessage)
 					sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
 					if err != nil {
-						log.Errorf("RunADCPoller ERROR %#v", err)
+						log.Errorf("ads1115: RunADCPoller ERROR %#v", err)
 					} else {
-						log.Infof("adc message reply for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, sensorReply)
+						log.Infof("ads1115: adc message reply for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, sensorReply)
 					}
 					if channelIndex == 1 && moduleIndex == 0 {
 						_ = sendTranslatedADCSensorMessages(moduleIndex, channelIndex, adcMessage)
@@ -150,7 +150,7 @@ func RunADCPoller(onceOnly bool, pollingWaitInSeconds int) (err error) {
 		}
 		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
-	log.Errorf("loopforever returning err = %#v", err)
+	log.Errorf("ads1115: loopforever returning err = %#v", err)
 	return nil
 }
 
@@ -166,9 +166,9 @@ func sendTranslatedADCSensorMessages(moduleIndex int, channelIndex int, adcMessa
 		//		log.Infof("sendTranslatedADCSensorMessages adc %#v", adcMessage)
 		sensorReply, err := globals.Client.StoreAndForward(context.Background(), &message)
 		if err != nil {
-			log.Errorf("sendTranslatedADCSensorMessages ERROR %#v", err)
+			log.Errorf("ads1115: sendTranslatedADCSensorMessages ERROR %#v", err)
 		} else {
-			log.Infof("sendTranslatedADCSensorMessages message reply for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, sensorReply)
+			log.Infof("ads1115: sendTranslatedADCSensorMessages message reply for moduleIndex %d channel %d %#v", moduleIndex, channelIndex, sensorReply)
 		}
 	}
 	return err
@@ -184,18 +184,18 @@ func getADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, chan
 		adcMessage.ChannelValues[channelIndex].ChannelNumber, adcMessage.ChannelValues[channelIndex].Gain, adcMessage.ChannelValues[channelIndex].Rate)
 	bytearray, err := json.Marshal(ads)
 	if err != nil {
-		log.Errorf("loopforever error %#v", err)
+		log.Errorf("ads1115: loopforever error %#v", err)
 		return err, message
 	}
-	message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+	message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: globals.Grpc_message_typeid_sensor, Data: string(bytearray)}
 	return nil, message
 }
 
 func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, channelIndex int, direction string,
 	sensorName string, measurementName string, slope float64, yintercept float64, measurementUnits string) (err error, message pb.SensorRequest) {
 
-	log.Infof("sendTranslatedADCSensorMessages sensorName %s %v", sensorName, adcMessage.ChannelValues[channelIndex].Voltage)
-	typeId := "sensor"
+	log.Infof("ads1115: sendTranslatedADCSensorMessages sensorName %s %v", sensorName, adcMessage.ChannelValues[channelIndex].Voltage)
+	typeId := globals.Grpc_message_typeid_sensor
 
 	if moduleIndex == 0 {
 		measurementValue := 0.0
@@ -207,7 +207,7 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 				inches = etapeInchesFromVolts(adcMessage.ChannelValues[channelIndex].Voltage, slope, yintercept)
 			}
 			measurementValue = etapeInchesToGallons(12.5, 13.5, 1.0, inches)
-			log.Infof("sendTranslatedADCSensorMessages raw %f Volts, %s %f inches, %f %s", adcMessage.ChannelValues[channelIndex].Voltage, measurementName, inches, measurementValue, measurementUnits)
+			log.Infof("ads1115: sendTranslatedADCSensorMessages raw %f Volts, %s %f inches, %f %s", adcMessage.ChannelValues[channelIndex].Voltage, measurementName, inches, measurementValue, measurementUnits)
 
 			direction := ""
 			if measurementValue > float64(globals.LastWaterLevel) {
@@ -221,11 +221,11 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 				measurementValue, measurementUnits, direction)
 			bytearray, err := json.Marshal(ads)
 			if err != nil {
-				log.Errorf("loopforever error %#v", err)
+				log.Errorf("ads1115: loopforever error %#v", err)
 				return err, message
 			}
 			message = pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: typeId, Data: string(bytearray)}
-			//			log.Infof("sendTranslatedADCSensorMessages message = %#v", message)
+			//			log.Infof("ads1115: sendTranslatedADCSensorMessages message = %#v", message)
 		}
 	}
 	return nil, message

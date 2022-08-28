@@ -73,7 +73,7 @@ func (r *RealPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool
 	log.Infof("Reporting switch %s status %#v", switch_name, on)
 	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
 	bytearray, err := json.Marshal(dm)
-	message := pb.SensorRequest{Sequence: sequence, TypeId: "switch", Data: string(bytearray)}
+	message := pb.SensorRequest{Sequence: sequence, TypeId: globals.Grpc_message_typeid_switch, Data: string(bytearray)}
 	if globals.Client == nil {
 		fmt.Printf("No connection to grpc client\n")
 	} else {
