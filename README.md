@@ -1,5 +1,7 @@
 # BubblesNet Edge Device
 
+This repo is temporarily public. It will revert to private shortly and without notice as, imho, it is not quite ready yet.
+
 [![codecov](https://codecov.io/gh/bubblesnet/edge-device/branch/develop/graph/badge.svg?token=4ETBIJSIKZ)](https://codecov.io/gh/bubblesnet/edge-device)
 ![ci](https://github.com/bubblesnet/edge-device/workflows/BubblesNetCI/badge.svg)
 
