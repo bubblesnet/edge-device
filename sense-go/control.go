@@ -21,6 +21,7 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+
 package main
 
 // copyright and license inspection - no issues 4/13/22
@@ -260,6 +261,7 @@ func ControlWaterTemp(force bool,
 		} // MAKE SURE HEAT IS OFF
 		return somethingChanged
 	}
+
 	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
 		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.TempWater %.3f - ignoring", ExternalCurrentState.TempWater)
 		return somethingChanged

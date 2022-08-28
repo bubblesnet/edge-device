@@ -58,7 +58,6 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 		value, err := ads1115.Read(channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
 		if err == nil {
 			log.Debugf("ads1115: Read value %.2fV moduleIndex %d addr 0x%x channel %d, gain %d, rate %d", value, moduleIndex, config.address, channel, config.channelConfig[channel].gain, config.channelConfig[channel].rate)
-
 			(*adcMessage).ChannelValues[channel].ChannelNumber = channel
 			(*adcMessage).ChannelValues[channel].Voltage = value
 			(*adcMessage).ChannelValues[channel].Gain = config.channelConfig[channel].gain
@@ -66,7 +65,6 @@ func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config Adapter
 		} else {
 
 			log.Errorf("ads1115: readAllChannels Read failed on address 0x%x channel %d %#v", config.address, channel, err)
-
 			globals.ReportDeviceFailed("ads1115")
 			err1 = err
 			//			break
@@ -208,7 +206,6 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			}
 			measurementValue = etapeInchesToGallons(12.5, 13.5, 1.0, inches)
 			log.Infof("ads1115: sendTranslatedADCSensorMessages raw %f Volts, %s %f inches, %f %s", adcMessage.ChannelValues[channelIndex].Voltage, measurementName, inches, measurementValue, measurementUnits)
-
 			direction := ""
 			if measurementValue > float64(globals.LastWaterLevel) {
 				direction = "up"

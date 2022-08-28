@@ -21,6 +21,7 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+
 package gpiorelay
 
 // copyright and license inspection - no issues 4/13/22

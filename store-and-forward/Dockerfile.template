@@ -8,6 +8,5 @@ RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/bubblesgrpc-server; ls -la /g
 
 # CMD ["modprobe i2c-dev; export I2C_BUS=1"]
 # CMD ["bash"]
-
 CMD ["/go/bin/bubblesgrpc-server"]
 

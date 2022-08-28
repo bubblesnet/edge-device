@@ -291,7 +291,6 @@ func setMyStationAndMyDevice(site Site) (success bool) {
 	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
 	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
 	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
-
 	//	fmt.Printf("data = %#v\n", *site)
 	found := false
 	//	fmt.Printf("searching %d stations\n", len(site.Stations))
@@ -575,7 +574,6 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
 	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
 	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
-
 	if err = ValidateConfigurable(); err != nil {
 		log.Errorf("GetConfigFromServer error %#v", err)
 		return err
@@ -617,14 +615,12 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return errors.New("err on site")
 	}
 	fmt.Printf("newconfig = %+v\n\n", newconfig)
-
 	if newconfig.Stations == nil {
 		fmt.Printf("No stations\n")
 		log.Fatalf("stations is nil!!!")
 	}
 	MySite.Stations = newconfig.Stations
 	fmt.Printf("before setMyStation %+v", MySite)
-
 	success := setMyStationAndMyDevice(MySite)
 	if !success {
 		fmt.Printf("No station\n")

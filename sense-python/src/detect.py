@@ -22,7 +22,6 @@
 #  OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-
 import adafruit_platformdetect
 
 detector = adafruit_platformdetect.Detector()

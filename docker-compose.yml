@@ -2,6 +2,7 @@ version: '2'
 volumes:
   resin-data:
 services:
+
   wifi-connect:
     image: bh.cr/balenablocks/wifi-connect-armv7hf
     restart: always

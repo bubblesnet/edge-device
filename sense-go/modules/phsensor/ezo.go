@@ -48,7 +48,6 @@ func StartEzoDriver() {
 	if err != nil {
 		globals.ReportDeviceFailed("ezoph")
 		log.Errorf("ezoph: ezo start error %#v", err)
-
 	}
 }
 
@@ -74,7 +73,6 @@ func ReadPh(once_only bool) error {
 	err := ezoDriver.Start()
 	if err != nil {
 		log.Errorf("ezoph: ezoDriver.Start returned ph device error %#v", err)
-
 		return err
 	}
 	var e error = nil
@@ -83,11 +81,9 @@ func ReadPh(once_only bool) error {
 		ph, err := ezoDriver.Ph()
 		if err != nil {
 			log.Errorf("ezoph: ReadPh error %#v", err)
-
 			e = err
 			break
 		} else {
-
 			ph = applyCalibration(ph)
 			direction := globals.Directions_none
 			if ph > lastPh {
@@ -119,6 +115,5 @@ func ReadPh(once_only bool) error {
 		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 	log.Debugf("ezoph: returning %#v from readph", e)
-
 	return e
 }
