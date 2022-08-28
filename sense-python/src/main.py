@@ -92,6 +92,8 @@ global light_measurement_name
 
 
 def wait_for_config(filename):
+    global naptime_in_seconds
+
     logging.info('wait_for_config %s' % filename)
     index = 0
     while index <= 60:
@@ -99,10 +101,10 @@ def wait_for_config(filename):
             logging.info('%s file exists' % filename)
             return
         logging.info("Sleeping while we wait for someone to create %s" % filename)
-        time.sleep(60)
+        time.sleep(5)   # 5 seconds is sort of arbitrary
         index = index+1
-        if index == 60:
-            logging.error("config file never showed up, exiting")
+        if index >= naptime_in_seconds/5:
+            logging.error(f"config file never showed up, exiting having slept {naptime_in_seconds} seconds")
             exit(1)
 
     return
@@ -135,7 +137,7 @@ def read_config(fullpath):
                 if device['deviceid'] == deviceid:
                     my_device = device
                     my_station = station
-                    my_site['time_between_sensor_polling_in_seconds'] = 15
+ #                   my_site['time_between_sensor_polling_in_seconds'] = 15
         return True
 
 
@@ -355,14 +357,38 @@ def append_axl345_data(msg):
     msg['value'] = False
 
 
+def any_thermometers_enabled(my_station) :
+    if my_station['thermometer_top']:
+        return True
+    if my_station['thermometer_middle']:
+        return True
+    if my_station['thermometer_bottom']:
+        return True
+    if my_station['thermometer_external']:
+        return True
+    return False
+
+def any_humidity_enabled(my_station) :
+    if my_station['humidity_sensor_internal']:
+        return True
+    if my_station['humidity_sensor_external']:
+        return True
+    return False
+
+def any_pressure( my_station ) :
+    if my_station['pressure_sensors']:
+        return True
+    return False
+
 def report_polled_sensor_parameters(i2cbus):
     global my_site
+    global my_station
     global light_sensor_name
     global light_measurement_name
 
-    #    logging.debug("reportPolledSensorParameters")
+    logging.debug("reportPolledSensorParameters")
 
-    if is_our_device('bh1750'):
+    if is_our_device('bh1750') and (my_station['light_sensor_internal'] or my_station['light_sensor_external']):
         module = get_our_device('bh1750')
         msg = {
             'message_type': 'measurement'
@@ -375,7 +401,7 @@ def report_polled_sensor_parameters(i2cbus):
         except Exception as ee:
             logging.error(ee)
 
-    if is_our_device('bmp280'):
+    if is_our_device('bmp280') and (any_thermometers_enabled(my_station) or any_humidity_enabled(my_station) or any_pressure(my_station)):
         module = get_our_device('bmp280')
 
         logging.info("found a bmp280 - no humidity!")
@@ -387,7 +413,7 @@ def report_polled_sensor_parameters(i2cbus):
         append_bme280_pressure(i2cbus, msg, pressure_sensor_name, pressure_measurement_name, int(module['address'],0))
         send_message(msg)
 
-    if is_our_device('bme280'):
+    if is_our_device('bme280') and (any_thermometers_enabled(my_station) or any_humidity_enabled(my_station) or any_pressure(my_station)):
         module = get_our_device('bme280')
         msg = {'message_type': 'measurement'}
         append_bme280_temp(i2cbus, msg, temperature_sensor_name, temperature_measurement_name, int(module['address'],0))
@@ -406,7 +432,7 @@ def report_polled_sensor_parameters(i2cbus):
         append_adc_data(msg)
         send_message(msg)
 
-    if is_our_device('adxl345'):
+    if is_our_device('adxl345') and my_station['movement_sensor']:
         msg = {'message_type': 'measurement'}
         append_axl345_data(msg)
         send_message(msg)
@@ -452,17 +478,21 @@ def send_message(msg):
 
 if __name__ == "__main__":
 
-
     logging.basicConfig(level=logging.DEBUG)
 
-    logging.debug("Starting sense-python")
+    naptime_in_seconds = int(os.environ['SLEEP_ON_EXIT_FOR_DEBUGGING'])
+
+    logging.info("Starting sense-python")
+
+    logging.info(f"naptime_in_seconds = {naptime_in_seconds} seconds")
+
     my_site['deviceid'] = read_deviceid('/config/deviceid')
     logging.info("deviceid from file is %d" % my_site['deviceid'])
-    wait_for_config('/config/config.json')
-    b = read_config('/config/config.json')
+    wait_for_config('/config/config.json')  # wait for the config file to exist, exit directly if it times out
+    b = read_config('/config/config.json')  # config file exists, read it in
     if not b:
-        logging.error('invalid config.json - not validating')
-        time.sleep(60)
+        logging.error(f"invalid config.json - not validating - exiting after {naptime_in_seconds} seconds")
+        time.sleep(naptime_in_seconds)
         exit(1)
 
     bme280_names()
@@ -487,7 +517,7 @@ if __name__ == "__main__":
 
                 #                logging.debug("sleeping %d xx seconds at %s" % (config['time_between_sensor_polling_in_seconds'],
                 #                time.strftime("%T")))
-                time.sleep(my_site['time_between_sensor_polling_in_seconds'])
+                time.sleep(my_device['time_between_sensor_polling_in_seconds'])
 
             logging.debug("broke out of temp/hum/distance polling loop")
         except Exception as e:

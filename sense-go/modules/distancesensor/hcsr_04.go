@@ -68,19 +68,19 @@ func RunDistanceWatcher1(once_only bool, isUnitTest bool) {
 		nanos := distance * 58000.00
 		seconds := nanos / 1000000000.0
 		mydistance := (float64)(17150.00 * seconds)
-		direction := ""
+		direction := globals.Directions_none
 		if mydistance > lastDistance {
-			direction = "up"
+			direction = globals.Directions_up
 		} else if mydistance < lastDistance {
-			direction = "down"
+			direction = globals.Directions_down
 		}
 		lastDistance = mydistance
 		//		log.Debugf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := messaging.NewDistanceSensorMessage("height_sensor", "plant_height", mydistance, "cm", direction, mydistance, mydistance/2.54)
+		dm := messaging.NewDistanceSensorMessage(globals.Sensor_name_height_sensor, globals.Measurement_name_plant_height, mydistance, globals.Distance_units_centimeters, direction, mydistance, mydistance/2.54)
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debugf("sending distance msg %s?", string(bytearray))
-			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: "sensor", Data: string(bytearray)}
+			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: globals.Grpc_message_typeid_sensor, Data: string(bytearray)}
 			if !isUnitTest {
 				_, err := globals.Client.StoreAndForward(context.Background(), &message)
 				if err != nil {
@@ -98,6 +98,6 @@ func RunDistanceWatcher1(once_only bool, isUnitTest bool) {
 			return
 		}
 		//		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
-		time.Sleep(time.Duration(60) * time.Second)
+		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds) * time.Second)
 	}
 }

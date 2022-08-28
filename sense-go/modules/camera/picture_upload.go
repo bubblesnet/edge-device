@@ -30,6 +30,7 @@ package camera
 // copyright and license inspection - no issues 4/13/22
 
 import (
+	"bubblesnet/edge-device/sense-go/globals"
 	"fmt"
 	"github.com/dhowden/raspicam"
 	"github.com/go-playground/log"
@@ -39,9 +40,15 @@ import (
 
 func TakeAPicture() {
 
-	//	log.Infof("takeAPicture()")
+	// Is there any light?  - check the bh1750
+	if globals.MyStation.LightSensorInternal && globals.ExternalCurrentState.LightInternal < 10.0 {
+		log.Infof("LightInternal value is available AND too low to take picture %f", globals.ExternalCurrentState.LightInternal)
+		return
+	}
+
+	log.Infof("takeAPicture() with light reading %f", globals.ExternalCurrentState.LightInternal)
 	t := time.Now()
-	filename := fmt.Sprintf("%4.4d%2.2d%2.2d_%2.2d%2.2d_%2.2d.jpg", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+	filename := fmt.Sprintf("%8.8d_%8.8d_%4.4d%2.2d%2.2d_%2.2d%2.2d_%2.2d.jpg", globals.MySite.UserID, globals.MyDevice.DeviceID, t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 	//	log.Debugf("Creating file %s", filename)
 	f, err := os.Create(filename)
 	if err != nil {
@@ -70,6 +77,6 @@ func TakeAPicture() {
 	if err != nil {
 		log.Errorf("os.Remove failed for %s", f.Name())
 	}
-	SendPictureTakenEvent()
+	SendPictureTakenEvent(filename, t.UnixMilli())
 
 }

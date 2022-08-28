@@ -55,10 +55,11 @@ message GetStateReply {
   int32 sequence = 1;
   string type_id = 2;
   string result = 3;
-  float tempF = 4;
-  float humidity = 5;
-  float externalTempF = 6;
-  float waterTempF = 7;
+  float temp_air_middle = 4;
+  float humidity_internal = 5;
+  float temp_external = 6;
+  float temp_water = 7;
+  float light_internal = 8;
 }
 
 // The request message

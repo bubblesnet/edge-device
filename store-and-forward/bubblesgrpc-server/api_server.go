@@ -52,17 +52,17 @@ func GetSequenceNumber() int32 {
 
 /*
 func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
-	ret := "SampleTimestamp,SampleTimestampS,DistanceIn,Ph,TempF,Humidity,Pressure,Light,GrowLightVeg,Heater,HeaterPad,Humidifier\n"
+	ret := "SampleTimestamp,SampleTimestampS,DistanceIn,Ph,TempAirMiddle,HumidityInternal,Pressure,LightInternal,GrowLightVeg,Heater,HeaterPad,Humidifier\n"
 	for i := 0; i < len(states); i++ {
 		ret = ret + fmt.Sprintf("%d,%s,%f,%f,%f,%f,%f,%f,%t,%t,%t,%t\n",
 			states[i].SampleTimestamp,
 			states[i].SampleTimestampS,
 			states[i].DistanceIn,
 			states[i].Ph,
-			states[i].TempF,
-			states[i].Humidity,
+			states[i].TempAirMiddle,
+			states[i].HumidityInternal,
 			states[i].Pressure,
-			states[i].Light,
+			states[i].LightInternal,
 			states[i].GrowLightVeg,
 			states[i].Heater,
 			states[i].HeaterPad,

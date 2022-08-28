@@ -189,7 +189,8 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		CurrentStage == globals.VEGETATIVE || CurrentStage == globals.BLOOMING {
 		// If it's time for grow light veg to be on
 		if inRange(CurrentStageSchedule.LightOnStartHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
+			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM,
+				localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, false, true)
 			}
@@ -197,7 +198,8 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		} else {
 			// If it's time for grow light veg to be off
 			if LocalCurrentState.GrowLightBloom == true {
-				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM, localTimeHours, CurrentStageSchedule.HoursOfLight, MyStation.Automation.LightOnStartHour)
+				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM,
+					localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			}
 			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
@@ -258,16 +260,16 @@ func ControlWaterTemp(force bool,
 		} // MAKE SURE HEAT IS OFF
 		return somethingChanged
 	}
-	if ExternalCurrentState.TempF == globals.TEMPNOTSET {
-		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.WaterTempF %.3f - ignoring", ExternalCurrentState.WaterTempF)
+	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
+		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.TempWater %.3f - ignoring", ExternalCurrentState.TempWater)
 		return somethingChanged
 	}
 	// Go from 62 to 68
 	highLimit := StageSchedule.EnvironmentalTargets.WaterTemperature + 3.0
 	lowLimit := StageSchedule.EnvironmentalTargets.WaterTemperature - 3.0
-	if ExternalCurrentState.WaterTempF > highLimit {
+	if ExternalCurrentState.TempWater > highLimit {
 		if *LastWaterTemp < highLimit { // JUST BECAME TOO HOT
-			log.Infof("automation: ControlWaterTemp turning off %s because WaterTemp (%.3f) just rolled over (%.2f/%.3f/%.2f) on way up", globals.WATERHEATER, ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit)
+			log.Infof("automation: ControlWaterTemp turning off %s because WaterTemp (%.3f) just rolled over (%.2f/%.3f/%.2f) on way up", globals.WATERHEATER, ExternalCurrentState.TempWater, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit)
 			force = true
 		}
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.WATERHEATER, force); somethingChanged == true {
@@ -276,11 +278,11 @@ func ControlWaterTemp(force bool,
 
 		(*LocalCurrentState).WaterHeater = false
 		(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
-		log.Infof("automation: ControlWaterTemp water temp %f is already too high %f", ExternalCurrentState.WaterTempF, highLimit)
+		log.Infof("automation: ControlWaterTemp water temp %f is already too high %f", ExternalCurrentState.TempWater, highLimit)
 	} else { // NOT TOO HOT
-		if ExternalCurrentState.WaterTempF < lowLimit { // TOO COLD
+		if ExternalCurrentState.TempWater < lowLimit { // TOO COLD
 			if *LastWaterTemp > lowLimit { // JUST BECAME TOO COLD
-				log.Infof("automation: ControlWaterTemp turning on %s because Water Temp (%.3f) just fell below (%.2f/%.1f/%.2f) on way up from %.2f", globals.WATERHEATER, ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
+				log.Infof("automation: ControlWaterTemp turning on %s because Water Temp (%.3f) just fell below (%.2f/%.1f/%.2f) on way up from %.2f", globals.WATERHEATER, ExternalCurrentState.TempWater, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 				force = true
 			}
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.WATERHEATER, force); somethingChanged == true {
@@ -290,17 +292,17 @@ func ControlWaterTemp(force bool,
 			(*LocalCurrentState).WaterHeater = true
 		} else { // JUST RIGHT
 			if *LastWaterTemp < lowLimit {
-				log.Infof("automation: ControlWaterTemp Water Temp (%.3f) just entered sweet spot (%.2f/%.1f/%.2f) on way up from %.2f", ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
+				log.Infof("automation: ControlWaterTemp Water Temp (%.3f) just entered sweet spot (%.2f/%.1f/%.2f) on way up from %.2f", ExternalCurrentState.TempWater, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 			} else {
 				if *LastWaterTemp > highLimit {
-					log.Infof("automation: ControlWaterTemp Water Temp (%.3f) just entered sweet spot (%.2f/%.1f/%.2f) on way down from %.3f", ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
+					log.Infof("automation: ControlWaterTemp Water Temp (%.3f) just entered sweet spot (%.2f/%.1f/%.2f) on way down from %.3f", ExternalCurrentState.TempWater, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 				} else {
-					log.Infof("automation: ControlWaterTemp Water Temp (%.3f) living in the sweet spot (%.2f/%.1f/%.2f) on way down from %.3f", ExternalCurrentState.WaterTempF, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
+					log.Infof("automation: ControlWaterTemp Water Temp (%.3f) living in the sweet spot (%.2f/%.1f/%.2f) on way down from %.3f", ExternalCurrentState.TempWater, lowLimit, StageSchedule.EnvironmentalTargets.WaterTemperature, highLimit, *LastWaterTemp)
 				}
 			}
 		}
 	}
-	*LastWaterTemp = ExternalCurrentState.WaterTempF
+	*LastWaterTemp = ExternalCurrentState.TempWater
 	return somethingChanged
 }
 
@@ -331,15 +333,15 @@ func ControlHeat(force bool,
 	highLimit := CurrentStageSchedule.EnvironmentalTargets.Temperature + 2.0
 	lowLimit := CurrentStageSchedule.EnvironmentalTargets.Temperature - 2.0
 
-	//	log.Infof("automation: checking temp %.3f for stage %s with highLimit %.3f, lowLimit %.3f", globals.ExternalCurrentState.TempF, globals.MyStation.CurrentStage, highLimit,lowLimit)
-	if ExternalCurrentState.TempF == globals.TEMPNOTSET {
-		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempF %.3f - ignoring", ExternalCurrentState.TempF)
+	//	log.Infof("automation: checking temp %.3f for stage %s with highLimit %.3f, lowLimit %.3f", globals.ExternalCurrentState.TempAirMiddle, globals.MyStation.CurrentStage, highLimit,lowLimit)
+	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
+		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempAirMiddle %.3f - ignoring", ExternalCurrentState.TempAirMiddle)
 		return somethingChanged
 	}
-	if ExternalCurrentState.TempF > highLimit { // TOO HOT
-		log.Infof("automation: ControlHeat turning off %s because internal temp %.3f is over high limit %.3f on way up", globals.HEATER, ExternalCurrentState.TempF, highLimit)
+	if ExternalCurrentState.TempAirMiddle > highLimit { // TOO HOT
+		log.Infof("automation: ControlHeat turning off %s because internal temp %.3f is over high limit %.3f on way up", globals.HEATER, ExternalCurrentState.TempAirMiddle, highLimit)
 		if globals.LastTemp < highLimit { // JUST BECAME TOO HOT
-			log.Infof("automation: ControlHeat turning off %s because internal temp %.3f just exceeded high limit %.3f on way up", globals.HEATER, ExternalCurrentState.TempF, highLimit)
+			log.Infof("automation: ControlHeat turning off %s because internal temp %.3f just exceeded high limit %.3f on way up", globals.HEATER, ExternalCurrentState.TempAirMiddle, highLimit)
 			force = true
 		}
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HEATER, force); somethingChanged == true {
@@ -350,10 +352,10 @@ func ControlHeat(force bool,
 		(*LocalCurrentState).HeaterPad = false
 		(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
 	} else { // NOT TOO HOT
-		if ExternalCurrentState.TempF < lowLimit { // TOO COLD
-			//			log.Infof("automation: ControlHeat TOO COLD %.3f < lowLimit %.2f", ExternalCurrentState.TempF, lowLimit)
+		if ExternalCurrentState.TempAirMiddle < lowLimit { // TOO COLD
+			//			log.Infof("automation: ControlHeat TOO COLD %.3f < lowLimit %.2f", ExternalCurrentState.TempAirMiddle, lowLimit)
 			if *LastTemp > lowLimit { // JUST BECAME TOO COLD
-				log.Infof("automation: ControlHeat turning on %s because internal temp %.3f just fell below low limit %.3f on way down", globals.HEATER, ExternalCurrentState.TempF, lowLimit)
+				log.Infof("automation: ControlHeat turning on %s because internal temp %.3f just fell below low limit %.3f on way down", globals.HEATER, ExternalCurrentState.TempAirMiddle, lowLimit)
 				force = true
 			}
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.HEATER, false); somethingChanged == true {
@@ -363,12 +365,12 @@ func ControlHeat(force bool,
 			(*LocalCurrentState).Heater = true
 			(*LocalCurrentState).HeaterPad = true
 		} else { // JUST RIGHT
-			log.Infof("automation: ControlHeat JUST RIGHT %.3f", ExternalCurrentState.TempF)
+			log.Infof("automation: ControlHeat JUST RIGHT %.3f", ExternalCurrentState.TempAirMiddle)
 			if *LastTemp < lowLimit {
-				log.Infof("automation: ControlHeat Temp just entered sweet spot on way up - %.3f", ExternalCurrentState.TempF)
+				log.Infof("automation: ControlHeat Temp just entered sweet spot on way up - %.3f", ExternalCurrentState.TempAirMiddle)
 			} else {
 				if *LastTemp > highLimit {
-					log.Infof("automation: ControlHeat Temp just entered sweet spot on way down - %.3f", ExternalCurrentState.TempF)
+					log.Infof("automation: ControlHeat Temp just entered sweet spot on way down - %.3f", ExternalCurrentState.TempAirMiddle)
 				} else {
 				}
 			}
@@ -376,7 +378,7 @@ func ControlHeat(force bool,
 	}
 
 	(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
-	*LastTemp = ExternalCurrentState.TempF
+	*LastTemp = ExternalCurrentState.TempAirMiddle
 	return somethingChanged
 }
 
@@ -405,13 +407,13 @@ func ControlHumidity(force bool,
 	highLimit := StageSchedule.EnvironmentalTargets.Humidity + 5.0
 	lowLimit := StageSchedule.EnvironmentalTargets.Humidity - 5.0
 
-	if ExternalCurrentState.Humidity == globals.HUMIDITYNOTSET {
-		//		log.Debugf("automation: HUMIDITYNOTSET ExternalCurrentState.Humidity %.3f - ignoring", globals.ExternalCurrentState.Humidity))
+	if ExternalCurrentState.HumidityInternal == globals.HUMIDITYNOTSET {
+		//		log.Debugf("automation: HUMIDITYNOTSET ExternalCurrentState.HumidityInternal %.3f - ignoring", globals.ExternalCurrentState.HumidityInternal))
 		return somethingChanged
 	}
-	if ExternalCurrentState.Humidity > highLimit { // TOO HUMID
+	if ExternalCurrentState.HumidityInternal > highLimit { // TOO HUMID
 		if *LastHumidity < highLimit { // JUST BECAME TOO HUMID
-			log.Infof("automation: ControlHumidity turning off %s because Humidity %.3f just exceeded (%.3f/%.1f/%.3f) on way up from %.3f", globals.HUMIDIFIER, ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+			log.Infof("automation: ControlHumidity turning off %s because HumidityInternal %.3f just exceeded (%.3f/%.1f/%.3f) on way up from %.3f", globals.HUMIDIFIER, ExternalCurrentState.HumidityInternal, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
 			force = true
 		}
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HUMIDIFIER, force); somethingChanged == true {
@@ -419,9 +421,9 @@ func ControlHumidity(force bool,
 		} // MAKE SURE HUMIDIFIER IS OFF
 		(*LocalCurrentState).Humidifier = false
 	} else { // NOT TOO HOT
-		if ExternalCurrentState.Humidity < lowLimit { // TOO COLD
+		if ExternalCurrentState.HumidityInternal < lowLimit { // TOO COLD
 			if *LastHumidity > lowLimit { // JUST BECAME TOO COLD
-				log.Infof("automation: ControlHumidity turning on %s because Humidity %.3f just fell below low (%.3f/%.1f/%.3f) on way down from %.3f", globals.HUMIDIFIER, ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+				log.Infof("automation: ControlHumidity turning on %s because HumidityInternal %.3f just fell below low (%.3f/%.1f/%.3f) on way down from %.3f", globals.HUMIDIFIER, ExternalCurrentState.HumidityInternal, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
 				force = true
 			}
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.HUMIDIFIER, force); somethingChanged == true {
@@ -431,10 +433,10 @@ func ControlHumidity(force bool,
 			(*LocalCurrentState).Humidifier = true
 		} else { // JUST RIGHT
 			if *LastHumidity < lowLimit {
-				log.Infof("automation: ControlHumidity Humidity %.3f just entered sweet spot (%.3f/%.1f/%.3f) on way up from %.3f", ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+				log.Infof("automation: ControlHumidity HumidityInternal %.3f just entered sweet spot (%.3f/%.1f/%.3f) on way up from %.3f", ExternalCurrentState.HumidityInternal, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
 			} else {
 				if *LastHumidity > highLimit {
-					log.Infof("automation: ControlHumidity Humidity %.3f just entered sweet spot (%.3f/%.1f/%.3f) on way down from %.3f", ExternalCurrentState.Humidity, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
+					log.Infof("automation: ControlHumidity HumidityInternal %.3f just entered sweet spot (%.3f/%.1f/%.3f) on way down from %.3f", ExternalCurrentState.HumidityInternal, lowLimit, StageSchedule.EnvironmentalTargets.Humidity, highLimit, *LastHumidity)
 				} else {
 				}
 			}
@@ -442,6 +444,6 @@ func ControlHumidity(force bool,
 	}
 
 	(*LocalCurrentState).EnvironmentalControl = setEnvironmentalControlString(LocalCurrentState)
-	*LastHumidity = ExternalCurrentState.Humidity
+	*LastHumidity = ExternalCurrentState.HumidityInternal
 	return somethingChanged
 }

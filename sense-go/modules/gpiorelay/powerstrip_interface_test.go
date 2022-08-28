@@ -122,7 +122,7 @@ func TestTurnOffOutlet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.TurnOffOutlet(tt.args.index)
+			PowerstripSvc.TurnOffOutletByIndex(tt.args.index)
 		})
 	}
 }
@@ -156,7 +156,7 @@ func TestTurnOnOutlet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PowerstripSvc.TurnOnOutlet(tt.args.index)
+			PowerstripSvc.TurnOnOutletByIndex(tt.args.index)
 		})
 	}
 }
