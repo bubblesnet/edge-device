@@ -1,7 +1,33 @@
 //go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package gpiorelay
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	pb "bubblesnet/edge-device/sense-go/bubblesgrpc"
@@ -47,7 +73,7 @@ func (r *RealPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool
 	log.Infof("Reporting switch %s status %#v", switch_name, on)
 	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
 	bytearray, err := json.Marshal(dm)
-	message := pb.SensorRequest{Sequence: sequence, TypeId: "switch", Data: string(bytearray)}
+	message := pb.SensorRequest{Sequence: sequence, TypeId: globals.Grpc_message_typeid_switch, Data: string(bytearray)}
 	if globals.Client == nil {
 		fmt.Printf("No connection to grpc client\n")
 	} else {
@@ -80,7 +106,7 @@ func (r *RealPowerStrip) TurnAllOn(MyDevice *globals.EdgeDevice, timeout time.Du
 	for i := 0; i < len((*MyDevice).ACOutlets); i++ {
 		log.Infof("TurnAllOn Turning on outlet %s", (*MyDevice).ACOutlets[i].Name)
 		(*MyDevice).ACOutlets[i].PowerOn = true
-		singletonPowerstrip.TurnOnOutlet((*MyDevice).ACOutlets[i].Index)
+		singletonPowerstrip.TurnOnOutletByIndex((*MyDevice).ACOutlets[i].Index)
 		singletonPowerstrip.SendSwitchStatusChangeEvent((*MyDevice).ACOutlets[i].Name, true, globals.GetSequence())
 		if timeout > 0 {
 			time.Sleep(timeout * time.Second)
@@ -101,7 +127,7 @@ func (r *RealPowerStrip) TurnOffOutletByName(MyDevice *globals.EdgeDevice, name 
 			log.Infof("TurnOffOutletByName %s", name)
 			log.Infof("offbyname found outlet %s at index %d BCM%d", name, MyDevice.ACOutlets[i].Index, MyDevice.ACOutlets[i].BCMPinNumber)
 			(*MyDevice).ACOutlets[i].PowerOn = false
-			singletonPowerstrip.TurnOffOutlet((*MyDevice).ACOutlets[i].Index)
+			singletonPowerstrip.TurnOffOutletByIndex((*MyDevice).ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, false, globals.GetSequence())
 			return singletonPowerstrip.IsOutletOn(MyDevice, name) != originallyOn
 		}
@@ -144,7 +170,7 @@ func (r *RealPowerStrip) TurnOnOutletByName(MyDevice *globals.EdgeDevice, name s
 			log.Infof("turnOnOutletByName %s force %#v", name, force)
 			log.Infof("onbyname found outlet %s at index %d BCM%d", name, (*MyDevice).ACOutlets[i].Index, (*MyDevice).ACOutlets[i].BCMPinNumber)
 			MyDevice.ACOutlets[i].PowerOn = true
-			singletonPowerstrip.TurnOnOutlet(MyDevice.ACOutlets[i].Index)
+			singletonPowerstrip.TurnOnOutletByIndex(MyDevice.ACOutlets[i].Index)
 			singletonPowerstrip.SendSwitchStatusChangeEvent(name, true, globals.GetSequence())
 			return singletonPowerstrip.IsOutletOn(MyDevice, name) == originallyOn
 		}
@@ -169,7 +195,7 @@ func (r *RealPowerStrip) TurnAllOff(MyDevice *globals.EdgeDevice, timeout time.D
 	for i := 0; i < len((*MyDevice).ACOutlets); i++ {
 		fmt.Printf("TurnAllOff Turning off outlet %s\n", (*MyDevice).ACOutlets[i].Name)
 		(*MyDevice).ACOutlets[i].PowerOn = false
-		singletonPowerstrip.TurnOffOutlet((*MyDevice).ACOutlets[i].Index)
+		singletonPowerstrip.TurnOffOutletByIndex((*MyDevice).ACOutlets[i].Index)
 		//		fmt.Printf("TurnAllOff 1 after\n")
 		singletonPowerstrip.SendSwitchStatusChangeEvent((*MyDevice).ACOutlets[i].Name, false, globals.GetSequence())
 		//		fmt.Printf("TurnAllOff 2 after\n")
@@ -179,17 +205,17 @@ func (r *RealPowerStrip) TurnAllOff(MyDevice *globals.EdgeDevice, timeout time.D
 	}
 }
 
-func (r *RealPowerStrip) TurnOnOutlet(index int) {
+func (r *RealPowerStrip) TurnOnOutletByIndex(index int) {
 	pins[index].High()
 }
 
-func (r *RealPowerStrip) TurnOffOutlet(index int) {
+func (r *RealPowerStrip) TurnOffOutletByIndex(index int) {
 	pins[index].Low()
 }
 
 func (r *RealPowerStrip) RunPinToggler(MyDevice *globals.EdgeDevice, isTest bool) {
 	log.Infof("pins %#v", pins)
-	for i := 0; i < 8; i++ {
+	for i := 0; i < len(pins); i++ {
 		log.Debugf("setting up pin[%d] %#v", i, pins[i])
 		if globals.RunningOnUnsupportedHardware() {
 			continue

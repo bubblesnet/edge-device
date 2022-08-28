@@ -1,7 +1,33 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 ///go:generate protoc -I ../bubblesgrpc --go_out=plugins=grpc:../bubblesgrpc ../bubblesgrpc/bubblesgrpc.proto
 
 // Package main implements a server for SensorStoreAndForward service.
 package main
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
@@ -17,6 +43,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -74,41 +101,41 @@ func parseMessageForCurrentState(message string) {
 		return
 	}
 	switch genericMessage.MessageType {
-	case "measurement":
+	case message_type_measurement:
 		switch genericMessage.MeasurementName {
-		case "plant_height":
+		case Measurement_name_plant_height:
 			if genericMessage.FloatValue != ExternalCurrentState.PlantHeightIn {
 				log.Infof("plant_height changed from %f to %f", ExternalCurrentState.PlantHeightIn, genericMessage.FloatValue)
 			}
 			ExternalCurrentState.PlantHeightIn = genericMessage.FloatValue
 			break
 
-		case "temp_water":
-			if genericMessage.FloatValue != ExternalCurrentState.WaterTempF {
-				log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTempF, genericMessage.FloatValue)
+		case Measurement_name_temp_water:
+			if genericMessage.FloatValue != ExternalCurrentState.WaterTemp {
+				log.Infof("temp_water changed from %f to %f", ExternalCurrentState.WaterTemp, genericMessage.FloatValue)
 			}
-			ExternalCurrentState.WaterTempF = genericMessage.FloatValue
+			ExternalCurrentState.WaterTemp = genericMessage.FloatValue
 			break
 
-		case "temp_air_middle":
-			if genericMessage.FloatValue != ExternalCurrentState.TempF {
-				log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempF, genericMessage.FloatValue)
+		case measurement_name_temp_air_middle:
+			if genericMessage.FloatValue != ExternalCurrentState.TempAirMiddle {
+				log.Infof("temp_air_middle changed from %f to %f", ExternalCurrentState.TempAirMiddle, genericMessage.FloatValue)
 			}
-			ExternalCurrentState.TempF = genericMessage.FloatValue
+			ExternalCurrentState.TempAirMiddle = genericMessage.FloatValue
 			break
-		case "humidity_internal":
-			if genericMessage.FloatValue != ExternalCurrentState.Humidity {
-				log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.Humidity, genericMessage.FloatValue)
+		case measurement_name_humidity_internal:
+			if genericMessage.FloatValue != ExternalCurrentState.HumidityInternal {
+				log.Infof("humidity_internal changed from %f to %f", ExternalCurrentState.HumidityInternal, genericMessage.FloatValue)
 			}
-			ExternalCurrentState.Humidity = genericMessage.FloatValue
+			ExternalCurrentState.HumidityInternal = genericMessage.FloatValue
 			break
-		case "light_internal":
+		case Measurement_name_light_internal:
 			if genericMessage.FloatValue != ExternalCurrentState.LightInternal {
 				log.Infof("light_internal changed from %f to %f", ExternalCurrentState.LightInternal, genericMessage.FloatValue)
 			}
 			ExternalCurrentState.LightInternal = genericMessage.FloatValue
 			break
-		case "pressure_internal":
+		case Measurement_name_pressure_internal:
 			if genericMessage.FloatValue != ExternalCurrentState.PressureInternal {
 				log.Infof("pressure_internal changed from %f to %f", ExternalCurrentState.PressureInternal, genericMessage.FloatValue)
 			}
@@ -135,7 +162,10 @@ func (s *server) GetState(_ context.Context, in *pb.GetStateRequest) (*pb.GetSta
 	//		return &pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "ERROR" }, nil
 	//	} else {
 
-	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(), Result: "OK", TempF: float32(ExternalCurrentState.TempF), Humidity: float32(ExternalCurrentState.Humidity), WaterTempF: float32(ExternalCurrentState.WaterTempF)}
+	ret := pb.GetStateReply{Sequence: in.GetSequence(), TypeId: in.GetTypeId(),
+		Result: "OK", TempAirMiddle: float32(ExternalCurrentState.TempAirMiddle),
+		HumidityInternal: float32(ExternalCurrentState.HumidityInternal),
+		TempWater:        float32(ExternalCurrentState.WaterTemp), LightInternal: float32(ExternalCurrentState.LightInternal)}
 	//	log.Infof("GetState returning %#v", ret)
 	return &ret, nil
 	//	}
@@ -172,7 +202,7 @@ func forwardMessages(bucketName string, oneOnly bool) (err error) {
 
 		for i := 0; i < len(forwarded); i++ {
 			if err := deleteFromBucket(bucketName, []byte(forwarded[i])); err != nil {
-				log.Errorf("delete from bucket failed %v", err)
+				log.Errorf("delete frm bucket failed %v", err)
 			}
 		}
 		// delete the forwarded messages
@@ -196,7 +226,7 @@ func postIt(message []byte) (err error) {
 			log.Infof("non-measurement message %s", string(message))
 		}
 	}
-	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerAPIHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
 	//	log.Infof("Sending to %s", url)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(message))
 	if err != nil {
@@ -221,11 +251,23 @@ func handleVersioningFromLoader() (err error) {
 	return nil
 }
 
+func SleepBeforeExit() {
+	snaptime := os.Getenv("SLEEP_ON_EXIT_FOR_DEBUGGING")
+	naptime, err := strconv.ParseInt(snaptime, 10, 32)
+	if err != nil {
+		log.Errorf("SLEEP_ON_EXIT_FOR_DEBUGGING %s conversion error %#v", snaptime, err)
+		naptime = 60
+	}
+	fmt.Printf("Exiting because of bad configuration - sleeping for %d seconds to allow intervention\n", naptime)
+	time.Sleep(time.Duration(naptime) * time.Second)
+}
+
 func main() {
 	log.ConfigureLogging("fatal,error,warn,info,debug,", ".")
 
 	if err := handleVersioningFromLoader(); err != nil {
 		log.Errorf("handleVersioningFromLoader %+v", err)
+		SleepBeforeExit()
 		os.Exit(222)
 	}
 	fmt.Printf("Bubblesnet %s.%s.%s build %s timestamp %s githash %s\n", BubblesnetVersionMajorString,
@@ -240,7 +282,7 @@ func main() {
 		databaseFilename = "./messages.db"
 	}
 	var err error
-	MyDeviceID, err = ReadMyDeviceId("/config", "", "deviceid")
+	MyDeviceID, err = ReadMyDeviceId()
 	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 	if err != nil {
 		fmt.Printf("error read device %v\n", err)
@@ -249,6 +291,14 @@ func main() {
 
 	WaitForConfigFile(storeMountPoint, "", "config.json")
 	err = ReadCompleteSiteFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
+	var nilerr error
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+	MySite.UserID, _ = strconv.ParseInt(os.Getenv("USERID"), 10, 64)
+	d := EdgeDevice{DeviceID: MyDeviceID}
+	MyDevice = &d
 
 	fmt.Printf("MySite = %v", MySite)
 	fmt.Printf("stageSchedule = %v", stageSchedule)
@@ -260,16 +310,6 @@ func main() {
 	go func() {
 		_ = forwardMessages(messageBucketName, false)
 	}()
-	/*	go func() {
-			_ = forwardMessages(stateBucketName, false)
-		}()
-		go func() {
-			_ = saveStateDaemon(stateBucketName, false)
-		}()
-
-	*/
-
-	//	go StartApiServer()
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
@@ -291,6 +331,7 @@ func WaitForConfigFile(storeMountPoint string, relativePath string, fileName str
 		}
 		if index == 60 {
 			fmt.Printf("waited too long for file %s to be downloaded. Probably no connection.  Exiting\n", fileName)
+			SleepBeforeExit()
 			os.Exit(1)
 		}
 		fmt.Printf("Sleeping 60 seconds waiting for someone to bring us a /config/config.json\n")

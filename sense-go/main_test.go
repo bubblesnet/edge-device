@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
 package main
 
 import (
@@ -36,46 +59,46 @@ func TestControlHeat(t *testing.T) {
 /*
 globals.CurrentStageSchedule.EnvironmentalTargets.Temperature
 globals.LastTemp
-globals.ExternalCurrentState.TempF
+globals.ExternalCurrentState.TempAirMiddle
 */
 func testHeat(t *testing.T) { //				,
 	globals.CurrentStageSchedule.EnvironmentalTargets.Temperature = 80
-	globals.ExternalCurrentState.TempF = globals.TEMPNOTSET
+	globals.ExternalCurrentState.TempAirMiddle = globals.TEMPNOTSET
 	globals.MyDevice = &globals.EdgeDevice{DeviceID: 0}
 	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	// all set
 	globals.LastTemp = 80
-	globals.ExternalCurrentState.TempF = 77
+	globals.ExternalCurrentState.TempAirMiddle = 77
 	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
-	globals.ExternalCurrentState.TempF = 77
+	globals.ExternalCurrentState.TempAirMiddle = 77
 	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 79
-	globals.ExternalCurrentState.TempF = 79
+	globals.ExternalCurrentState.TempAirMiddle = 79
 	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
-	globals.ExternalCurrentState.TempF = 80
+	globals.ExternalCurrentState.TempAirMiddle = 80
 	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 	globals.LastTemp = 81
-	globals.ExternalCurrentState.TempF = 83
+	globals.ExternalCurrentState.TempAirMiddle = 83
 	ControlHeat(true, globals.MyDevice.DeviceID, globals.MyDevice, globals.CurrentStageSchedule.Name, globals.CurrentStageSchedule,
 		globals.ExternalCurrentState, &globals.LocalCurrentState, &globals.LastTemp, gpiorelay.GetPowerstripService())
 
 }
 
 /*
-globals.LastHumidity = globals.ExternalCurrentState.Humidity
-globals.CurrentStageSchedule.EnvironmentalTargets.Humidity
+globals.LastHumidity = globals.ExternalCurrentState.HumidityInternal
+globals.CurrentStageSchedule.EnvironmentalTargets.HumidityInternal
 */
 
 /*
@@ -296,7 +319,7 @@ func Test_initializeOutletsForAutomation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			initializeOutletsForAutomation()
+			initializePowerstripForAutomation()
 		})
 	}
 }
@@ -323,7 +346,7 @@ func Test_setupGPIO(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			setupGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
+			setupPowerstripGPIO(globals.MyStation, globals.MyDevice, gpiorelay.GetPowerstripService())
 		})
 	}
 }

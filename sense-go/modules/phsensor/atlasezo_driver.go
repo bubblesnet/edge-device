@@ -1,6 +1,33 @@
+//go:build (linux && arm) || arm64
 // +build linux,arm arm64
 
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package phsensor
+
+/// TODO copyright and license inspection - 4/13/22 - recheck - figure out where this code came from
 
 import (
 	"bubblesnet/edge-device/sense-go/globals"
@@ -12,13 +39,7 @@ import (
 )
 
 const (
-	atlasEZOAddress            = 0x63
-	bmp280RegisterControl      = 0xf4
-	bmp280RegisterConfig       = 0xf5
-	bmp280RegisterPressureData = 0xf7
-	bmp280RegisterTempData     = 0xfa
-	bmp280RegisterCalib00      = 0x88
-	bmp280SeaLevelPressure     = 1013.25
+	atlasEZOAddress = 0x63
 )
 
 type bmp280CalibrationCoefficients struct {
@@ -66,7 +87,6 @@ func NewAtlasEZODriver(c i2c.Connector, options ...func(i2c.Config)) *AtlasEZODr
 		option(b)
 	}
 
-	// TODO: expose commands to API
 	return b
 }
 
@@ -85,20 +105,20 @@ func (d *AtlasEZODriver) Connection() gobot.Connection {
 	return d.connector.(gobot.Connection)
 }
 
-// Start initializes the BMP280 and loads the calibration coefficients.
+// Start initializes the EZO pH
 func (d *AtlasEZODriver) Start() (err error) {
 	bus := d.GetBusOrDefault(d.connector.GetDefaultBus())
 	address := d.GetAddressOrDefault(atlasEZOAddress)
 
 	if d.connection, err = d.connector.GetConnection(address, bus); err != nil {
 		globals.ReportDeviceFailed("ezoph")
-		log.Errorf("atlasezo getconnection error %#v", err)
+		log.Errorf("ezoph: atlasezo getconnection error %#v", err)
 		return err
 	}
 
 	if err := d.initialization(); err != nil {
 		globals.ReportDeviceFailed("ezoph")
-		log.Errorf("atlasezo initialization error %#v", err)
+		log.Errorf("ezoph: atlasezo initialization error %#v", err)
 		return err
 	}
 
@@ -114,8 +134,8 @@ func (d *AtlasEZODriver) Halt() (err error) {
 func (d *AtlasEZODriver) Ph() (pH float64, err error) {
 	var rawP float64
 	if rawP, err = d.rawPh(); err != nil {
-		log.Errorf("Ph read error %#v", err)
-		log.Errorf("atlasezo rawPh %#v", err)
+		log.Errorf("ezoph: Ph read error %#v", err)
+		log.Errorf("ezoph: atlasezo rawPh %#v", err)
 		return 0.0, err
 	}
 	pH = rawP
@@ -140,7 +160,7 @@ func (d *AtlasEZODriver) rawPh() (pH float64, err error) {
 	var data []byte
 
 	if data, err = d.read(0x52, 256); err != nil {
-		log.Errorf("atlasezo rawPh err %#v", err)
+		log.Errorf("ezoph: atlasezo rawPh err %#v", err)
 		return 0, err
 	}
 	d1 := data[:clen(data)]
@@ -152,7 +172,7 @@ func (d *AtlasEZODriver) rawPh() (pH float64, err error) {
 
 func (d *AtlasEZODriver) read(address byte, n int) ([]byte, error) {
 	if _, err := d.connection.Write([]byte{address}); err != nil {
-		log.Errorf("atlasezo write err %#v", err)
+		log.Errorf("ezoph: atlasezo write err %#v", err)
 		return nil, err
 	}
 	// Documentation says wait 900ms between write and read, but 1000ms doesn't work while 2000ms does
@@ -160,7 +180,7 @@ func (d *AtlasEZODriver) read(address byte, n int) ([]byte, error) {
 	buf := make([]byte, n)
 	bytesRead, err := d.connection.Read(buf)
 	if bytesRead != n || err != nil {
-		log.Errorf("read %d bytes err = %#v", bytesRead, err)
+		log.Errorf("ezoph: read %d bytes err = %#v", bytesRead, err)
 		return nil, err
 	}
 	buflen := 0

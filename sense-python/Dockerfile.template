@@ -1,13 +1,14 @@
 # base-image for python on any machine using a template variable,
 # see more about dockerfile templates here: https://www.balena.io/docs/learn/develop/dockerfile/
-FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-buster-run
+# FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-buster-run  THIS FAILS WITH GLIBC 2.29 NOT FOUND ERROR
+FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3.7.4-buster-run
 
 # Install Python.
 RUN apt-get update
 RUN apt-get install -y python python-dev python-pip git wireless-tools network-manager python-smbus vim
 RUN apt-get install -y gcc g++
 RUN apt-get install python3-pigpio python3-gpiozero
-
+RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 
   # use `install_packages` if you need to install dependencies,
   # for instance if you need git, just uncomment the line below.
@@ -21,6 +22,8 @@ COPY src/requirements.txt requirements.txt
 
   # pip install python deps from requirements.txt on the resin.io build server
 RUN export READTHEDOCS=True;pip install -r requirements.txt
+# RUN python -m pip install --target=".python_packages/lib/site-packages" -r requirements.txt
+# RUN echo "" > requirements.txt
 
 # ADD config.json /config/config.json
 

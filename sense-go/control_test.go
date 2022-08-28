@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
 package main
 
 import (
@@ -141,7 +164,7 @@ func testHumidity(t *testing.T) {
 
 		for i := 0; i < len(humidifierstates); i++ {
 			globals.LastHumidity = 59
-			globals.ExternalCurrentState.Humidity = 50
+			globals.ExternalCurrentState.HumidityInternal = 50
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
@@ -154,7 +177,7 @@ func testHumidity(t *testing.T) {
 
 		for i := 0; i < len(humidifierstates); i++ {
 			globals.LastHumidity = 61
-			globals.ExternalCurrentState.Humidity = 67
+			globals.ExternalCurrentState.HumidityInternal = 67
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
@@ -166,7 +189,7 @@ func testHumidity(t *testing.T) {
 
 		for i := 0; i < len(humidifierstates); i++ {
 			globals.LastHumidity = 60
-			globals.ExternalCurrentState.Humidity = 60
+			globals.ExternalCurrentState.HumidityInternal = 60
 			ControlHumidity(true, globals.MyDevice.DeviceID,
 				globals.MyDevice,
 				globals.CurrentStageSchedule,
@@ -368,7 +391,7 @@ func testWaterTemp(t *testing.T) {
 	}
 	for x := 0; x < len(stages); x++ {
 		for _, tt := range tests {
-			tt.args.ExternalCurrentState.TempF = rand.Float32() * 100.0
+			tt.args.ExternalCurrentState.TempAirMiddle = rand.Float32() * 100.0
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlWaterTemp(
 					tt.args.force,
@@ -436,7 +459,7 @@ func testHeat1(t *testing.T) {
 	}
 	for x := 0; x < len(stages); x++ {
 		for _, tt := range tests {
-			tt.args.ExternalCurrentState.TempF = 100.0 // Too high
+			tt.args.ExternalCurrentState.TempAirMiddle = 100.0 // Too high
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlHeat(
 					tt.args.force,
@@ -453,7 +476,7 @@ func testHeat1(t *testing.T) {
 				}
 			})
 
-			tt.args.ExternalCurrentState.TempF = -1.0 // Too low
+			tt.args.ExternalCurrentState.TempAirMiddle = -1.0 // Too low
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlHeat(
 					tt.args.force,

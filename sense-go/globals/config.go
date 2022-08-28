@@ -1,4 +1,30 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package globals
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	"bytes"
@@ -6,9 +32,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/log"
+	//	_type "google.golang.org/genproto/googleapis/identity/accesscontextmanager/type"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,12 +45,14 @@ import (
 // Site is the Top-level object in the data hierarchy.  A site is identified by the user/owner
 // and contains multiple stations.
 type Site struct {
-	SiteID             int64     `json:"siteid"`
-	UserID             int64     `json:"userid"`
-	ControllerHostName string    `json:"controller_hostname"`
-	ControllerAPIPort  int       `json:"controller_api_port"`
-	LogLevel           string    `json:"log_level,omitempty"`
-	Stations           []Station `json:"stations,omitempty"`
+	SiteID                     int64     `json:"siteid"`
+	UserID                     int64     `json:"userid"`
+	ControllerAPIHostName      string    // Removed json because hosts come from env. `json:"controller_hostname"`
+	ControllerActiveMQHostName string    // Removed json because hosts come from env. `json:"controller_activemq_hostname"`
+	ControllerAPIPort          int       // Removed json because hosts come from env. `json:"controller_api_port"`
+	ControllerActiveMQPort     int       // Removed json because hosts come from env. `json:"controller_activemq_port"`
+	LogLevel                   string    `json:"log_level,omitempty"`
+	Stations                   []Station `json:"stations,omitempty"`
 }
 
 // AutomationSettings is the set of automation parameters that belong to this station.
@@ -53,42 +83,45 @@ type AutomationSettings struct {
 // structure for one or more plants.
 type Station struct {
 	StationID              int64              `json:"stationid"`
-	AutomaticControl       bool               `json:"automatic_control,omitempty"`
-	HeightSensor           bool               `json:"height_sensor,omitempty"`
-	Humidifier             bool               `json:"humidifier,omitempty"`
-	HumiditySensor         bool               `json:"humidity_sensor_internal,omitempty"`
-	ExternalHumiditySensor bool               `json:"humidity_sensor_external,omitempty"`
-	Heater                 bool               `json:"heater,omitempty"`
-	WaterHeater            bool               `json:"water_heater,omitempty"`
-	ThermometerTop         bool               `json:"thermometer_top,omitempty"`
-	ThermometerMiddle      bool               `json:"thermometer_middle,omitempty"`
-	ThermometerBottom      bool               `json:"thermometer_bottom,omitempty"`
-	ThermometerExternal    bool               `json:"thermometer_external,omitempty"`
-	ThermometerWater       bool               `json:"thermometer_water,omitempty"`
-	WaterPump              bool               `json:"waterPump,omitempty"`
-	AirPump                bool               `json:"airPump,omitempty"`
-	LightSensorInternal    bool               `json:"light_sensor_internal,omitempty"`
-	LightSensorExternal    bool               `json:"light_sensor_external,omitempty"`
-	StationDoorSensor      bool               `json:"station_door_sensor,omitempty"`
-	OuterDoorSensor        bool               `json:"outer_door_sensor,omitempty"`
-	MovementSensor         bool               `json:"movement_sensor,omitempty"`
-	PressureSensor         bool               `json:"pressure_sensors,omitempty"`
-	RootPhSensor           bool               `json:"root_ph_sensor,omitempty"`
+	AutomaticControl       bool               `json:"automatic_control"`
+	HeightSensor           bool               `json:"height_sensor"`
+	Humidifier             bool               `json:"humidifier"`
+	HumiditySensor         bool               `json:"humidity_sensor_internal"`
+	ExternalHumiditySensor bool               `json:"humidity_sensor_external"`
+	Heater                 bool               `json:"heater"`
+	WaterHeater            bool               `json:"water_heater"`
+	ThermometerTop         bool               `json:"thermometer_top"`
+	ThermometerMiddle      bool               `json:"thermometer_middle"`
+	ThermometerBottom      bool               `json:"thermometer_bottom"`
+	ThermometerExternal    bool               `json:"thermometer_external"`
+	ThermometerWater       bool               `json:"thermometer_water"`
+	WaterPump              bool               `json:"waterPump"`
+	AirPump                bool               `json:"airPump"`
+	LightSensorInternal    bool               `json:"light_sensor_internal"`
+	LightSensorExternal    bool               `json:"light_sensor_external"`
+	StationDoorSensor      bool               `json:"station_door_sensor"`
+	OuterDoorSensor        bool               `json:"outer_door_sensor"`
+	MovementSensor         bool               `json:"movement_sensor"`
+	PressureSensor         bool               `json:"pressure_sensors"`
+	RootPhSensor           bool               `json:"root_ph_sensor"`
 	EnclosureType          string             `json:"enclosure_type,omitempty"`
-	WaterLevelSensor       bool               `json:"water_level_sensor,omitempty"`
-	IntakeFan              bool               `json:"intakeFan,omitempty"`
-	ExhaustFan             bool               `json:"exhaustFan,omitempty"`
-	HeatLamp               bool               `json:"heatLamp,omitempty"`
-	HeatingPad             bool               `json:"heatingPad,omitempty"`
-	LightBloom             bool               `json:"lightBloom,omitempty"`
-	LightVegetative        bool               `json:"lightVegetative,omitempty"`
-	LightGerminate         bool               `json:"lightGerminate,omitempty"`
-	Relay                  bool               `json:"relay,omitempty,omitempty"`
+	WaterLevelSensor       bool               `json:"water_level_sensor"`
+	IntakeFan              bool               `json:"intakeFan"`
+	ExhaustFan             bool               `json:"exhaustFan"`
+	HeatLamp               bool               `json:"heatLamp"`
+	HeatingPad             bool               `json:"heatingPad"`
+	LightBloom             bool               `json:"lightBloom"`
+	LightVegetative        bool               `json:"lightVegetative"`
+	LightGerminate         bool               `json:"lightGerminate"`
+	Relay                  bool               `json:"relay"`
 	EdgeDevices            []EdgeDevice       `json:"edge_devices,omitempty"`
+	Dispensers             []Dispenser        `json:"dispensers,omitempty"`
 	StageSchedules         []StageSchedule    `json:"stage_schedules,omitempty"`
 	TamperSpec             Tamper             `json:"tamper,omitempty"`
 	Automation             AutomationSettings `json:"automation_settings"`
 	CurrentStage           string             `json:"current_stage"`
+	VOCSensor              bool               `json:"voc_sensor"`
+	CO2Sensor              bool               `json:"co2_sensor"`
 }
 
 // EdgeDevice is a single-board-computer that, with the other
@@ -105,7 +138,24 @@ type EdgeDevice struct {
 	DeviceModules                     []DeviceModule `json:"modules,omitempty"`
 	Camera                            PiCam          `json:"camera,omitempty"`
 	TimeBetweenSensorPollingInSeconds int64          `json:"time_between_sensor_polling_in_seconds,omitempty"`
+	TimeBetweenPicturesInSeconds      int64          `json:"time_between_pictures_in_seconds"`
 	ACOutlets                         []ACOutlet     `json:"ac_outlets,omitempty"`
+}
+
+// Dispenser is a combination of a dispenser bottle, a relay-connected dispenser-valve and an additive
+// that is loaded into the dispenser bottle.  Combines the server side tables Dispenser and Additive.
+type Dispenser struct {
+	DispenserID      int64  `json:"dispenserid"`
+	DispenserName    string `json:"dispenser_name"`
+	DeviceID         int64  `json:"deviceid_device"`
+	StationID        int64  `json:"stationid_station"`
+	AdditiveID       int64  `json:"currently_loaded_additiveid"`
+	OnOff            bool   `json:"onoff"`
+	Name             string `json:"name"`
+	Index            int    `json:"index"`
+	BCMPinNumber     int    `json:"bcm_pin_number"`
+	ManufacturerName string `json:"manufacturer_name"`
+	AdditiveName     string `json:"additive_name"`
 }
 
 // DeviceModule is typically an add-on board attached to the edge device that
@@ -148,10 +198,6 @@ type StageSchedule struct {
 	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
 }
 
-/// TODO: Delete this
-type ControlState struct {
-}
-
 type PiCam struct {
 	PiCamera    bool `json:"picamera"`
 	ResolutionX int  `json:"resolutionX"`
@@ -172,32 +218,16 @@ type ACOutlet struct {
 }
 
 // ReadMyDeviceId reads the deviceid of this device from the config directory
-func ReadMyDeviceId(storeMountPoint string, relativePath string, fileName string) (id int64, err error) {
-	log.Debug("ReadMyDeviceId")
-	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
-	if relativePath == "" {
-		fullpath = storeMountPoint + "/" + fileName
-	}
-	fmt.Printf("readConfig from %s\n", fullpath)
-	file, _ := ioutil.ReadFile(fullpath)
-	idstring := strings.TrimSpace(string(file))
-
-	id, err = strconv.ParseInt(idstring, 10, 64)
-	return id, err
+func ReadMyDeviceId() (id int64, err error) {
+	retval, _ := strconv.ParseInt(os.Getenv("DEVICEID"), 10, 64)
+	log.Infof("ReadMyDeviceId returning %d", retval)
+	return retval, nil
 }
 
-// ReadMyServerHostname reads the name/ip of the server from the config directory
-func ReadMyServerHostname(storeMountPoint string, relativePath string, fileName string) (serverHostname string, err error) {
-	log.Debug("ReadMyServerHostname")
-	fullpath := storeMountPoint + "/" + relativePath + "/" + fileName
-	if relativePath == "" {
-		fullpath = storeMountPoint + "/" + fileName
-	}
-	fmt.Printf("ReadMyServerHostname from %s\n", fullpath)
-	file, _ := ioutil.ReadFile(fullpath)
-	serverHostname = strings.TrimSpace(string(file))
-
-	return serverHostname, err
+// ReadMyAPIServerHostname reads the name/ip of the server from the config directory
+func ReadMyAPIServerHostname() (serverHostname string, err error) {
+	log.Debug("ReadMyAPIServerHostname")
+	return os.Getenv("API_HOST"), nil
 }
 
 // ReadCompleteSiteFromPersistentStore reads a complete site configuration from the specified mount-point/relativePath/fileName
@@ -255,6 +285,12 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 // setMyStationAndMyDevice sets the globally accessible vars MyStation and MyDevice from a full
 // site configuration.  Convenience function to keep from accessing site every time
 func setMyStationAndMyDevice(site Site) (success bool) {
+	var nilerr error
+
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
 	//	fmt.Printf("data = %#v\n", *site)
 	found := false
 	//	fmt.Printf("searching %d stations\n", len(site.Stations))
@@ -265,6 +301,7 @@ func setMyStationAndMyDevice(site Site) (success bool) {
 			if MyDeviceID == site.Stations[stationIndex].EdgeDevices[deviceIndex].DeviceID {
 				//				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 				MyStation = &site.Stations[stationIndex]
+				log.Infof("MyStation is %#v", MyStation)
 				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
 				found = true
 				return true
@@ -338,12 +375,12 @@ func ValidateConfigurable() (err error) {
 		log.Errorf(" context %s should be %T, is %T", "MySite", t, MySite)
 		return errors.New("bad global MySite")
 	}
-	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf("ValidateConfigurable MySite.ControllerHostName context %s should be %T, is %T value %s length %d\n",
-			"MySite.ControllerHostName", t, MySite.ControllerHostName, t, len(t))
-		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
+	if t, ok := interface{}(MySite.ControllerAPIHostName).(string); ok == false || len(t) == 0 {
+		fmt.Printf("ValidateConfigurable MySite.ControllerAPIHostName context %s should be %T, is %T value %s length %d\n",
+			"MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName, t, len(t))
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName)
 		fmt.Printf("\n\n%#v\n\n", MySite)
-		return errors.New("bad global MySite.ControllerHostName")
+		return errors.New("bad global MySite.ControllerAPIHostName")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigurable MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
@@ -366,6 +403,13 @@ func ValidateConfigurable() (err error) {
 // ValidateConfigured checks that the configuration is present and implements all interfaces and that all checkable
 // values are within limits.
 func ValidateConfigured(situation string) (err error) {
+	var nilerr error
+
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %#v", err)
 		fmt.Printf("Validate failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
@@ -399,22 +443,22 @@ func ValidateConfigured(situation string) (err error) {
 		}
 		return errors.New("<0 MySite.UserID")
 	}
-	if t, ok := interface{}(MySite.ControllerHostName).(string); ok == false || len(t) == 0 {
-		fmt.Printf("ValidateConfigured (%s) MySite.ControllerHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerHostName", t, MySite.ControllerHostName, t)
-		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerHostName", t, MySite.ControllerHostName)
+	if t, ok := interface{}(MySite.ControllerAPIHostName).(string); ok == false || len(t) == 0 {
+		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIHostName context %s should be %T, is %T value %s\n", situation, "MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName, t)
+		log.Errorf(" context %s should be %T, is %T", "MySite.ControllerAPIHostName", t, MySite.ControllerAPIHostName)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		if situation != "test" {
 			time.Sleep(60 * time.Second)
 		}
-		return errors.New("nil or wrong type MySite.ControllerHostName")
+		return errors.New("nil or wrong type MySite.ControllerAPIHostName")
 	}
-	if MySite.ControllerHostName == "localhost" {
-		fmt.Printf("MySite.ControllerHostName cannot be localhost\n")
+	if MySite.ControllerAPIHostName == "localhost" {
+		fmt.Printf("MySite.ControllerAPIHostName cannot be localhost\n")
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		if situation != "test" {
 			time.Sleep(60 * time.Second)
 		}
-		return errors.New("MySite.ControllerHostName cannot be localhost")
+		return errors.New("MySite.ControllerAPIHostName cannot be localhost")
 	}
 	if t, ok := interface{}(MySite.ControllerAPIPort).(int); ok == false || t <= 0 {
 		fmt.Printf("ValidateConfigured (%s) MySite.ControllerAPIPort context %s should be %T, is %T value %d\n", situation, "MySite.ControllerAPIPort", t, MySite.ControllerAPIPort, t)
@@ -525,6 +569,11 @@ func ValidateConfigured(situation string) (err error) {
 // directory.
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	fmt.Printf("\n\nGetConfigFromServer\n")
+	var nilerr error
+	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
 	if err = ValidateConfigurable(); err != nil {
 		log.Errorf("GetConfigFromServer error %#v", err)
 		return err
@@ -542,7 +591,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 		return errors.New("bad global")
 	}
 
-	url := fmt.Sprintf("http://%s:%d/api/config/site/%8.8d/%8.8d", MySite.ControllerHostName, MySite.ControllerAPIPort, MySite.UserID, MyDevice.DeviceID)
+	url := fmt.Sprintf("http://%s:%d/api/config/site/%8.8d/%8.8d", MySite.ControllerAPIHostName, MySite.ControllerAPIPort, MySite.UserID, MyDevice.DeviceID)
 	fmt.Printf("Sending to %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -559,24 +608,25 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	}
 
 	fmt.Printf("\n\nconfig response from server %s\n\n\n", string(body))
-
+	// body is good here
 	newconfig := Site{}
 	if err = json.Unmarshal(body, &newconfig); err != nil {
 		fmt.Printf("err on site %#v\n", err)
 		return errors.New("err on site")
 	}
-
+	fmt.Printf("newconfig = %+v\n\n", newconfig)
 	if newconfig.Stations == nil {
 		fmt.Printf("No stations\n")
 		log.Fatalf("stations is nil!!!")
 	}
 	MySite.Stations = newconfig.Stations
-
+	fmt.Printf("before setMyStation %+v", MySite)
 	success := setMyStationAndMyDevice(MySite)
 	if !success {
 		fmt.Printf("No station\n")
 		return errors.New("NO station!!")
 	}
+	fmt.Printf("after setMyStation %+v", MySite)
 	//	js, _ := json.Marshal(MySite)
 	//	fmt.Printf("\nset site to newconfig \n%s\n", string(js) )
 	if err = ValidateConfigured("getConfigFromServer"); err != nil {
@@ -589,9 +639,9 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 }
 
 func WriteConfig(storeMountPoint string, relativePath string, fileName string) (err error) {
-	log.Infof("WriteConfig stage now %s", MySite.Stations[0].CurrentStage)
+	fmt.Printf("WriteConfig MySite %+v\n\n", MySite)
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
-
+	fmt.Printf("\n\nWriteConfig sighx siteBytes %s\n\n", string(siteBytes[:]))
 	if err != nil {
 		log.Errorf("error marshalling MySite %#v", err)
 		return err
@@ -607,6 +657,6 @@ func WriteConfig(storeMountPoint string, relativePath string, fileName string) (
 		return err
 	}
 
-	fmt.Printf("received site\n\n")
+	fmt.Printf("WriteConfig wrote config\n\n")
 	return nil
 }

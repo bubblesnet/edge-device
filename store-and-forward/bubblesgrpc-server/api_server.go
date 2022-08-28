@@ -1,4 +1,29 @@
+/*
+ * Copyright (c) John Rodley 2022.
+ * SPDX-FileCopyrightText:  John Rodley 2022.
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the
+ * Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
 package main
+
+// copyright and license inspection - no issues 4/13/22
 
 import (
 	pb "bubblesnet/edge-device/store-and-forward/bubblesgrpc-server/bubblesgrpc"
@@ -9,6 +34,7 @@ import (
 	"google.golang.org/grpc"
 	"time"
 )
+
 var SequenceNumber int32 = 0
 
 const address = "store-and-forward:50051"
@@ -23,19 +49,20 @@ func GetSequenceNumber() int32 {
 	}
 	return SequenceNumber
 }
+
 /*
 func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
-	ret := "SampleTimestamp,SampleTimestampS,DistanceIn,Ph,TempF,Humidity,Pressure,Light,GrowLightVeg,Heater,HeaterPad,Humidifier\n"
+	ret := "SampleTimestamp,SampleTimestampS,DistanceIn,Ph,TempAirMiddle,HumidityInternal,Pressure,LightInternal,GrowLightVeg,Heater,HeaterPad,Humidifier\n"
 	for i := 0; i < len(states); i++ {
 		ret = ret + fmt.Sprintf("%d,%s,%f,%f,%f,%f,%f,%f,%t,%t,%t,%t\n",
 			states[i].SampleTimestamp,
 			states[i].SampleTimestampS,
 			states[i].DistanceIn,
 			states[i].Ph,
-			states[i].TempF,
-			states[i].Humidity,
+			states[i].TempAirMiddle,
+			states[i].HumidityInternal,
 			states[i].Pressure,
-			states[i].Light,
+			states[i].LightInternal,
 			states[i].GrowLightVeg,
 			states[i].Heater,
 			states[i].HeaterPad,
@@ -45,12 +72,13 @@ func convertJsonStateArrayStringToCsv( states []state ) (string, error) {
 }
 */
 
-func getContentDisposition( format string ) string {
+func getContentDisposition(format string) string {
 	t := time.Now()
 	filename := fmt.Sprintf("%d-%02d-%02dT%02d_%02d_%02d-00_00.%s", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), format)
 	content_dispostion := fmt.Sprintf("attachment; filename=%s", filename)
 	return content_dispostion
 }
+
 /*
 func StartApiServer() {
 	log.Infof("StartApiServer"))
@@ -87,9 +115,9 @@ func StartApiServer() {
 
 type getRecordsRequest struct {
 	BucketName string `json:"bucket_name"`
-	Year int `json:"year"`
-	Month int `json:"month"`
-	Day int `json:"day"`
+	Year       int    `json:"year"`
+	Month      int    `json:"month"`
+	Day        int    `json:"day"`
 }
 
 func requestStateList() (string, error) {
@@ -103,7 +131,7 @@ func requestStateList() (string, error) {
 	defer conn.Close()
 	c := pb.NewSensorStoreAndForwardClient(conn)
 
-	var getRecsReq = getRecordsRequest {
+	var getRecsReq = getRecordsRequest{
 		BucketName: stateBucketName,
 		Year:       2020,
 		Month:      2,
