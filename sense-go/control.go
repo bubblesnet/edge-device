@@ -30,6 +30,7 @@ import (
 	"bubblesnet/edge-device/sense-go/globals"
 	"bubblesnet/edge-device/sense-go/modules/gpiorelay"
 	"github.com/go-playground/log"
+	"os"
 	"time"
 )
 
@@ -109,9 +110,10 @@ func ControlRootWater(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, 
 }
 
 func ControlAirflow(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, CurrentStage string, Powerstrip gpiorelay.PowerstripService) (somethingChanged bool) {
+	log.Infof("automation: ControlAirflow force=%v", force)
 	somethingChanged = false
 	if !isPowerstripAttached(DeviceID) {
-		log.Debugf("automation: ControlAirflow - no outlets attached")
+		log.Infof("automation: ControlAirflow - no outlets attached")
 		return
 	}
 
@@ -119,22 +121,27 @@ func ControlAirflow(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Cu
 	TurnFansOff := false
 	switch CurrentStage {
 	case globals.GERMINATION:
+		log.Infof("automation: ControlAirflow - turning fans OFF because stage is GERMINATION")
 		TurnFansOff = true
 		break
 	case globals.IDLE:
+		log.Infof("automation: ControlAirflow - turning fans OFF because stage is IDLE")
 		TurnFansOff = true
 		break
 	default:
+		log.Infof("automation: ControlAirflow - turning fans ON because stage is not IDLE or GERMINATION")
 		TurnFansOn = true
 		break
 	}
 
-	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) {
+	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) && os.Getenv("NO_FAN_WITH_HEATER") == "true" {
+		log.Infof("automation: ControlAirflow - turning fans OFF because heater is ON and NO_FAN_WITH_HEATER == ", os.Getenv("NO_FAN_WITH_HEATER"))
 		TurnFansOff = true
 		TurnFansOn = false
 	}
 
 	if TurnFansOn == true {
+		log.Infof("automation: ControlAirflow - turning fans ON for some reason")
 		if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.OUTLETFAN, force); somethingChanged == true {
 			LogSwitchStateChanged("ControlAirflow", globals.OUTLETFAN, false, true)
 		}
@@ -143,12 +150,15 @@ func ControlAirflow(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Cu
 		}
 	} else {
 		if TurnFansOff == true {
+			log.Infof("automation: ControlAirflow - turning fans OFF for some reason")
 			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.OUTLETFAN, false); somethingChanged == true {
 				LogSwitchStateChanged("ControlAirflow", globals.OUTLETFAN, true, false)
 			}
 			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.INLETFAN, false); somethingChanged == true {
 				LogSwitchStateChanged("ControlAirflow", globals.INLETFAN, true, false)
 			}
+		} else {
+			log.Infof("automation: ControlAirflow - NOT turning fans ON or OFF for some reason")
 		}
 	}
 
@@ -442,6 +452,7 @@ func ControlHumidity(force bool,
 				} else {
 				}
 			}
+			log.Infof("automation: ControlHumidity HumidityInternal %.3f just right", ExternalCurrentState.HumidityInternal)
 		}
 	}
 

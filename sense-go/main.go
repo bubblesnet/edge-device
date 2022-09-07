@@ -407,16 +407,6 @@ func makeControlDecisions(once_only bool) {
 					&globals.LastTemp,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
-				ControlWaterTemp(false,
-					globals.MyDevice.DeviceID,
-					globals.MyDevice,
-					globals.CurrentStageSchedule,
-					globals.MyStation.CurrentStage,
-					globals.ExternalCurrentState,
-					&globals.LocalCurrentState,
-					&globals.LastWaterTemp,
-					gpiorelay.GetPowerstripService())
-				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 				ControlHumidity(false,
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
@@ -443,6 +433,16 @@ func makeControlDecisions(once_only bool) {
 					globals.MyDevice.DeviceID,
 					globals.MyDevice,
 					globals.MyStation.CurrentStage,
+					gpiorelay.GetPowerstripService())
+				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
+				ControlWaterTemp(false,
+					globals.MyDevice.DeviceID,
+					globals.MyDevice,
+					globals.CurrentStageSchedule,
+					globals.MyStation.CurrentStage,
+					globals.ExternalCurrentState,
+					&globals.LocalCurrentState,
+					&globals.LastWaterTemp,
 					gpiorelay.GetPowerstripService())
 				time.Sleep(time.Second) // Try not to toggle AC mains power too quickly
 			}
@@ -495,7 +495,7 @@ func initGlobals(testing bool) {
 		fmt.Printf("error read serverHostname %#v\n", err)
 		return
 	}
-	globals.MySite.ControllerActiveMQHostName = globals.MySite.ControllerAPIHostName /// TODO fix this hack - pass host through from env
+	globals.MySite.ControllerActiveMQHostName = globals.MySite.ControllerAPIHostName // / TODO fix this hack - pass host through from env
 
 	// Read the configuration file
 	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerAPIHostName)
