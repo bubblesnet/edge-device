@@ -127,7 +127,12 @@ const (
 
 var baseline = []byte{253, 184}
 
-func ReadCO2VOC() {
+func toCelsius(fahrenheit float32) (celsius float32) {
+	celsius = (fahrenheit - 32.0) / 1.8
+	return celsius
+}
+
+func ReadCO2VOC(ptemp *float32, phumidity *float32) {
 	// Make sure periph is initialized.
 	if _, err := host.Init(); err != nil {
 		log.Errorf("ccs811: host.Init failed %+v", err)
@@ -159,6 +164,15 @@ func ReadCO2VOC() {
 			continue
 		}
 		log.Info("ccs811: ccs811.New succeeded")
+
+		if *ptemp > 0 && *ptemp < 100.0 && *phumidity > 0.0 && *phumidity < 100.1 {
+			log.Infof("ccs811: SetEnvironmentData %f %f toCelsius %f", *ptemp, *phumidity, toCelsius(*ptemp))
+			if err := ccs.SetEnvironmentData(toCelsius(*ptemp), *phumidity); err != nil {
+				log.Errorf("ccs811: SetEnvironmentData %f %f error %#v", *ptemp, *phumidity, err)
+			}
+		} else {
+			log.Errorf("ccs811: SetEnvironmentData %f %f can't use these values!!!", *ptemp, *phumidity)
+		}
 
 		mode, err := ccs.GetMeasurementModeRegister()
 		if err != nil {

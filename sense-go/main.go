@@ -631,7 +631,7 @@ func startGoRoutines(onceOnly bool) {
 
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.CO2Sensor, globals.Module_type_ccs811) {
 		log.Info("automation: CO2 and VOC configured for this device, starting")
-		go co2vocmeter.ReadCO2VOC()
+		go co2vocmeter.ReadCO2VOC(&globals.ExternalCurrentState.TempAirMiddle, &globals.ExternalCurrentState.HumidityInternal)
 	} else {
 		log.Warnf("CO2 and VOC  (CCS811) not configured for this device - skipping VOC/CO2")
 	}
