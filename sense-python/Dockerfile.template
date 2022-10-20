@@ -8,6 +8,7 @@ RUN apt-get update
 RUN apt-get install -y python python-dev python-pip git wireless-tools network-manager python-smbus vim
 RUN apt-get install -y gcc g++
 RUN apt-get install python3-pigpio python3-gpiozero
+
 RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 
   # use `install_packages` if you need to install dependencies,
