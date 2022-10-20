@@ -159,8 +159,8 @@ type Dispenser struct {
 }
 
 // DeviceModule is typically an add-on board attached to the edge device that
-//generates one or more types of measurements.  An AttachedDevice can have multiple
-//DeviceModules.
+// generates one or more types of measurements.  An AttachedDevice can have multiple
+// DeviceModules.
 type DeviceModule struct {
 	ModuleID        int64    `json:"moduleid"`
 	ContainerName   string   `json:"container_name,omitempty"`
@@ -186,16 +186,16 @@ type AttachedDevice struct {
 }
 
 type EnvironmentalTarget struct {
-	Temperature      float32 `json:"temperature,omitempty"`
-	Humidity         float32 `json:"humidity,omitempty"`
-	WaterTemperature float32 `json:"water_temperature,omitempty"`
+	Temperature      float32 `json:"temperature"`
+	Humidity         float32 `json:"humidity"`
+	WaterTemperature float32 `json:"water_temperature"`
 }
 
 type StageSchedule struct {
-	Name                 string              `json:"name,omitempty"`
+	Name                 string              `json:"name"`
 	LightOnStartHour     int                 `json:"light_on_start_hour"`
 	HoursOfLight         int                 `json:"hours_of_light"`
-	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets,omitempty"`
+	EnvironmentalTargets EnvironmentalTarget `json:"environmental_targets"`
 }
 
 type PiCam struct {
