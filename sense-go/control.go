@@ -272,7 +272,7 @@ func ControlWaterTemp(force bool,
 		return somethingChanged
 	}
 
-	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
+	if ExternalCurrentState.TempWater == globals.TEMPNOTSET {
 		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.TempWater %.3f - ignoring", ExternalCurrentState.TempWater)
 		return somethingChanged
 	}
@@ -330,12 +330,12 @@ func ControlHeat(force bool,
 
 	somethingChanged = false
 	if !isPowerstripAttached(DeviceID) {
-		log.Debugf("automation: ControlHeat - no outlets attached")
+		log.Debugf("automation: ControlHeat - no outlets attached, exiting")
 		return somethingChanged
 	}
 	//	log.Infof("automation: ControlHeat - current stage is %s", globals.MyStation.CurrentStage)
 	if CurrentStage == globals.IDLE {
-		log.Debugf("automation: ControlHeat - stage is idle, turning off")
+		log.Debugf("automation: ControlHeat - stage is idle, turning off and exiting")
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HEATER, false); somethingChanged == true {
 			LogSwitchStateChanged("ControlHeat", globals.HEATER, true, false)
 		} // MAKE SURE HEAT IS OFF
@@ -347,7 +347,7 @@ func ControlHeat(force bool,
 
 	//	log.Infof("automation: checking temp %.3f for stage %s with highLimit %.3f, lowLimit %.3f", globals.ExternalCurrentState.TempAirMiddle, globals.MyStation.CurrentStage, highLimit,lowLimit)
 	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
-		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempAirMiddle %.3f - ignoring", ExternalCurrentState.TempAirMiddle)
+		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempAirMiddle %.3f - ignoring and exiting", ExternalCurrentState.TempAirMiddle)
 		return somethingChanged
 	}
 	if ExternalCurrentState.TempAirMiddle > highLimit { // TOO HOT

@@ -166,7 +166,7 @@ def append_bme280_temp(i2cbus, msg, sensor_name, measurement_name, address):
         msg['tempC'] = data.temperature
         msg['tempF'] = (data.temperature * 1.8) + 32.0
     except Exception as ee:
-        logging.debug("bme280 error %s" % ee)
+        logging.error("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
@@ -193,7 +193,7 @@ def append_bme280_humidity(i2cbus, msg, sensor_name, measurement_name, address):
         msg[direction_name] = direction
         lastHumidity = data.humidity
     except Exception as ee:
-        logging.debug("bme280 error %s" % ee)
+        logging.error("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
@@ -221,7 +221,7 @@ def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name, address):
         msg[direction_name] = direction
         lastPressure = data.humidity
     except Exception as ee:
-        logging.debug("bme280 error %s" % ee)
+        logging.error("bme280 error %s" % ee)
         logging.debug(traceback.format_exc())
 
 
