@@ -125,7 +125,7 @@ const (
 	baselineFile = "BASELINE"
 )
 
-var baseline = []byte{253, 184}
+// var baseline = []byte{253, 184}
 
 func toCelsius(fahrenheit float32) (celsius float32) {
 	celsius = (fahrenheit - 32.0) / 1.8
@@ -348,9 +348,9 @@ func ReadCO2VOC(ptemp *float32, phumidity *float32) {
 				}
 
 			} else {
-				log.Error("ccs811: bad status 0x%x no data ready - retrying in %d seconds", status, retryNaptime)
+				log.Errorf("ccs811: bad status 0x%x no data ready - retrying in %d seconds", status, retryNaptime)
 				if status&STATUS_MASK_FIRMWAREMODE == STATUS_MASK_FIRMWAREMODE {
-					log.Error("ccs811: still in firmware mode - new() failed silently - retrying in %d seconds", retryNaptime)
+					log.Errorf("ccs811: still in firmware mode - new() failed silently - retrying in %d seconds", retryNaptime)
 					time.Sleep(time.Duration(retryNaptime) * time.Second)
 					continue
 				}
@@ -373,7 +373,7 @@ func ReadCO2VOC(ptemp *float32, phumidity *float32) {
 	}
 }
 
-func reportError(err byte) {
+func _(err byte) {
 	if err&ERROR_MASK_WRITE_REG_INVALID == ERROR_MASK_WRITE_REG_INVALID {
 		log.Infof("ccs811: ")
 	}
@@ -471,7 +471,9 @@ func loadBaseline() []byte {
 
 	file, err := os.Open(baselineFile)
 	checkErr(err)
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	stats, err := file.Stat()
 	checkErr(err)
@@ -483,14 +485,14 @@ func loadBaseline() []byte {
 	_, err = rdr.Read(bytes)
 
 	return bytes
-
-	return baseline
 }
 
 func saveBaseline(baseline []byte) {
 	file, err := os.Create(baselineFile)
 	checkErr(err)
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	wrt := bufio.NewWriter(file)
 	_, err = wrt.Write(baseline)

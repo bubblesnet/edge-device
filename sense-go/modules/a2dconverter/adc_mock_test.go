@@ -19,71 +19,56 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package main
+package a2dconverter
 
 import "testing"
 
-func TestGetSequenceNumber(t *testing.T) {
-	tests := []struct {
-		name string
-		want int32
-	}{
-		{
-			name: "happy",
-			want: 1,
-		},
+func TestReadAllChannels(t *testing.T) {
+	var adcmessage = ADCMessage{
+		BusId:         0,
+		Address:       0,
+		ChannelValues: Channels{},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetSequenceNumber(); got != tt.want {
-				t.Errorf("GetSequenceNumber() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getContentDisposition(t *testing.T) {
 	type args struct {
-		format string
+		index      int
+		adcMessage *ADCMessage
 	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getContentDisposition(tt.args.format); got != tt.want {
-				t.Errorf("getContentDisposition() got  %v", got)
-				t.Errorf("getContentDisposition() want %v", tt.want)
-			}
-		})
-	}
-}
-
-func Test_requestStateList(t *testing.T) {
 	tests := []struct {
 		name    string
-		want    string
+		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "happy", args: args{index: 0, adcMessage: &adcmessage}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := requestStateList()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("requestStateList() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if err := ReadAllChannels(tt.args.index, tt.args.adcMessage); (err != nil) != tt.wantErr {
+				t.Errorf("ReadAllChannels() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if got != tt.want {
-				t.Errorf("requestStateList() got  %v", got)
-				t.Errorf("requestStateList() want %v", tt.want)
+		})
+	}
+}
+
+func TestRunADCPoller(t *testing.T) {
+	type args struct {
+		onceOnly      bool
+		waitInSeconds int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "happy",
+			args:    args{onceOnly: true, waitInSeconds: 10},
+			wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := RunADCPoller(tt.args.onceOnly, tt.args.waitInSeconds); (err != nil) != tt.wantErr {
+				t.Errorf("RunADCPoller() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

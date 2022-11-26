@@ -219,7 +219,7 @@ type ACOutlet struct {
 
 // ReadMyDeviceId reads the deviceid of this device from the config directory
 func ReadMyDeviceId() (id int64, err error) {
-	retval, _ := strconv.ParseInt(os.Getenv("DEVICEID"), 10, 64)
+	retval, _ := strconv.ParseInt(os.Getenv(ENV_DEVICEID), 10, 64)
 	log.Infof("ReadMyDeviceId returning %d", retval)
 	return retval, nil
 }
@@ -227,7 +227,7 @@ func ReadMyDeviceId() (id int64, err error) {
 // ReadMyAPIServerHostname reads the name/ip of the server from the config directory
 func ReadMyAPIServerHostname() (serverHostname string, err error) {
 	log.Debug("ReadMyAPIServerHostname")
-	return os.Getenv("API_HOST"), nil
+	return os.Getenv(ENV_API_HOST), nil
 }
 
 // ReadCompleteSiteFromPersistentStore reads a complete site configuration from the specified mount-point/relativePath/fileName
@@ -287,10 +287,10 @@ func ReadCompleteSiteFromPersistentStore(storeMountPoint string, relativePath st
 func setMyStationAndMyDevice(site Site) (success bool) {
 	var nilerr error
 
-	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
-	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
-	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
-	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+	MySite.ControllerAPIHostName, _ = os.Getenv(ENV_API_HOST), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv(ENV_API_PORT))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv(ENV_ACTIVEMQ_HOST), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv(ENV_ACTIVEMQ_PORT))
 	//	fmt.Printf("data = %#v\n", *site)
 	found := false
 	//	fmt.Printf("searching %d stations\n", len(site.Stations))
@@ -301,7 +301,7 @@ func setMyStationAndMyDevice(site Site) (success bool) {
 			if MyDeviceID == site.Stations[stationIndex].EdgeDevices[deviceIndex].DeviceID {
 				//				fmt.Printf("My deviceid %d matches %#v\n", MyDeviceID, site.Stations[stationIndex].EdgeDevices[deviceIndex])
 				MyStation = &site.Stations[stationIndex]
-				log.Infof("MyStation is %#v", MyStation)
+				//				log.Infof("MyStation is %#v", MyStation)
 				MyDevice = &site.Stations[stationIndex].EdgeDevices[deviceIndex]
 				found = true
 				return true
@@ -405,10 +405,10 @@ func ValidateConfigurable() (err error) {
 func ValidateConfigured(situation string) (err error) {
 	var nilerr error
 
-	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
-	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
-	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
-	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+	MySite.ControllerAPIHostName, _ = os.Getenv(ENV_API_HOST), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv(ENV_API_PORT))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv(ENV_ACTIVEMQ_HOST), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv(ENV_ACTIVEMQ_PORT))
 
 	if err := ValidateConfigurable(); err != nil {
 		log.Errorf("ValidateConfigured error %#v", err)
@@ -570,10 +570,10 @@ func ValidateConfigured(situation string) (err error) {
 func GetConfigFromServer(storeMountPoint string, relativePath string, fileName string) (err error) {
 	fmt.Printf("\n\nGetConfigFromServer\n")
 	var nilerr error
-	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
-	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
-	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
-	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
+	MySite.ControllerAPIHostName, _ = os.Getenv(ENV_API_HOST), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv(ENV_API_PORT))
+	MySite.ControllerActiveMQHostName, _ = os.Getenv(ENV_ACTIVEMQ_HOST), nilerr
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv(ENV_ACTIVEMQ_PORT))
 	if err = ValidateConfigurable(); err != nil {
 		log.Errorf("GetConfigFromServer error %#v", err)
 		return err
@@ -659,4 +659,20 @@ func WriteConfig(storeMountPoint string, relativePath string, fileName string) (
 
 	fmt.Printf("WriteConfig wrote config\n\n")
 	return nil
+}
+
+func InitEnvironmentalGlobals(testing bool) {
+	log.Infof("initGlobals")
+	var err error
+	MyDeviceID, err = ReadMyDeviceId()
+	if err != nil {
+		fmt.Printf("error read device %#v\n", err)
+		return
+	}
+	MySite.ControllerAPIHostName, err = ReadMyAPIServerHostname()
+	if err != nil {
+		fmt.Printf("error read serverHostname %#v\n", err)
+		return
+	}
+	MySite.ControllerActiveMQHostName = MySite.ControllerAPIHostName // / TODO fix this hack - pass host through from env
 }

@@ -460,10 +460,10 @@ func makeControlDecisions(once_only bool) {
 }
 
 func SleepBeforeExit() {
-	snaptime := os.Getenv("SLEEP_ON_EXIT_FOR_DEBUGGING")
+	snaptime := os.Getenv(globals.ENV_SLEEP_ON_EXIT_FOR_DEBUGGING)
 	naptime, err := strconv.ParseInt(snaptime, 10, 32)
 	if err != nil {
-		log.Errorf("SLEEP_ON_EXIT_FOR_DEBUGGING %s conversion error %#v", snaptime, err)
+		log.Errorf("%s %s conversion error %#v", globals.ENV_SLEEP_ON_EXIT_FOR_DEBUGGING, snaptime, err)
 		naptime = 60
 	}
 	fmt.Printf("Exiting because of bad configuration - sleeping for %d seconds to allow intervention\n", naptime)
@@ -476,7 +476,6 @@ func reportVersion() {
 }
 
 func initGlobals(testing bool) {
-	log.Infof("initGlobals")
 	globals.BubblesnetVersionMajorString = BubblesnetVersionMajorString
 	globals.BubblesnetVersionMinorString = BubblesnetVersionMinorString
 	globals.BubblesnetVersionPatchString = BubblesnetVersionPatchString
@@ -484,18 +483,7 @@ func initGlobals(testing bool) {
 	globals.BubblesnetBuildTimestamp = BubblesnetBuildTimestamp
 	globals.BubblesnetGitHash = BubblesnetGitHash
 
-	var err error
-	globals.MyDeviceID, err = globals.ReadMyDeviceId()
-	if err != nil {
-		fmt.Printf("error read device %#v\n", err)
-		return
-	}
-	globals.MySite.ControllerAPIHostName, err = globals.ReadMyAPIServerHostname()
-	if err != nil {
-		fmt.Printf("error read serverHostname %#v\n", err)
-		return
-	}
-	globals.MySite.ControllerActiveMQHostName = globals.MySite.ControllerAPIHostName // / TODO fix this hack - pass host through from env
+	globals.InitEnvironmentalGlobals(testing)
 
 	// Read the configuration file
 	fmt.Printf("Read deviceid %d and server_hostname %s\n", globals.MyDeviceID, globals.MySite.ControllerAPIHostName)
@@ -536,7 +524,7 @@ func readConfigFromDisk() {
 		fmt.Printf("ReadCompleteSiteFromPersistentStore failed - using default config\n")
 		//		globals.MySite.ControllerAPIHostName = serverHostname
 		//		globals.MySite.ControllerAPIPort = 3003
-		//		nodeEnv := os.Getenv("NODE_ENV")
+		//		nodeEnv := os.Getenv(ENV_NODE_ENV)
 		/*
 			switch nodeEnv {
 			case "PRODUCTION":
@@ -554,11 +542,11 @@ func readConfigFromDisk() {
 			}
 		*/
 		var nilerr error
-		globals.MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
-		globals.MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
-		globals.MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
-		globals.MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
-		globals.MySite.UserID, _ = strconv.ParseInt(os.Getenv("USERID"), 10, 64)
+		globals.MySite.ControllerAPIHostName, _ = os.Getenv(globals.ENV_API_HOST), nilerr
+		globals.MySite.ControllerActiveMQHostName, _ = os.Getenv(globals.ENV_ACTIVEMQ_HOST), nilerr
+		globals.MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv(globals.ENV_API_PORT))
+		globals.MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv(globals.ENV_ACTIVEMQ_PORT))
+		globals.MySite.UserID, _ = strconv.ParseInt(os.Getenv(globals.ENV_USERID), 10, 64)
 		d := globals.EdgeDevice{DeviceID: globals.MyDeviceID}
 		globals.MyDevice = &d
 		//		fmt.Printf("\ngetconfigfromserver config = %#v\n\n", globals.MySite)

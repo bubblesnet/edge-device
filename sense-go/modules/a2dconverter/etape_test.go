@@ -59,3 +59,27 @@ func Test_etapeInchesFromVolts(t *testing.T) {
 		})
 	}
 }
+
+func Test_etapeInchesToGallons(t *testing.T) {
+	type args struct {
+		MaxInches  float64
+		MaxGallons float64
+		MinGallons float64
+		inches     float64
+	}
+	tests := []struct {
+		name        string
+		args        args
+		wantGallons float64
+	}{
+		{name: "happy", args: args{MaxInches: 1.0, MaxGallons: 1.0, MinGallons: 0.0, inches: 1.0},
+			wantGallons: 1.0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotGallons := etapeInchesToGallons(tt.args.MaxInches, tt.args.MaxGallons, tt.args.MinGallons, tt.args.inches); gotGallons != tt.wantGallons {
+				t.Errorf("etapeInchesToGallons() = %v, want %v", gotGallons, tt.wantGallons)
+			}
+		})
+	}
+}

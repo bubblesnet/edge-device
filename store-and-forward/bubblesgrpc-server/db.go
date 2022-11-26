@@ -66,7 +66,7 @@ func openWriteable(dbFilename string) {
 func makeBuckets(buckets []string) {
 	log.Info("makeBuckets\n")
 	messageBucketName := buckets[0]
-	nodeEnv := os.Getenv("NODE_ENV")
+	nodeEnv := os.Getenv(ENV_NODE_ENV)
 	if nodeEnv == "DEV" {
 		err := deleteBucketIfExist(messageBucketName)
 		if err != nil {

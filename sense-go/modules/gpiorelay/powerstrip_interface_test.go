@@ -58,6 +58,23 @@ func TestInitRpioPins(t *testing.T) {
 	}
 }
 
+func TestReportAll(t *testing.T) {
+	type args struct {
+		timeout time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{name: "happy", args: args{5}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			PowerstripSvc.ReportAll(globals.MyDevice, tt.args.timeout)
+		})
+	}
+}
+
 func TestTurnAllOff(t *testing.T) {
 	type args struct {
 		timeout time.Duration

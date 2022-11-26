@@ -1,21 +1,27 @@
 {
   "siteid": 1,
-  "userid": 90000009,
-  "controller_hostname": "192.168.21.237",
-  "controller_api_port": 3003,
+  "userid": 0,
+  "ControllerAPIHostName": "",
+  "ControllerActiveMQHostName": "",
+  "ControllerAPIPort": 0,
+  "ControllerActiveMQPort": 0,
   "stations": [
     {
       "stationid": 1,
-      "current_stage":"vegetative",
       "automatic_control": true,
       "height_sensor": true,
       "humidifier": true,
       "humidity_sensor_internal": true,
       "humidity_sensor_external": true,
       "heater": true,
+      "water_heater": false,
+      "thermometer_top": false,
       "thermometer_middle": true,
+      "thermometer_bottom": false,
       "thermometer_external": true,
       "thermometer_water": true,
+      "waterPump": false,
+      "airPump": false,
       "light_sensor_internal": true,
       "light_sensor_external": true,
       "station_door_sensor": true,
@@ -25,6 +31,14 @@
       "root_ph_sensor": true,
       "enclosure_type": "CABINET",
       "water_level_sensor": true,
+      "intakeFan": false,
+      "exhaustFan": false,
+      "heatLamp": false,
+      "heatingPad": false,
+      "lightBloom": false,
+      "lightVegetative": false,
+      "lightGerminate": false,
+      "relay": false,
       "edge_devices": [
         {
           "deviceid": 70000008,
@@ -141,6 +155,7 @@
             "resolutionX": 0,
             "resolutionY": 0
           },
+          "time_between_pictures_in_seconds": 0,
           "ac_outlets": [
             {
               "name": "intakeFan",
@@ -226,7 +241,8 @@
             "picamera": false,
             "resolutionX": 0,
             "resolutionY": 0
-          }
+          },
+          "time_between_pictures_in_seconds": 0
         },
         {
           "deviceid": 70000005,
@@ -278,6 +294,7 @@
             "resolutionX": 0,
             "resolutionY": 0
           },
+          "time_between_pictures_in_seconds": 0,
           "ac_outlets": [
             {
               "name": "lightVegetative",
@@ -293,7 +310,11 @@
           "name": "idle",
           "light_on_start_hour": 0,
           "hours_of_light": 0,
-          "environmental_targets": {}
+          "environmental_targets": {
+            "temperature": 0,
+            "humidity": 0,
+            "water_temperature": 0
+          }
         },
         {
           "name": "germination",
@@ -341,7 +362,8 @@
           "hours_of_light": 0,
           "environmental_targets": {
             "temperature": 80,
-            "humidity": 60
+            "humidity": 60,
+            "water_temperature": 0
           }
         },
         {
@@ -350,7 +372,8 @@
           "hours_of_light": 0,
           "environmental_targets": {
             "temperature": 80,
-            "humidity": 60
+            "humidity": 60,
+            "water_temperature": 0
           }
         }
       ],
@@ -380,7 +403,9 @@
         "current_light_type": "Grow Light Veg",
         "light_type_options": null
       },
-      "current_stage": "idle"
+      "current_stage": "",
+      "voc_sensor": false,
+      "co2_sensor": false
     }
   ]
 }

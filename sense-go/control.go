@@ -134,8 +134,8 @@ func ControlAirflow(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Cu
 		break
 	}
 
-	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) && os.Getenv("NO_FAN_WITH_HEATER") == "true" {
-		log.Infof("automation: ControlAirflow - turning fans OFF because heater is ON and NO_FAN_WITH_HEATER == ", os.Getenv("NO_FAN_WITH_HEATER"))
+	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) && os.Getenv(globals.ENV_NO_FAN_WITH_HEATER) == "true" {
+		log.Infof("automation: ControlAirflow - turning fans OFF because heater is ON and NO_FAN_WITH_HEATER == %s", os.Getenv(globals.ENV_NO_FAN_WITH_HEATER))
 		TurnFansOff = true
 		TurnFansOn = false
 	}
@@ -195,30 +195,30 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		CurrentStage == globals.VEGETATIVE || CurrentStage == globals.BLOOMING {
 		// If it's time for grow light bloom to be on
 		if inRange(CurrentStageSchedule.LightOnStartHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM,
-				localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
+				log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM,
+					localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, false, true)
 			}
 			bloomlight = true
 		} else {
 			// If it's time for grow light bloom to be off
-			log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM,
-				localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
+				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM,
+					localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
 			}
 			bloomlight = false
 		}
 	} else {
-		log.Infof("automation: ControlLight Not a lit stage %s - no light changes", CurrentStage)
+		//		log.Infof("automation: ControlLight Not a lit stage %s - no light changes", CurrentStage)
 	}
 	if bloomlight && !LocalCurrentState.GrowLightBloom {
 		log.Infof("automation: ControlLight Turned bloom light ON")
 	} else if !bloomlight && LocalCurrentState.GrowLightBloom {
 		log.Infof("automation: ControlLight Turned bloom light OFF")
 	} else {
-		log.Infof("automation: ControlLight did nothing bloomlight now %v started with localcurrentstate.growlightbloom %v", bloomlight, LocalCurrentState.GrowLightBloom)
+		//		log.Infof("automation: ControlLight did nothing bloomlight now %v started with localcurrentstate.growlightbloom %v", bloomlight, LocalCurrentState.GrowLightBloom)
 	}
 	(*LocalCurrentState).GrowLightBloom = bloomlight
 	return somethingChanged

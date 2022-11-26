@@ -82,7 +82,7 @@ func TestReadServerHostname(t *testing.T) {
 				relativePath:    "",
 				fileName:        "hostname",
 			},
-			wantHostname: "192.168.21.237",
+			wantHostname: "192.168.23.237",
 			wantErr:      false,
 		},
 	}
@@ -102,6 +102,7 @@ func TestReadServerHostname(t *testing.T) {
 
 func initGlobalsLocally(t *testing.T) {
 	MyDeviceID = 70000008
+	InitEnvironmentalGlobals(true)
 	if err := ReadCompleteSiteFromPersistentStore("../testdata", "", "config.json", &MySite, &CurrentStageSchedule); err != nil {
 		t.Errorf("getConfigFromServer() error = %#v", err)
 	}
