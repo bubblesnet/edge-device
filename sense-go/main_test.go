@@ -110,9 +110,9 @@ globals.LocalCurrentState.GrowLightVeg
 "seedling"
 "vegetative"
 */
-func initGlobalsLocally(t *testing.T) {
+func initGlobalsLocally(t *testing.T, filename string) {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", filename, &globals.MySite, &globals.CurrentStageSchedule); err != nil {
 		t.Errorf("getConfigFromServer() error = %#v", err)
 	}
 	if globals.MyStation == nil {
@@ -121,7 +121,6 @@ func initGlobalsLocally(t *testing.T) {
 }
 
 func Test_moduleShouldBeHere(t *testing.T) {
-	initGlobalsLocally(t)
 
 	type args struct {
 		containerName   string
@@ -134,9 +133,22 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		name                string
 		args                args
 		wantShouldBePresent bool
+		configfilename      string
 	}{
 		{name: "happy",
 			wantShouldBePresent: true,
+			configfilename:      "config.json",
+			args: args{
+				containerName:   "sense-python",
+				mydeviceid:      globals.MyDeviceID,
+				myStation:       globals.MyStation,
+				deviceInStation: true,
+				moduleType:      "bme280",
+			},
+		},
+		{name: "happy no modules",
+			wantShouldBePresent: false,
+			configfilename:      "config_no_modules_no_outlets.json",
 			args: args{
 				containerName:   "sense-python",
 				mydeviceid:      globals.MyDeviceID,
@@ -147,6 +159,7 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		},
 		{name: "unhappy",
 			wantShouldBePresent: false,
+			configfilename:      "config.json",
 			args: args{
 				containerName:   "sense-python",
 				mydeviceid:      70000006,
@@ -157,6 +170,7 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		initGlobalsLocally(t, tt.configfilename)
 		t.Run(tt.name, func(t *testing.T) {
 			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.myStation, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
 				t.Errorf("moduleShouldBeHere(%#v)", tt.args)

@@ -1,10 +1,10 @@
 {
   "siteid": 1,
-  "userid": 0,
-  "ControllerAPIHostName": "",
-  "ControllerActiveMQHostName": "",
-  "ControllerAPIPort": 0,
-  "ControllerActiveMQPort": 0,
+  "userid": 90000009,
+  "ControllerAPIHostName": "192.168.23.237",
+  "ControllerActiveMQHostName": "192.168.23.237",
+  "ControllerAPIPort": 4001,
+  "ControllerActiveMQPort": 61611,
   "stations": [
     {
       "stationid": 1,
@@ -14,14 +14,14 @@
       "humidity_sensor_internal": true,
       "humidity_sensor_external": true,
       "heater": true,
-      "water_heater": false,
-      "thermometer_top": false,
+      "water_heater": true,
+      "thermometer_top": true,
       "thermometer_middle": true,
-      "thermometer_bottom": false,
+      "thermometer_bottom": true,
       "thermometer_external": true,
       "thermometer_water": true,
-      "waterPump": false,
-      "airPump": false,
+      "waterPump": true,
+      "airPump": true,
       "light_sensor_internal": true,
       "light_sensor_external": true,
       "station_door_sensor": true,
@@ -31,14 +31,14 @@
       "root_ph_sensor": true,
       "enclosure_type": "CABINET",
       "water_level_sensor": true,
-      "intakeFan": false,
-      "exhaustFan": false,
-      "heatLamp": false,
-      "heatingPad": false,
-      "lightBloom": false,
-      "lightVegetative": false,
-      "lightGerminate": false,
-      "relay": false,
+      "intakeFan": true,
+      "exhaustFan": true,
+      "heatLamp": true,
+      "heatingPad": true,
+      "lightBloom": true,
+      "lightVegetative": true,
+      "lightGerminate": true,
+      "relay": true,
       "edge_devices": [
         {
           "deviceid": 70000008,
@@ -134,6 +134,43 @@
               ]
             },
             {
+              "moduleid": 22,
+              "container_name": "sense-go",
+              "module_name": "ccs811",
+              "module_type": "ccs811",
+              "protocol": "i2c",
+              "address": "0x53",
+              "internal_address": "",
+              "included_sensors": [
+                {
+                  "sensorid": 77,
+                  "sensor_name": "co2_sensor",
+                  "measurement_name": "co2"
+                },
+                {
+                  "sensorid": 78,
+                  "sensor_name": "voc_sensor",
+                  "measurement_name": "voc"
+                }
+              ]
+            },
+            {
+              "moduleid": 44,
+              "container_name": "sense-go",
+              "module_name": "hcsr04",
+              "module_type": "hcsr04",
+              "protocol": "i2c",
+              "address": "0x53",
+              "internal_address": "",
+              "included_sensors": [
+                {
+                  "sensorid": 77,
+                  "sensor_name": "height_sensor",
+                  "measurement_name": "plant_height"
+                }
+              ]
+            },
+            {
               "moduleid": 11,
               "container_name": "sense-go",
               "module_name": "DS18B20",
@@ -155,7 +192,7 @@
             "resolutionX": 0,
             "resolutionY": 0
           },
-          "time_between_pictures_in_seconds": 0,
+          "time_between_pictures_in_seconds": 600,
           "ac_outlets": [
             {
               "name": "intakeFan",
@@ -403,9 +440,9 @@
         "current_light_type": "Grow Light Veg",
         "light_type_options": null
       },
-      "current_stage": "",
-      "voc_sensor": false,
-      "co2_sensor": false
+      "current_stage": "idle",
+      "voc_sensor": true,
+      "co2_sensor": true
     }
   ]
 }

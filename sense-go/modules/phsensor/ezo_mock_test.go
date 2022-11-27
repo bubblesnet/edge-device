@@ -1,6 +1,3 @@
-//go:build windows || darwin || (linux && amd64)
-// +build windows darwin linux,amd64
-
 /*
  * Copyright (c) John Rodley 2022.
  * SPDX-FileCopyrightText:  John Rodley 2022.
@@ -22,21 +19,28 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package rpio
+package phsensor
 
-import (
-	"github.com/go-playground/log"
-)
+import "testing"
 
-func OpenRpio() (err error) {
-	log.Info("Calling rpio.open")
-	return nil
-}
-
-func CloseRpio() (err error) {
-	log.Info("Calling rpio.close")
-	return nil
+func TestReadPh(t *testing.T) {
+	type args struct {
+		once_only bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "happy", args: args{once_only: true}, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := ReadPh(tt.args.once_only); (err != nil) != tt.wantErr {
+				t.Errorf("ReadPh() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }

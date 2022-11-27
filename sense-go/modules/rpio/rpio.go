@@ -35,18 +35,20 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
-func OpenRpio() {
+func OpenRpio() (err error) {
 	log.Info("Calling rpio.open")
-	err := rpio.Open()
+	err = rpio.Open()
 	if err != nil {
 		log.Errorf("open rpio error %#v", err)
 	}
+	return err
 }
 
-func CloseRpio() {
+func CloseRpio() (err error) {
 	fmt.Printf("Called rpio.close - figure out defer bozo")
-	err := rpio.Close()
+	err = rpio.Close()
 	if err != nil {
 		log.Errorf("rpio.close %+v", err)
 	}
+	return err
 }

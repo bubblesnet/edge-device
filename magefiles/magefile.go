@@ -1,5 +1,5 @@
-//go:build windows || darwin || (linux && amd64)
-// +build windows darwin linux,amd64
+//go:build mage
+// +build mage
 
 /*
  * Copyright (c) John Rodley 2022.
@@ -22,21 +22,49 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package rpio
+package main
 
 import (
-	"github.com/go-playground/log"
+	"fmt"
+	"github.com/magefile/mage/sh"
+	"os"
+	"runtime"
 )
 
-func OpenRpio() (err error) {
-	log.Info("Calling rpio.open")
-	return nil
-}
+// Creates the binary in the current directory.  It will overwrite any existing
+// binary.
+func Deploy(balenafleet string, targetos string, targetarch string) (err error) {
+	fmt.Printf("Build(buildos=%s, targetos=%s, targetarch=%s)\n", runtime.GOOS, targetos, targetarch)
 
-func CloseRpio() (err error) {
-	log.Info("Calling rpio.close")
-	return nil
+	cwd, _ := os.Getwd()
+	if err = os.Chdir(cwd + "/sense-go"); err != nil {
+		return err
+	}
+	cwd2, _ := os.Getwd()
+	fmt.Printf("Current directory %s\n", cwd2)
+	if err := sh.RunV("mage", "build", targetos, targetarch); err != nil {
+		return err
+	}
+
+	if err = os.Chdir(cwd + "/store-and-forward/bubblesgrpc-server"); err != nil {
+		return err
+	}
+	cwd1, _ := os.Getwd()
+	fmt.Printf("Current directory %s\n", cwd1)
+	if err := sh.RunV("mage", "build", targetos, targetarch); err != nil {
+		return err
+	}
+
+	if err = os.Chdir(cwd); err != nil {
+		return err
+	}
+	cwd3, _ := os.Getwd()
+	fmt.Printf("Current directory %s\n", cwd3)
+
+	if err := sh.RunV("balena", "push", balenafleet); err != nil {
+		return err
+	}
+	return err
 }

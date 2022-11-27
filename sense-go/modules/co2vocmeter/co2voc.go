@@ -399,8 +399,8 @@ func _(err byte) {
 		log.Infof("ccs811: ")
 	}
 }
-func reportStatus(status byte) {
-	statstring := "ccs811: status - "
+func reportStatus(status byte) (statstring string) {
+	statstring = "ccs811: status - "
 
 	if status&STATUS_MASK_FIRMWAREMODE == STATUS_MASK_FIRMWAREMODE {
 		//		statstring = statstring + " firmware in application mode "
@@ -439,6 +439,7 @@ func reportStatus(status byte) {
 		statstring = statstring + " ERROR "
 	}
 	log.Info(statstring)
+	return statstring
 }
 
 func getCCCS811SensorMessages(sensorValues ccs811.SensorValues) (co2msg *messaging.CO2SensorMessage, vocmsg *messaging.VOCSensorMessage,

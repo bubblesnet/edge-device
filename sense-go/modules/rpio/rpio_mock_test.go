@@ -1,6 +1,3 @@
-//go:build windows || darwin || (linux && amd64)
-// +build windows darwin linux,amd64
-
 /*
  * Copyright (c) John Rodley 2022.
  * SPDX-FileCopyrightText:  John Rodley 2022.
@@ -22,21 +19,40 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package rpio
 
-import (
-	"github.com/go-playground/log"
-)
+import "testing"
 
-func OpenRpio() (err error) {
-	log.Info("Calling rpio.open")
-	return nil
+func TestCloseRpio(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "happy", wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := CloseRpio(); (err != nil) != tt.wantErr {
+				t.Errorf("openrpio failed")
+			}
+		})
+	}
 }
 
-func CloseRpio() (err error) {
-	log.Info("Calling rpio.close")
-	return nil
+func TestOpenRpio(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{name: "happy", wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := OpenRpio(); (err != nil) != tt.wantErr {
+				t.Errorf("openrpio failed")
+			}
+		})
+	}
 }

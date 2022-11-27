@@ -65,29 +65,3 @@ func Build(targetos string, targetarch string) error {
 	err := sh.RunWithV(envmap, "go", "build", "-tags", "make", "--ldflags="+ldf, "-o", "build", "./...")
 	return err
 }
-
-func Coverage(targetos string, targetarch string) error {
-	fmt.Printf("Coverage(buildos=%s, targetos=%s, targetarch=%s)\n", runtime.GOOS, targetos, targetarch)
-
-	envmap := make(map[string]string)
-	envmap["CODECOV_TOKEN"] = "bd6757f7-5f19-40b6-81f3-68547d5b9177"
-	envmap["API_HOST"] = "192.168.23.237"
-	envmap["NO_FAN_WITH_HEATER"] = "false"
-	envmap["SLEEP_ON_EXIT_FOR_DEBUGGING"] = "60"
-	envmap["ACTIVEMQ_HOST"] = "192.168.23.237"
-	envmap["ACTIVEMQ_PORT"] = "61611"
-	envmap["API_PORT"] = "4001"
-	envmap["USERID"] = "90000009"
-	envmap["DEVICEID"] = "70000008"
-	envmap["GOOS"] = targetos
-	envmap["GOARCH"] = targetarch
-	envmap["GOARM"] = "7"
-
-	if err := sh.RunWithV(envmap, "go", "test", "-tags", "make", "-coverprofile=coverage.out", "./..."); err != nil {
-		return err
-	}
-	if err := sh.RunWithV(envmap, "go", "tool", "cover", "-tags", "make", "-html=coverage.out"); err != nil {
-		return err
-	}
-	return nil
-}

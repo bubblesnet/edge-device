@@ -640,6 +640,10 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 
 func WriteConfig(storeMountPoint string, relativePath string, fileName string) (err error) {
 	fmt.Printf("WriteConfig MySite %+v\n\n", MySite)
+	if MySite.Stations[0].CurrentStage == "" {
+		fmt.Printf("current stage is not set, setting to IDLE") // TODO: Apparently this happens a LOT in tests, figure out why
+		MySite.Stations[0].CurrentStage = IDLE
+	}
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")
 	fmt.Printf("\n\nWriteConfig sighx siteBytes %s\n\n", string(siteBytes[:]))
 	if err != nil {
