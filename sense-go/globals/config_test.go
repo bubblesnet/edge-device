@@ -82,7 +82,7 @@ func TestReadServerHostname(t *testing.T) {
 				relativePath:    "",
 				fileName:        "hostname",
 			},
-			wantHostname: "192.168.23.237",
+			wantHostname: TEST_HOSTNAME,
 			wantErr:      false,
 		},
 	}
