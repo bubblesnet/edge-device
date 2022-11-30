@@ -1,5 +1,15 @@
 set GOPATH=%GOPATH%;c:\Users\rodley\documents\go;c:\Users\rodley\go
 echo %GOPATH%
+
+set API_HOST = 192.168.23.237
+set NO_FAN_WITH_HEATER = false
+set SLEEP_ON_EXIT_FOR_DEBUGGING = 60
+set ACTIVEMQ_HOST = 192.168.23.237
+set ACTIVEMQ_PORT  = 61611
+set API_PORT = 4001
+set USERID = 90000009
+set DEVICEID = 70000008
+
 set GOOS=windows
 set GOARCH=amd64
 set GOARM=7

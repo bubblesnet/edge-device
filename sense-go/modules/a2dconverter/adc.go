@@ -177,7 +177,7 @@ func getADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, chan
 	//	log.Infof("sensorName %s", sensorName)
 
 	ads := messaging.NewADCSensorMessage(sensorName, sensorName,
-		adcMessage.ChannelValues[channelIndex].Voltage, "Volts",
+		adcMessage.ChannelValues[channelIndex].Voltage, globals.UNIT_VOLTS,
 		direction,
 		adcMessage.ChannelValues[channelIndex].ChannelNumber, adcMessage.ChannelValues[channelIndex].Gain, adcMessage.ChannelValues[channelIndex].Rate)
 	bytearray, err := json.Marshal(ads)

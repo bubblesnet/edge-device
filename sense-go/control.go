@@ -134,8 +134,8 @@ func ControlAirflow(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Cu
 		break
 	}
 
-	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) && os.Getenv("NO_FAN_WITH_HEATER") == "true" {
-		log.Infof("automation: ControlAirflow - turning fans OFF because heater is ON and NO_FAN_WITH_HEATER == ", os.Getenv("NO_FAN_WITH_HEATER"))
+	if Powerstrip.IsOutletOn(MyDevice, globals.HEATER) && os.Getenv(globals.ENV_NO_FAN_WITH_HEATER) == "true" {
+		log.Infof("automation: ControlAirflow - turning fans OFF because heater is ON and NO_FAN_WITH_HEATER == %s", os.Getenv(globals.ENV_NO_FAN_WITH_HEATER))
 		TurnFansOff = true
 		TurnFansOn = false
 	}
@@ -185,44 +185,40 @@ func ControlLight(force bool, DeviceID int64, MyDevice *globals.EdgeDevice, Curr
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, false); somethingChanged == true {
 			LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
 		}
+		log.Infof("stage is idle, doing nothing!")
 		return
 	}
 	localTimeHours := currentTime.Hour()
-	offsetHours := 5
-	if localTimeHours-offsetHours < 0 {
-		localTimeHours = 24 + (localTimeHours - offsetHours)
-	} else {
-		localTimeHours = localTimeHours - offsetHours
-	}
 	bloomlight := false
 
 	if CurrentStage == globals.GERMINATION || CurrentStage == globals.SEEDLING ||
 		CurrentStage == globals.VEGETATIVE || CurrentStage == globals.BLOOMING {
-		// If it's time for grow light veg to be on
+		// If it's time for grow light bloom to be on
 		if inRange(CurrentStageSchedule.LightOnStartHour, CurrentStageSchedule.HoursOfLight, localTimeHours) {
-			log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM,
-				localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 			if somethingChanged = Powerstrip.TurnOnOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
+				log.Infof("automation: ControlLight turning on %s because local hour %d is within %d hours of %d", globals.GROWLIGHTBLOOM,
+					localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, false, true)
 			}
 			bloomlight = true
 		} else {
-			// If it's time for grow light veg to be off
-			if LocalCurrentState.GrowLightBloom == true {
+			// If it's time for grow light bloom to be off
+			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				log.Infof("automation: ControlLight turning off %s because local hour %d is outside %d hours of %d", globals.GROWLIGHTBLOOM,
 					localTimeHours, CurrentStageSchedule.HoursOfLight, CurrentStageSchedule.LightOnStartHour)
-			}
-			if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.GROWLIGHTBLOOM, force); somethingChanged == true {
 				LogSwitchStateChanged("ControlLight", globals.GROWLIGHTBLOOM, true, false)
 			}
 			bloomlight = false
 		}
 	} else {
+		//		log.Infof("automation: ControlLight Not a lit stage %s - no light changes", CurrentStage)
 	}
 	if bloomlight && !LocalCurrentState.GrowLightBloom {
-		log.Infof("automation: ControlLight Turned veg light ON")
+		log.Infof("automation: ControlLight Turned bloom light ON")
 	} else if !bloomlight && LocalCurrentState.GrowLightBloom {
-		log.Infof("automation: ControlLight Turned veg light OFF")
+		log.Infof("automation: ControlLight Turned bloom light OFF")
+	} else {
+		//		log.Infof("automation: ControlLight did nothing bloomlight now %v started with localcurrentstate.growlightbloom %v", bloomlight, LocalCurrentState.GrowLightBloom)
 	}
 	(*LocalCurrentState).GrowLightBloom = bloomlight
 	return somethingChanged
@@ -272,7 +268,7 @@ func ControlWaterTemp(force bool,
 		return somethingChanged
 	}
 
-	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
+	if ExternalCurrentState.TempWater == globals.TEMPNOTSET {
 		log.Infof("automation: ControlWaterTemp TEMPNOTSET ExternalCurrentState.TempWater %.3f - ignoring", ExternalCurrentState.TempWater)
 		return somethingChanged
 	}
@@ -330,12 +326,12 @@ func ControlHeat(force bool,
 
 	somethingChanged = false
 	if !isPowerstripAttached(DeviceID) {
-		log.Debugf("automation: ControlHeat - no outlets attached")
+		log.Debugf("automation: ControlHeat - no outlets attached, exiting")
 		return somethingChanged
 	}
 	//	log.Infof("automation: ControlHeat - current stage is %s", globals.MyStation.CurrentStage)
 	if CurrentStage == globals.IDLE {
-		log.Debugf("automation: ControlHeat - stage is idle, turning off")
+		log.Debugf("automation: ControlHeat - stage is idle, turning off and exiting")
 		if somethingChanged = Powerstrip.TurnOffOutletByName(MyDevice, globals.HEATER, false); somethingChanged == true {
 			LogSwitchStateChanged("ControlHeat", globals.HEATER, true, false)
 		} // MAKE SURE HEAT IS OFF
@@ -347,7 +343,7 @@ func ControlHeat(force bool,
 
 	//	log.Infof("automation: checking temp %.3f for stage %s with highLimit %.3f, lowLimit %.3f", globals.ExternalCurrentState.TempAirMiddle, globals.MyStation.CurrentStage, highLimit,lowLimit)
 	if ExternalCurrentState.TempAirMiddle == globals.TEMPNOTSET {
-		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempAirMiddle %.3f - ignoring", ExternalCurrentState.TempAirMiddle)
+		log.Debugf("automation: ControlHeat TEMPNOTSET ExternalCurrentState.TempAirMiddle %.3f - ignoring and exiting", ExternalCurrentState.TempAirMiddle)
 		return somethingChanged
 	}
 	if ExternalCurrentState.TempAirMiddle > highLimit { // TOO HOT

@@ -55,7 +55,7 @@ func (m *MockDispenser) InitRpioPins(MyStation *globals.Station, MyDevice *globa
 }
 
 func (m *MockDispenser) TurnOffDispenserByName(MyStation *globals.Station, MyDevice *globals.EdgeDevice, name string, force bool) (somethingChanged bool) {
-	return (false)
+	return false
 }
 
 func (m *MockDispenser) IsDispenserOn(MyStation *globals.Station, MyDevice *globals.EdgeDevice, name string) bool {
@@ -63,7 +63,7 @@ func (m *MockDispenser) IsDispenserOn(MyStation *globals.Station, MyDevice *glob
 }
 
 func (m *MockDispenser) TurnOnDispenserByName(MyStation *globals.Station, MyDevice *globals.EdgeDevice, name string, force bool) (somethingChanged bool) {
-	return (false)
+	return false
 }
 
 func (m *MockDispenser) ReportAll(MyStation *globals.Station, MyDevice *globals.EdgeDevice, timeout time.Duration) {
@@ -83,7 +83,7 @@ func (m *MockDispenser) TurnOffDispenserByIndex(index int) {
 func (m *MockDispenser) RunPinToggler(MyStation *globals.Station, MyDevice *globals.EdgeDevice, isTest bool) {
 }
 
-func (m *MockDispenser) SetupDispenserGPIO(MyStation *globals.Station, MyDevice *globals.EdgeDevice, Dispenser DispenserService) {
+func (m *MockDispenser) SetupDispenserGPIO(MyStation *globals.Station, MyDevice *globals.EdgeDevice) {
 }
 
 func (m *MockDispenser) TimedDispenseSynchronous(MyStation *globals.Station, MyDevice *globals.EdgeDevice, dispenserName string, milliseconds int32) (err error) {

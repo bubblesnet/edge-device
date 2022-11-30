@@ -110,9 +110,9 @@ globals.LocalCurrentState.GrowLightVeg
 "seedling"
 "vegetative"
 */
-func initGlobalsLocally(t *testing.T) {
+func initGlobalsLocally(t *testing.T, filename string) {
 	globals.MyDeviceID = 70000008
-	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", "config.json", &globals.MySite, &globals.CurrentStageSchedule); err != nil {
+	if err := globals.ReadCompleteSiteFromPersistentStore("./testdata", "", filename, &globals.MySite, &globals.CurrentStageSchedule); err != nil {
 		t.Errorf("getConfigFromServer() error = %#v", err)
 	}
 	if globals.MyStation == nil {
@@ -121,7 +121,6 @@ func initGlobalsLocally(t *testing.T) {
 }
 
 func Test_moduleShouldBeHere(t *testing.T) {
-	initGlobalsLocally(t)
 
 	type args struct {
 		containerName   string
@@ -134,9 +133,22 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		name                string
 		args                args
 		wantShouldBePresent bool
+		configfilename      string
 	}{
 		{name: "happy",
 			wantShouldBePresent: true,
+			configfilename:      "config.json",
+			args: args{
+				containerName:   "sense-python",
+				mydeviceid:      globals.MyDeviceID,
+				myStation:       globals.MyStation,
+				deviceInStation: true,
+				moduleType:      "bme280",
+			},
+		},
+		{name: "happy no modules",
+			wantShouldBePresent: false,
+			configfilename:      "config_no_modules_no_outlets.json",
 			args: args{
 				containerName:   "sense-python",
 				mydeviceid:      globals.MyDeviceID,
@@ -147,6 +159,7 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		},
 		{name: "unhappy",
 			wantShouldBePresent: false,
+			configfilename:      "config.json",
 			args: args{
 				containerName:   "sense-python",
 				mydeviceid:      70000006,
@@ -157,9 +170,12 @@ func Test_moduleShouldBeHere(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		initGlobalsLocally(t, tt.configfilename)
 		t.Run(tt.name, func(t *testing.T) {
 			if gotShouldBePresent := moduleShouldBeHere(tt.args.containerName, tt.args.myStation, tt.args.mydeviceid, tt.args.deviceInStation, tt.args.moduleType); gotShouldBePresent != tt.wantShouldBePresent {
-				t.Errorf("moduleShouldBeHere(%#v) = %#v, want %#v", tt.args, gotShouldBePresent, tt.wantShouldBePresent)
+				t.Errorf("moduleShouldBeHere(%#v)", tt.args)
+				t.Errorf("moduleShouldBeHere got  %#v", gotShouldBePresent)
+				t.Errorf("moduleShouldBeHere want %#v", tt.wantShouldBePresent)
 			}
 		})
 	}
@@ -454,6 +470,22 @@ func Test_processCommand(t *testing.T) {
 		Body: []byte(myswitchOnBody),
 		Err:  errors.New("test error handling"),
 	}
+
+	statusmessageBody := "{ \"command\": \"status\" }"
+	statusMessage := stomp.Message{
+		Body: []byte(statusmessageBody),
+	}
+
+	dispenseBody := "{ \"command\": \"dispense\", \"dispenser_name\": \"pH Up\", \"milliseconds\": 100 }"
+	dispenseMessage := stomp.Message{
+		Body: []byte(dispenseBody),
+	}
+
+	stageBody := "{ \"command\": \"stage\", \"stage\": \"IDLE\"}"
+	stageMessage := stomp.Message{
+		Body: []byte(stageBody),
+	}
+
 	//	messageWithTimeout := stomp.Message{
 	//		Body: []byte(myswitchOnBody),
 	//		Err:  errors.New("timeout"),
@@ -478,6 +510,9 @@ func Test_processCommand(t *testing.T) {
 		{name: "notMyswitchMessage", args: args{msg: &notMyswitchMessage}, wantResub: false, wantErr: false},
 		{name: "autoSwitchMessage", args: args{msg: &autoSwitchMessage}, wantResub: false, wantErr: false},
 		{name: "pictureMessage", args: args{msg: &pictureMessage}, wantResub: false, wantErr: false},
+		{name: "dispenseMessage", args: args{msg: &dispenseMessage}, wantResub: false, wantErr: false},
+		{name: "statusMessage", args: args{msg: &statusMessage}, wantResub: false, wantErr: false},
+		{name: "stageMessage", args: args{msg: &stageMessage}, wantResub: false, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -489,6 +524,23 @@ func Test_processCommand(t *testing.T) {
 			if gotResub != tt.wantResub {
 				t.Errorf("processCommand() gotResub = %#v, want %#v", gotResub, tt.wantResub)
 			}
+		})
+	}
+}
+
+func Test_makeControlDecisions1(t *testing.T) {
+	type args struct {
+		once_only bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{name: "happy", args: args{once_only: true}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			//			makeControlDecisions(tt.args.once_only)
 		})
 	}
 }

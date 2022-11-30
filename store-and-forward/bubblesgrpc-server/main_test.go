@@ -138,7 +138,8 @@ func Test_server_GetState(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetState() got = %v, want %v", got, tt.want)
+				t.Errorf("GetState() got  %v", got)
+				t.Errorf("GetState() want %v", tt.want)
 			}
 		})
 	}
@@ -172,7 +173,8 @@ func Test_server_StoreAndForward(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("StoreAndForward() got = %v, want %v", got, tt.want)
+				t.Errorf("StoreAndForward() got  %v", got)
+				t.Errorf("StoreAndForward() want %v", tt.want)
 			}
 		})
 	}

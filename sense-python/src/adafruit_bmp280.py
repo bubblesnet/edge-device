@@ -124,15 +124,15 @@ class Adafruit_BMP280: # pylint: disable=invalid-name
             while self._get_status() & 0x08:
                 sleep(0.002)
         raw_humidity = self._read24(_REGISTER_HUMIDITYDATA) / 16 # lowest 4 bits get dropped
-        #logging.debug("raw temp: ", UT)
+        # logging.debug("raw temp: ", UT)
         var1 = (raw_humidity / 16384.0 - self._humidity_calib[0] / 1024.0) * self._humidity_calib[1]
-        #logging.debug(var1)
+        # logging.debug(var1)
         var2 = ((raw_humidity / 131072.0 - self._humidity_calib[0] / 8192.0) * (
             raw_humidity / 131072.0 - self._humidity_calib[0] / 8192.0)) * self._humidity_calib[2]
-        #logging.debug(var2)
+        # logging.debug(var2)
 
         self._h_fine = int(var1 + var2)
-        #logging.debug("t_fine: ", self.t_fine)
+        # logging.debug("t_fine: ", self.t_fine)
 
     def _read_temperature(self):
         # perform one measurement
@@ -142,20 +142,20 @@ class Adafruit_BMP280: # pylint: disable=invalid-name
             while self._get_status() & 0x08:
                 sleep(0.002)
         raw_temperature = self._read24(_REGISTER_TEMPDATA) / 16 # lowest 4 bits get dropped
-        #logging.debug("raw temp: ", UT)
+        # logging.debug("raw temp: ", UT)
         var1 = (raw_temperature / 16384.0 - self._temp_calib[0] / 1024.0) * self._temp_calib[1]
-        #logging.debug(var1)
+        # logging.debug(var1)
         var2 = ((raw_temperature / 131072.0 - self._temp_calib[0] / 8192.0) * (
             raw_temperature / 131072.0 - self._temp_calib[0] / 8192.0)) * self._temp_calib[2]
-        #logging.debug(var2)
+        # logging.debug(var2)
 
         self._t_fine = int(var1 + var2)
-        #logging.debug("t_fine: ", self.t_fine)
+        # logging.debug("t_fine: ", self.t_fine)
 
     def _reset(self):
         """Soft reset the sensor"""
         self._write_register_byte(_REGISTER_SOFTRESET, 0xB6)
-        sleep(0.004)  #Datasheet says 2ms.  Using 4ms just to be safe
+        sleep(0.004)  # Datasheet says 2ms.  Using 4ms just to be safe
 
     def _write_ctrl_meas(self):
         """
@@ -176,9 +176,9 @@ class Adafruit_BMP280: # pylint: disable=invalid-name
         """Write the value to the config register in the device """
         normal_flag = False
         if self._mode == MODE_NORMAL:
-            #Writes to the config register may be ignored while in Normal mode
+            # Writes to the config register may be ignored while in Normal mode
             normal_flag = True
-            self.mode = MODE_SLEEP #So we switch to Sleep mode first
+            self.mode = MODE_SLEEP # So we switch to Sleep mode first
         self._write_register_byte(_REGISTER_CONFIG, self._config)
         if normal_flag:
             self.mode = MODE_NORMAL
@@ -386,6 +386,7 @@ class Adafruit_BMP280: # pylint: disable=invalid-name
         """Low level register writing, not implemented in base class"""
         raise NotImplementedError()
 
+
 class Adafruit_BMP280_I2C(Adafruit_BMP280): # pylint: disable=invalid-name
     """Driver for I2C connected BMP280. Default address is 0x77 but another address can be passed
        in as an argument"""
@@ -400,14 +401,14 @@ class Adafruit_BMP280_I2C(Adafruit_BMP280): # pylint: disable=invalid-name
             i2c.write(bytes([register & 0xFF]))
             result = bytearray(length)
             i2c.readinto(result)
-            #logging.debug("$%02X => %s" % (register, [hex(i) for i in result]))
+            # logging.debug("$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
     def _write_register_byte(self, register, value):
         """Low level register writing over I2C, writes one 8-bit value"""
         with self._i2c as i2c:
             i2c.write(bytes([register & 0xFF, value & 0xFF]))
-            #logging.debug("$%02X <= 0x%02X" % (register, value))
+            # logging.debug("$%02X <= 0x%02X" % (register, value))
 
 class Adafruit_BMP280_SPI(Adafruit_BMP280):
     """Driver for SPI connected BMP280. Default clock rate is 100000 but can be changed with

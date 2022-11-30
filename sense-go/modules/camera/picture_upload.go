@@ -41,7 +41,7 @@ import (
 func TakeAPicture() {
 
 	// Is there any light?  - check the bh1750
-	if globals.MyStation.LightSensorInternal && globals.ExternalCurrentState.LightInternal < 10.0 {
+	if globals.MyStation.LightSensorInternal && globals.ExternalCurrentState.LightInternal < 2.0 {
 		log.Infof("LightInternal value is available AND too low to take picture %f", globals.ExternalCurrentState.LightInternal)
 		return
 	}

@@ -21,53 +21,75 @@
 #
 
 from unittest import TestCase
-from . import main
+from .. import main
+
+global my_device
+
+import os
+
+
 import grpc as grpcio
-from bubblesgrpc_pb2 import SensorRequest
-from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
+# from bubblesgrpc_pb2 import SensorRequest
+# from bubblesgrpc_pb2_grpc import SensorStoreAndForwardStub as grpcStub
 
 
 class Test(TestCase):
+    def test_validate_config(self):
+        b = main.read_config('../config.json', int(os.environ['DEVICEID']))
+        self.assertTrue(b)
+        b = main.validate_config(main.my_site)
+        self.assertTrue(b)
+
+    def test_read_deviceid(self):
+        deviceid = main.read_deviceid("asdfsafdf")
+        self.assertGreater(deviceid, -1)
+
+    def test_wait_for_config(self):
+        b = main.wait_for_config('../config.json')
+        self.assertTrue(b)
+
     def test_read_config(self):
-        main.read_config('../config.json')
-        if main.my_site['deviceid'] <= 0:
-            self.fail()
-        return
+        global my_device
+
+        b = main.read_config('../config.json', int(os.environ['DEVICEID']))
+        self.assertTrue(b)
+        self.assertEqual(main.my_site['deviceid'], int(os.environ['DEVICEID']))
+        self.assertIsNotNone(main.my_device)
 
     def test_get_address(self):
-        main.read_config('../config.json')
-        addr = main.get_address("bme280")
-        if addr == 0:
-            self.fail()
+        b = main.read_config('../config.json', int(os.environ['DEVICEID']))
+        self.assertTrue(b)
+        addr = main.get_address('bme280')
+        self.assertNotEqual(addr, 0)
 
     def test_is_our_device(self):
-        main.read_config("../config.json")
-        ourdevice = main.is_our_device("bme280")
-        if not ourdevice:
-            self.fail()
+        b = main.read_config('../config.json', int(os.environ['DEVICEID']))
+        self.assertTrue(b)
+        ourdevice = main.is_our_device('bme280')
+        self.assertIsNotNone(ourdevice)
 
     def test_bme280_names(self):
-        main.read_config("../config.json")
-        main.bme280_names()
-        if main.temperature_sensor_name == "":
-            self.fail()
+        global my_device
+
+        b = main.read_config('../config.json', int(os.environ['DEVICEID']))
+        self.assertTrue(b)
+        self.assertIsNotNone(main.my_device)
+        main.bme280_names(main.my_device)
+        self.assertNotEqual(main.temperature_sensor_name, '')
 
     def test_get_sequence(self):
         x = main.get_sequence()
-        if x <= 0:
-            self.fail()
+        self.assertGreaterEqual(x, 0)
 
+    def test_send_message(self):
+        main.channel = grpcio.insecure_channel('localhost:50051')
+        main.stub = main.grpcStub(main.channel)
+
+        msg = {}
+        main.send_message(msg)
+        self.assertGreater(msg['sample_timestamp'], 0)
 
 '''
-  def test_send_message(self):
-       main.channel = grpcio.insecure_channel('store-and-forward:50051')
-       main.stub = grpcStub(main.channel)
-
-       msg = {}
-       main.send_message(msg)
-       if msg['sample_timestamp'] <= 0:
-           self.fail()
-
 
    def test_append_bh1750_data(self):
        self.fail()
@@ -85,7 +107,7 @@ class Test(TestCase):
        self.fail()
 
    def test_append_bme280_temp(self):
-       main.append_bme280_temp("", "test_thermometer", "test_temp")
+       main.append_bme280_temp('', 'test_thermometer', 'test_temp')
        self.fail()
 
    def test_append_bme280_humidity(self):
@@ -94,3 +116,5 @@ class Test(TestCase):
    def test_append_bme280_pressure(self):
        self.fail()
 '''
+
+

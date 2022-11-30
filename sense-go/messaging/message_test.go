@@ -48,19 +48,22 @@ func TestNewADCSensorMessage(t *testing.T) {
 		wantPmsg *ADCSensorMessage
 	}{
 		{name: "happy",
-			args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "up", channel: 0, gain: 1, rate: 2},
+			args: args{sensor_name: "test", value: 99.99, units: globals.UNIT_VOLTS, direction: globals.Directions_up, channel: 0, gain: 1, rate: 2},
 			wantPmsg: &ADCSensorMessage{
-				DeviceId:          globals.MyDevice.DeviceID,
+				DeviceId:  globals.MyDevice.DeviceID,
+				SiteId:    1,
+				StationId: 1,
+
 				SampleTimestamp:   getNowMillis(),
-				ContainerName:     "sense-go",
+				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 				MeasurementName:   "",
-				MessageType:       "measurement",
+				MessageType:       globals.Message_type_measurement,
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
 				Value:             99.99,
 				FloatValue:        99.99,
-				Units:             "Volts",
-				Direction:         "up",
+				Units:             globals.UNIT_VOLTS,
+				Direction:         globals.Directions_up,
 				ChannelNumber:     0,
 				Rate:              2,
 				Gain:              1,
@@ -72,7 +75,8 @@ func TestNewADCSensorMessage(t *testing.T) {
 			gotPmsg := NewADCSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.channel, tt.args.gain, tt.args.rate)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewADCSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewADCSensorMessage() got  %#v", gotPmsg)
+				t.Errorf("NewADCSensorMessage() want %#v", tt.wantPmsg)
 			}
 		})
 	}
@@ -94,19 +98,22 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 		args     args
 		wantPmsg *DistanceSensorMessage
 	}{
-		{args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts", direction: "up", distanceIn: 2.2, distanceCm: 2.1},
+		{args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99,
+			units: globals.UNIT_VOLTS, direction: globals.Directions_up, distanceIn: 2.2, distanceCm: 2.1},
 			wantPmsg: &DistanceSensorMessage{
+				SiteId:            1,
+				StationId:         1,
 				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
-				ContainerName:     "sense-go",
-				MessageType:       "measurement",
+				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
+				MessageType:       globals.Message_type_measurement,
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
 				MeasurementName:   "test_measurement",
 				Value:             99.99,
 				FloatValue:        99.99,
-				Units:             "Volts",
-				Direction:         "up",
+				Units:             globals.UNIT_VOLTS,
+				Direction:         globals.Directions_up,
 				DistanceCm:        2.1,
 				DistanceIn:        2.2,
 			},
@@ -117,7 +124,8 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 			gotPmsg := NewDistanceSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.distanceCm, tt.args.distanceIn)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewDistanceSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewDistanceSensorMessage() got  %#v", gotPmsg)
+				t.Errorf("NewDistanceSensorMessage() want %#v", tt.wantPmsg)
 			}
 		})
 	}
@@ -137,19 +145,22 @@ func TestNewGenericSensorMessage(t *testing.T) {
 		args     args
 		wantPmsg *GenericSensorMessage
 	}{
-		{name: "happy", args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99, units: "Volts", direction: "up"},
+		{name: "happy", args: args{sensor_name: "test", measurement_name: "test_measurement", value: 99.99,
+			units: globals.UNIT_VOLTS, direction: globals.Directions_up},
 			wantPmsg: &GenericSensorMessage{
+				SiteId:            1,
+				StationId:         1,
 				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
-				ContainerName:     "sense-go",
-				MessageType:       "measurement",
+				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
+				MessageType:       globals.Message_type_measurement,
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
 				MeasurementName:   "test_measurement",
 				Value:             99.99,
 				FloatValue:        99.99,
-				Units:             "Volts",
-				Direction:         "up",
+				Units:             globals.UNIT_VOLTS,
+				Direction:         globals.Directions_up,
 			},
 		},
 	}
@@ -159,7 +170,8 @@ func TestNewGenericSensorMessage(t *testing.T) {
 			gotPmsg := NewGenericSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewGenericSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewGenericSensorMessage() got  %#v", gotPmsg)
+				t.Errorf("NewGenericSensorMessage() want %#v", tt.wantPmsg)
 			}
 		})
 	}
@@ -188,19 +200,21 @@ func TestNewTamperSensorMessage(t *testing.T) {
 		args     args
 		wantPmsg *TamperEventMessage
 	}{
-		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: "Volts", direction: "", measurement_name: "movement", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
+		{name: "happy", args: args{sensor_name: "test", value: 99.99, units: globals.UNIT_VOLTS, direction: globals.Directions_none, measurement_name: "movement", moveX: 1.1, moveY: 2.2, moveZ: 3.3},
 			wantPmsg: &TamperEventMessage{
+				SiteId:            1,
+				StationId:         1,
 				DeviceId:          globals.MyDevice.DeviceID,
 				SampleTimestamp:   getNowMillis(),
-				ContainerName:     "sense-go",
+				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 				MessageType:       "event",
 				ExecutableVersion: "..  ",
 				SensorName:        "test",
 				MeasurementName:   "tamper",
 				Value:             99.99,
 				FloatValue:        99.99,
-				Units:             "Volts",
-				Direction:         "",
+				Units:             globals.UNIT_VOLTS,
+				Direction:         globals.Directions_none,
 				XMove:             1.1,
 				YMove:             2.2,
 				ZMove:             3.3,
@@ -213,7 +227,8 @@ func TestNewTamperSensorMessage(t *testing.T) {
 			gotPmsg := NewTamperSensorMessage(tt.args.sensor_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.moveX, tt.args.moveY, tt.args.moveZ)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewTamperSensorMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewTamperSensorMessage() = got  %#v", gotPmsg)
+				t.Errorf("NewTamperSensorMessage() = want %#v", tt.wantPmsg)
 			}
 		})
 	}
@@ -239,8 +254,9 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 	initGlobalsLocally(t)
 	testmsg := SwitchStatusChangeMessage{
 		DeviceId:          70000008,
+		SiteId:            1,
 		StationId:         1,
-		ContainerName:     "sense-go",
+		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 		ExecutableVersion: "..  ",
 		EventTimestamp:    getNowMillis(),
 		MessageType:       "switch_event",
@@ -262,7 +278,194 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 		testmsg.EventTimestamp = getNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewSwitchStatusChangeMessage(tt.args.switch_name, tt.args.on); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewSwitchStatusChangeMessage() = %#v, want %#v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewSwitchStatusChangeMessage() = got  %#v", gotPmsg)
+				t.Errorf("NewSwitchStatusChangeMessage() = want %#v", tt.wantPmsg)
+			}
+		})
+	}
+}
+
+func TestNewVOCSensorMessage(t *testing.T) {
+	initGlobalsLocally(t)
+	//	sensor_name string, measurement_name string, value float64, units string, direction string
+	testmsg := VOCSensorMessage{
+		DeviceId:          70000008,
+		SiteId:            1,
+		StationId:         1,
+		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
+		ExecutableVersion: "..  ",
+		MessageType:       globals.Message_type_measurement,
+		SensorName:        globals.SENSOR_NAME_VOC,
+		MeasurementName:   globals.MEASUREMENT_NAME_VOC,
+		Value:             1.1,
+		FloatValue:        1.1,
+		Units:             globals.UNITS_PARTS_PER_BILLION,
+		Direction:         globals.Directions_none,
+	}
+	type args struct {
+		sensor_name      string
+		measurement_name string
+		value            float64
+		units            string
+		direction        string
+	}
+
+	tests := []struct {
+		name     string
+		args     args
+		wantPmsg *VOCSensorMessage
+	}{
+		{name: "happy", args: args{sensor_name: globals.SENSOR_NAME_VOC,
+			measurement_name: globals.MEASUREMENT_NAME_VOC, value: 1.1, units: globals.UNITS_PARTS_PER_BILLION,
+			direction: globals.Directions_none}, wantPmsg: &testmsg},
+	}
+	for _, tt := range tests {
+		testmsg.SampleTimestamp = getNowMillis()
+		t.Run(tt.name, func(t *testing.T) {
+			if gotPmsg := NewVOCSensorMessage(tt.args.sensor_name, tt.args.measurement_name,
+				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				t.Errorf("TestNewVOCSensorMessage() = got  %#v", gotPmsg)
+				t.Errorf("TestNewVOCSensorMessage() = want %#v", tt.wantPmsg)
+			}
+		})
+	}
+}
+
+func TestNewCO2SensorMessage(t *testing.T) {
+	initGlobalsLocally(t)
+	//	sensor_name string, measurement_name string, value float64, units string, direction string
+	testmsg := CO2SensorMessage{
+		DeviceId:          70000008,
+		SiteId:            1,
+		StationId:         1,
+		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
+		ExecutableVersion: "..  ",
+		MessageType:       globals.Message_type_measurement,
+		SensorName:        globals.SENSOR_NAME_CO2,
+		MeasurementName:   globals.MEASUREMENT_NAME_CO2,
+		Value:             1.1,
+		FloatValue:        1.1,
+		Units:             globals.UNITS_PARTS_PER_MILLION,
+		Direction:         globals.Directions_none,
+	}
+	type args struct {
+		sensor_name      string
+		measurement_name string
+		value            float64
+		units            string
+		direction        string
+	}
+
+	tests := []struct {
+		name     string
+		args     args
+		wantPmsg *CO2SensorMessage
+	}{
+		{name: "happy", args: args{sensor_name: globals.SENSOR_NAME_CO2,
+			measurement_name: globals.MEASUREMENT_NAME_CO2, value: 1.1, units: globals.UNITS_PARTS_PER_MILLION,
+			direction: globals.Directions_none}, wantPmsg: &testmsg},
+	}
+	for _, tt := range tests {
+		testmsg.SampleTimestamp = getNowMillis()
+		t.Run(tt.name, func(t *testing.T) {
+			if gotPmsg := NewCO2SensorMessage(tt.args.sensor_name, tt.args.measurement_name,
+				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				t.Errorf("TestNewCO2SensorMessage() = got  %#v", gotPmsg)
+				t.Errorf("TestNewCO2SensorMessage() = want %#v", tt.wantPmsg)
+			}
+		})
+	}
+}
+
+func TestNewCCS811CurrentMessage(t *testing.T) {
+	initGlobalsLocally(t)
+	//	sensor_name string, measurement_name string, value float64, units string, direction string
+	testmsg := CCS811CurrentMessage{
+		DeviceId:          70000008,
+		SiteId:            1,
+		StationId:         1,
+		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
+		ExecutableVersion: "..  ",
+		MessageType:       globals.Message_type_measurement,
+		SensorName:        globals.SENSOR_NAME_CCS811_CURRENT,
+		MeasurementName:   globals.MEASUREMENT_NAME_CCS811_RAW_CURRENT,
+		Value:             1.1,
+		FloatValue:        1.1,
+		Units:             globals.UNITS_MICRO_AMPS,
+		Direction:         globals.Directions_none,
+	}
+	type args struct {
+		sensor_name      string
+		measurement_name string
+		value            float64
+		units            string
+		direction        string
+	}
+
+	tests := []struct {
+		name     string
+		args     args
+		wantPmsg *CCS811CurrentMessage
+	}{
+		{name: "happy", args: args{sensor_name: globals.SENSOR_NAME_CCS811_CURRENT,
+			measurement_name: globals.MEASUREMENT_NAME_CCS811_RAW_CURRENT, value: 1.1,
+			units:     globals.UNITS_MICRO_AMPS,
+			direction: globals.Directions_none}, wantPmsg: &testmsg},
+	}
+	for _, tt := range tests {
+		testmsg.SampleTimestamp = getNowMillis()
+		t.Run(tt.name, func(t *testing.T) {
+			if gotPmsg := NewCCS811CurrentMessage(tt.args.sensor_name, tt.args.measurement_name,
+				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				t.Errorf("NewCCS811CurrentMessage() = got  %#v", gotPmsg)
+				t.Errorf("NewCCS811CurrentMessage() = want %#v", tt.wantPmsg)
+			}
+		})
+	}
+}
+
+func TestNewCCS811VoltageMessage(t *testing.T) {
+	initGlobalsLocally(t)
+	//	sensor_name string, measurement_name string, value float64, units string, direction string
+	testmsg := CCS811VoltageMessage{
+		DeviceId:          70000008,
+		SiteId:            1,
+		StationId:         1,
+		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
+		ExecutableVersion: "..  ",
+		MessageType:       globals.Message_type_measurement,
+		SensorName:        globals.SENSOR_NAME_CCS811_VOLTAGE,
+		MeasurementName:   globals.MEASUREMENT_NAME_CCS811_RAW_VOLTAGE,
+		Value:             1.1,
+		FloatValue:        1.1,
+		Units:             globals.UNITS_MICRO_VOLTS,
+		Direction:         globals.Directions_none,
+	}
+	type args struct {
+		sensor_name      string
+		measurement_name string
+		value            float64
+		units            string
+		direction        string
+	}
+
+	tests := []struct {
+		name     string
+		args     args
+		wantPmsg *CCS811VoltageMessage
+	}{
+		{name: "happy", args: args{sensor_name: globals.SENSOR_NAME_CCS811_VOLTAGE,
+			measurement_name: globals.MEASUREMENT_NAME_CCS811_RAW_VOLTAGE, value: 1.1,
+			units:     globals.UNITS_MICRO_VOLTS,
+			direction: globals.Directions_none}, wantPmsg: &testmsg},
+	}
+	for _, tt := range tests {
+		testmsg.SampleTimestamp = getNowMillis()
+		t.Run(tt.name, func(t *testing.T) {
+			if gotPmsg := NewCCS811VoltageMessage(tt.args.sensor_name, tt.args.measurement_name,
+				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				t.Errorf("NewCCS811VoltageMessage() = got  %#v", gotPmsg)
+				t.Errorf("NewCCS811VoltageMessage() = want %#v", tt.wantPmsg)
 			}
 		})
 	}
@@ -271,11 +474,14 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 func TestNewPictureTakenMessage(t *testing.T) {
 	initGlobalsLocally(t)
 	testmsg := PictureTakenMessage{
+		SiteId:            1,
+		StationId:         1,
 		DeviceId:          70000008,
-		ContainerName:     "sense-go",
+		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 		ExecutableVersion: "..  ",
 		EventTimestamp:    getNowMillis(),
 		MessageType:       "picture_event",
+		PictureFilename:   "blah.jpg",
 	}
 	tests := []struct {
 		name     string
@@ -287,7 +493,8 @@ func TestNewPictureTakenMessage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testmsg.EventTimestamp = getNowMillis()
 			if gotPmsg := NewPictureTakenMessage("blah.jpg", 0); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewPictureTakenMessage() = %v, want %v", gotPmsg, tt.wantPmsg)
+				t.Errorf("NewPictureTakenMessage() got  %#v", gotPmsg)
+				t.Errorf("NewPictureTakenMessage() want %#v", tt.wantPmsg)
 			}
 		})
 	}

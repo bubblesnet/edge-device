@@ -59,7 +59,8 @@ func Test_getContentDisposition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getContentDisposition(tt.args.format); got != tt.want {
-				t.Errorf("getContentDisposition() = %v, want %v", got, tt.want)
+				t.Errorf("getContentDisposition() got  %v", got)
+				t.Errorf("getContentDisposition() want %v", tt.want)
 			}
 		})
 	}
@@ -81,7 +82,8 @@ func Test_requestStateList(t *testing.T) {
 				return
 			}
 			if got != tt.want {
-				t.Errorf("requestStateList() got = %v, want %v", got, tt.want)
+				t.Errorf("requestStateList() got  %v", got)
+				t.Errorf("requestStateList() want %v", tt.want)
 			}
 		})
 	}
