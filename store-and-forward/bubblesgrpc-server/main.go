@@ -22,7 +22,7 @@
  *
  */
 
-///go:generate protoc -I ../bubblesgrpc --go_out=plugins=grpc:../bubblesgrpc ../bubblesgrpc/bubblesgrpc.proto
+// /go:generate protoc -I ../bubblesgrpc --go_out=plugins=grpc:../bubblesgrpc ../bubblesgrpc/bubblesgrpc.proto
 
 // Package main implements a server for SensorStoreAndForward service.
 package main
@@ -252,7 +252,7 @@ func handleVersioningFromLoader() (err error) {
 }
 
 func SleepBeforeExit() {
-	snaptime := os.Getenv("SLEEP_ON_EXIT_FOR_DEBUGGING")
+	snaptime := os.Getenv(ENV_SLEEP_ON_EXIT_FOR_DEBUGGING)
 	naptime, err := strconv.ParseInt(snaptime, 10, 32)
 	if err != nil {
 		log.Errorf("SLEEP_ON_EXIT_FOR_DEBUGGING %s conversion error %#v", snaptime, err)
@@ -292,11 +292,11 @@ func main() {
 	WaitForConfigFile(storeMountPoint, "", "config.json")
 	err = ReadCompleteSiteFromPersistentStore(storeMountPoint, "", "config.json", &MySite, &stageSchedule)
 	var nilerr error
-	MySite.ControllerAPIHostName, _ = os.Getenv("API_HOST"), nilerr
-	MySite.ControllerActiveMQHostName, _ = os.Getenv("ACTIVEMQ_HOST"), nilerr
-	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv("API_PORT"))
-	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv("ACTIVEMQ_PORT"))
-	MySite.UserID, _ = strconv.ParseInt(os.Getenv("USERID"), 10, 64)
+	MySite.ControllerAPIHostName, _ = os.Getenv(ENV_API_HOST), nilerr
+	MySite.ControllerActiveMQHostName, _ = os.Getenv(ENV_ACTIVEMQ_HOST), nilerr
+	MySite.ControllerAPIPort, _ = strconv.Atoi(os.Getenv(ENV_API_PORT))
+	MySite.ControllerActiveMQPort, _ = strconv.Atoi(os.Getenv(ENV_ACTIVEMQ_PORT))
+	MySite.UserID, _ = strconv.ParseInt(os.Getenv(ENV_USERID), 10, 64)
 	d := EdgeDevice{DeviceID: MyDeviceID}
 	MyDevice = &d
 

@@ -31,6 +31,12 @@ import (
 	"github.com/go-playground/log"
 )
 
-func OpenRpio() {
+func OpenRpio() (err error) {
 	log.Info("Calling rpio.open")
+	return nil
+}
+
+func CloseRpio() (err error) {
+	log.Info("Calling rpio.close")
+	return nil
 }

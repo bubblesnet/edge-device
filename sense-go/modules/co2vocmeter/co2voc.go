@@ -125,9 +125,14 @@ const (
 	baselineFile = "BASELINE"
 )
 
-var baseline = []byte{253, 184}
+// var baseline = []byte{253, 184}
 
-func ReadCO2VOC() {
+func toCelsius(fahrenheit float32) (celsius float32) {
+	celsius = (fahrenheit - 32.0) / 1.8
+	return celsius
+}
+
+func ReadCO2VOC(ptemp *float32, phumidity *float32) {
 	// Make sure periph is initialized.
 	if _, err := host.Init(); err != nil {
 		log.Errorf("ccs811: host.Init failed %+v", err)
@@ -159,6 +164,15 @@ func ReadCO2VOC() {
 			continue
 		}
 		log.Info("ccs811: ccs811.New succeeded")
+
+		if *ptemp > 0 && *ptemp < 100.0 && *phumidity > 0.0 && *phumidity < 100.1 {
+			log.Infof("ccs811: SetEnvironmentData %f %f toCelsius %f", *ptemp, *phumidity, toCelsius(*ptemp))
+			if err := ccs.SetEnvironmentData(toCelsius(*ptemp), *phumidity); err != nil {
+				log.Errorf("ccs811: SetEnvironmentData %f %f error %#v", *ptemp, *phumidity, err)
+			}
+		} else {
+			log.Errorf("ccs811: SetEnvironmentData %f %f can't use these values!!!", *ptemp, *phumidity)
+		}
 
 		mode, err := ccs.GetMeasurementModeRegister()
 		if err != nil {
@@ -334,9 +348,9 @@ func ReadCO2VOC() {
 				}
 
 			} else {
-				log.Error("ccs811: bad status 0x%x no data ready - retrying in %d seconds", status, retryNaptime)
+				log.Errorf("ccs811: bad status 0x%x no data ready - retrying in %d seconds", status, retryNaptime)
 				if status&STATUS_MASK_FIRMWAREMODE == STATUS_MASK_FIRMWAREMODE {
-					log.Error("ccs811: still in firmware mode - new() failed silently - retrying in %d seconds", retryNaptime)
+					log.Errorf("ccs811: still in firmware mode - new() failed silently - retrying in %d seconds", retryNaptime)
 					time.Sleep(time.Duration(retryNaptime) * time.Second)
 					continue
 				}
@@ -359,7 +373,7 @@ func ReadCO2VOC() {
 	}
 }
 
-func reportError(err byte) {
+func _(err byte) {
 	if err&ERROR_MASK_WRITE_REG_INVALID == ERROR_MASK_WRITE_REG_INVALID {
 		log.Infof("ccs811: ")
 	}
@@ -385,8 +399,8 @@ func reportError(err byte) {
 		log.Infof("ccs811: ")
 	}
 }
-func reportStatus(status byte) {
-	statstring := "ccs811: status - "
+func reportStatus(status byte) (statstring string) {
+	statstring = "ccs811: status - "
 
 	if status&STATUS_MASK_FIRMWAREMODE == STATUS_MASK_FIRMWAREMODE {
 		//		statstring = statstring + " firmware in application mode "
@@ -425,6 +439,7 @@ func reportStatus(status byte) {
 		statstring = statstring + " ERROR "
 	}
 	log.Info(statstring)
+	return statstring
 }
 
 func getCCCS811SensorMessages(sensorValues ccs811.SensorValues) (co2msg *messaging.CO2SensorMessage, vocmsg *messaging.VOCSensorMessage,
@@ -457,7 +472,9 @@ func loadBaseline() []byte {
 
 	file, err := os.Open(baselineFile)
 	checkErr(err)
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	stats, err := file.Stat()
 	checkErr(err)
@@ -469,14 +486,14 @@ func loadBaseline() []byte {
 	_, err = rdr.Read(bytes)
 
 	return bytes
-
-	return baseline
 }
 
 func saveBaseline(baseline []byte) {
 	file, err := os.Create(baselineFile)
 	checkErr(err)
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	wrt := bufio.NewWriter(file)
 	_, err = wrt.Write(baseline)

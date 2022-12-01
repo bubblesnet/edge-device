@@ -53,28 +53,28 @@ ONE_TIME_LOW_RES_MODE = 0x23
 bus = smbus2.SMBus(1)  # Rev 2 Pi uses 1
 
 
-def convertToNumber(data):
+def convert_to_number(data):
     # Simple function to convert 2 bytes of data
     # into a decimal number. Optional parameter 'decimals'
     # will round to specified number of decimal places.
     result = (data[1] + (256 * data[0])) / 1.2
-    return (result)
+    return result
 
 
-def readLight(addr=DEVICE):
+def read_light(addr=DEVICE):
     # Read data from I2C interface
     data = bus.read_i2c_block_data(addr, ONE_TIME_HIGH_RES_MODE_1, 32)
-    return convertToNumber(data)
+    return convert_to_number(data)
 
 
 def main():
     global my_site
 
     while True:
-        lightLevel = readLight()
-        logging.debug("Light Level : " + format(lightLevel, '.2f') + " lx")
+        lightLevel = read_light()
+        logging.debug('Light Level : ' + format(lightLevel, '.2f') + " lx")
         time.sleep(my_site['time_between_sensor_polling_in_seconds'])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

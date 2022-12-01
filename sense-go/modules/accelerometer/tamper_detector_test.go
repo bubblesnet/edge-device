@@ -1,5 +1,5 @@
-//go:build (linux && arm) || arm64
-// +build linux,arm arm64
+//go:build darwin || (windows && amd64) || (linux && amd64)
+// +build darwin windows,amd64 linux,amd64
 
 /*
  * Copyright (c) John Rodley 2022.
@@ -27,7 +27,9 @@
 
 package accelerometer
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_didWeMove(t *testing.T) {
 	type args struct {
@@ -44,7 +46,47 @@ func Test_didWeMove(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			DidWeMove(tt.args.x, tt.args.y, tt.args.z, tt.args.isUnitTest)
+			//			DidWeMove(tt.args.x, tt.args.y, tt.args.z, tt.args.isUnitTest)
+		})
+	}
+}
+
+func TestGetTamperDetectorService(t *testing.T) {
+	tests := []struct {
+		name string
+		want TamperDetectorService
+	}{
+		{name: "happy", want: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetTamperDetectorService(); got == nil {
+				t.Errorf("GetTamperDetectorService() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRealTamperDetector_RunTamperDetector(t *testing.T) {
+	type fields struct {
+		Real bool
+	}
+	type args struct {
+		onceOnly bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &MockTamperDetector{
+				Real: tt.fields.Real,
+			}
+			r.RunTamperDetector(tt.args.onceOnly)
 		})
 	}
 }

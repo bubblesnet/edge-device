@@ -1,9 +1,11 @@
 FROM balenalib/%%BALENA_MACHINE_NAME%%-golang
 
+# Dockerfile boilerplace - certs and timezone
 COPY ca-certificates.crt /etc/ssl/certs/
+RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
+
 COPY bubblesgrpc-server/build/bubblesgrpc-server /go/bin
 
-RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/bubblesgrpc-server; ls -la /go/bin'
 
 # CMD ["modprobe i2c-dev; export I2C_BUS=1"]

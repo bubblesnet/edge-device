@@ -46,7 +46,7 @@ func Test_uploadFile(t *testing.T) {
 			args: args{
 				name: "test.jpg",
 			},
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 	globals.MySite.ControllerAPIHostName = "192.168.21.237"

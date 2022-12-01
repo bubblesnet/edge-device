@@ -138,8 +138,8 @@ type EdgeDevice struct {
 }
 
 // DeviceModule is typically an add-on board attached to the edge device that
-//generates one or more types of measurements.  An AttachedDevice can have multiple
-//DeviceModules.
+// generates one or more types of measurements.  An AttachedDevice can have multiple
+// DeviceModules.
 type DeviceModule struct {
 	ModuleID        int64    `json:"moduleid"`
 	ContainerName   string   `json:"container_name,omitempty"`
@@ -198,7 +198,7 @@ type ACOutlet struct {
 
 // ReadMyDeviceId reads the deviceid of this device from the config directory
 func ReadMyDeviceId() (id int64, err error) {
-	retval, _ := strconv.ParseInt(os.Getenv("DEVICEID"), 10, 64)
+	retval, _ := strconv.ParseInt(os.Getenv(ENV_DEVICEID), 10, 64)
 	log.Infof("ReadMyDeviceId returning %d", retval)
 	return retval, nil
 }
@@ -206,7 +206,7 @@ func ReadMyDeviceId() (id int64, err error) {
 // ReadMyAPIServerHostname reads the name/ip of the server from the config directory
 func ReadMyAPIServerHostname() (serverHostname string, err error) {
 	log.Debug("ReadMyAPIServerHostname")
-	return os.Getenv("API_HOST"), nil
+	return os.Getenv(ENV_API_HOST), nil
 }
 
 // ReadCompleteSiteFromPersistentStore reads a complete site configuration from the specified mount-point/relativePath/fileName

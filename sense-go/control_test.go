@@ -69,7 +69,8 @@ func Test_inRange(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := inRange(tt.args.starthour, tt.args.numhours, tt.args.currenthours); got != tt.want {
-				t.Errorf("inRange() = %#v, want %#v", got, tt.want)
+				t.Errorf("inRange() got  %#v", got)
+				t.Errorf("inRange() want %#v", tt.want)
 			}
 		})
 	}
@@ -90,7 +91,8 @@ func Test_isRelayAttached(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotRelayIsAttached := isRelayAttached(tt.args.deviceid); gotRelayIsAttached != tt.wantRelayIsAttached {
-				t.Errorf("isRelayAttached() = %#v, want %#v", gotRelayIsAttached, tt.wantRelayIsAttached)
+				t.Errorf("isRelayAttached() got  %#v", gotRelayIsAttached)
+				t.Errorf("isRelayAttached() want %#v", tt.wantRelayIsAttached)
 			}
 		})
 	}
@@ -228,8 +230,23 @@ func testOxygenation(t *testing.T) {
 		wantSomethingChanged bool
 	}{
 		{
-			name:                 "happy",
-			args:                 args{force: false, DeviceID: globals.MyDeviceID, MyDevice: globals.MyDevice, CurrentStage: "", Powerstrip: gpiorelay.GetPowerstripService()},
+			name:                 globals.IDLE,
+			args:                 args{force: false, DeviceID: globals.MyDeviceID, MyDevice: globals.MyDevice, CurrentStage: globals.IDLE, Powerstrip: gpiorelay.GetPowerstripService()},
+			wantSomethingChanged: false,
+		},
+		{
+			name:                 globals.GERMINATION,
+			args:                 args{force: false, DeviceID: globals.MyDeviceID, MyDevice: globals.MyDevice, CurrentStage: globals.GERMINATION, Powerstrip: gpiorelay.GetPowerstripService()},
+			wantSomethingChanged: false,
+		},
+		{
+			name:                 globals.VEGETATIVE,
+			args:                 args{force: false, DeviceID: globals.MyDeviceID, MyDevice: globals.MyDevice, CurrentStage: globals.VEGETATIVE, Powerstrip: gpiorelay.GetPowerstripService()},
+			wantSomethingChanged: false,
+		},
+		{
+			name:                 globals.BLOOMING,
+			args:                 args{force: false, DeviceID: globals.MyDeviceID, MyDevice: globals.MyDevice, CurrentStage: globals.BLOOMING, Powerstrip: gpiorelay.GetPowerstripService()},
 			wantSomethingChanged: false,
 		},
 	}
@@ -238,7 +255,8 @@ func testOxygenation(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlOxygenation(tt.args.force, tt.args.DeviceID, tt.args.MyDevice, stages[x], tt.args.Powerstrip); gotSomethingChanged != tt.wantSomethingChanged {
-					t.Errorf("ControlOxygenation() = %v, want %v", gotSomethingChanged, tt.wantSomethingChanged)
+					t.Errorf("ControlOxygenation() got  %#v", gotSomethingChanged)
+					t.Errorf("ControlOxygenation() want %#v", tt.wantSomethingChanged)
 				}
 			})
 		}
@@ -287,7 +305,8 @@ func testRootWater(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlRootWater(tt.args.force, tt.args.DeviceID, tt.args.MyDevice, stages[x], tt.args.Powerstrip); gotSomethingChanged != tt.wantSomethingChanged {
-					t.Errorf("ControlRootWater() = %v, want %v", gotSomethingChanged, tt.wantSomethingChanged)
+					t.Errorf("ControlRootWater() got  %v", gotSomethingChanged)
+					t.Errorf("ControlRootWater() want %v", tt.wantSomethingChanged)
 				}
 			})
 		}
@@ -336,7 +355,8 @@ func testAirflow(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				if gotSomethingChanged := ControlAirflow(tt.args.force, tt.args.DeviceID, tt.args.MyDevice, stages[x], tt.args.Powerstrip); gotSomethingChanged != tt.wantSomethingChanged {
-					t.Errorf("ControlAirflow() = %v, want %v", gotSomethingChanged, tt.wantSomethingChanged)
+					t.Errorf("ControlAirflow() got  %v", gotSomethingChanged)
+					t.Errorf("ControlAirflow() want %v", tt.wantSomethingChanged)
 				}
 			})
 		}
@@ -404,7 +424,8 @@ func testWaterTemp(t *testing.T) {
 					tt.args.LastWaterTemp,
 					tt.args.Powerstrip,
 				); gotSomethingChanged != tt.wantSomethingChanged {
-					t.Errorf("ControlWaterTemp() = %v, want %v", gotSomethingChanged, tt.wantSomethingChanged)
+					t.Errorf("ControlWaterTemp() got  %#v", gotSomethingChanged)
+					t.Errorf("ControlWaterTemp() want %#v", tt.wantSomethingChanged)
 				}
 			})
 		}
@@ -472,7 +493,8 @@ func testHeat1(t *testing.T) {
 					tt.args.LastWaterTemp,
 					tt.args.Powerstrip,
 				); gotSomethingChanged != tt.wantSomethingChanged {
-					t.Errorf("ControlWaterTemp() = %v, want %v", gotSomethingChanged, tt.wantSomethingChanged)
+					t.Errorf("ControlWaterTemp() got  %#v", gotSomethingChanged)
+					t.Errorf("ControlWaterTemp() want %#v", tt.wantSomethingChanged)
 				}
 			})
 
@@ -489,7 +511,8 @@ func testHeat1(t *testing.T) {
 					tt.args.LastWaterTemp,
 					tt.args.Powerstrip,
 				); gotSomethingChanged != tt.wantSomethingChanged {
-					t.Errorf("ControlWaterTemp() = %v, want %v", gotSomethingChanged, tt.wantSomethingChanged)
+					t.Errorf("ControlWaterTemp() got  %#v", gotSomethingChanged)
+					t.Errorf("ControlWaterTemp() want %#v", tt.wantSomethingChanged)
 				}
 			})
 		}

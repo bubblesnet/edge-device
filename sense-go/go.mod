@@ -12,6 +12,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/jdevelop/golang-rpi-extras v0.0.0-20181010003844-c75e8edb0d6f
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/magefile/mage v1.14.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/stianeikeland/go-rpio/v4 v4.6.0

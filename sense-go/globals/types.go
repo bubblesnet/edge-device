@@ -65,15 +65,15 @@ const (
 	measurement_type_co2                = "co2"
 	measurement_type_voc                = "voc"
 
-	/// emulator types - not all valid?
+	// / emulator types - not all valid?
 	measurement_type_temperature = "temperature"
 	measurement_type_humidity    = "humidity"
 	measurement_type_level       = "level"
 
-	message_type_measurement     = "measurement"
-	message_type_switch_event    = "switch_event"
-	message_type_dispenser_event = "dispenser_event"
-	message_type_picture_event   = "picture_event"
+	Message_type_measurement     = "measurement"
+	Message_type_switch_event    = "switch_event"
+	Message_type_dispenser_event = "dispenser_event"
+	Message_type_picture_event   = "picture_event"
 	// CLIENT ADDED
 	message_type_event = "event"
 

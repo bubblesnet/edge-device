@@ -60,7 +60,8 @@ func TestAtlasEZODriver_Connection(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if got := d.Connection(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Connection() = %#v, want %#v", got, tt.want)
+				t.Errorf("Connection() got  %#v", got)
+				t.Errorf("Connection() want %#v", tt.want)
 			}
 		})
 	}
@@ -122,7 +123,8 @@ func TestAtlasEZODriver_Name(t *testing.T) {
 				tpc:        tt.fields.tpc,
 			}
 			if got := d.Name(); got != tt.want {
-				t.Errorf("Name() = %#v, want %#v", got, tt.want)
+				t.Errorf("Name() got  %#v", got)
+				t.Errorf("Name() want %#v", tt.want)
 			}
 		})
 	}
@@ -159,7 +161,8 @@ func TestAtlasEZODriver_Ph(t *testing.T) {
 				return
 			}
 			if gotPH != tt.wantPH {
-				t.Errorf("Ph() gotPH = %#v, want %#v", gotPH, tt.wantPH)
+				t.Errorf("Ph() got  %#v", gotPH)
+				t.Errorf("Ph() want %#v", tt.wantPH)
 			}
 		})
 	}
@@ -332,7 +335,8 @@ func TestAtlasEZODriver_read(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("read() got = %#v, want %#v", got, tt.want)
+				t.Errorf("read() got  %#v", got)
+				t.Errorf("read() want %#v", tt.want)
 			}
 		})
 	}
@@ -353,7 +357,8 @@ func TestNewAtlasEZODriver(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewAtlasEZODriver(tt.args.c, tt.args.options...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAtlasEZODriver() = %#v, want %#v", got, tt.want)
+				t.Errorf("NewAtlasEZODriver() got  %#v", got)
+				t.Errorf("NewAtlasEZODriver() want %#v", tt.want)
 			}
 		})
 	}

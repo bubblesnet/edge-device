@@ -4,7 +4,7 @@ volumes:
 services:
 
   wifi-connect:
-    image: bh.cr/balenablocks/wifi-connect-armv7hf
+    image: bh.cr/balenalabs/wifi-connect-armv7hf
     restart: always
     network_mode: host
     privileged: true

@@ -2,9 +2,11 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-buster-run
 
 RUN apt-get update
 RUN apt-get install -y vim
+
+# Dockerfile boilerplace - certs and timezone
+COPY ca-certificates.crt /etc/ssl/certs/
 RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 
-COPY ca-certificates.crt /etc/ssl/certs/
 COPY build/sense-go /go/bin
 # ADD config.json /go
 

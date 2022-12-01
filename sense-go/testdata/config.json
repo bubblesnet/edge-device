@@ -1,21 +1,27 @@
 {
   "siteid": 1,
   "userid": 90000009,
-  "controller_hostname": "192.168.21.237",
-  "controller_api_port": 3003,
+  "ControllerAPIHostName": "192.168.23.237",
+  "ControllerActiveMQHostName": "192.168.23.237",
+  "ControllerAPIPort": 4001,
+  "ControllerActiveMQPort": 61611,
   "stations": [
     {
       "stationid": 1,
-      "current_stage":"vegetative",
       "automatic_control": true,
       "height_sensor": true,
       "humidifier": true,
       "humidity_sensor_internal": true,
       "humidity_sensor_external": true,
       "heater": true,
+      "water_heater": true,
+      "thermometer_top": true,
       "thermometer_middle": true,
+      "thermometer_bottom": true,
       "thermometer_external": true,
       "thermometer_water": true,
+      "waterPump": true,
+      "airPump": true,
       "light_sensor_internal": true,
       "light_sensor_external": true,
       "station_door_sensor": true,
@@ -25,6 +31,14 @@
       "root_ph_sensor": true,
       "enclosure_type": "CABINET",
       "water_level_sensor": true,
+      "intakeFan": true,
+      "exhaustFan": true,
+      "heatLamp": true,
+      "heatingPad": true,
+      "lightBloom": true,
+      "lightVegetative": true,
+      "lightGerminate": true,
+      "relay": true,
       "edge_devices": [
         {
           "deviceid": 70000008,
@@ -120,6 +134,43 @@
               ]
             },
             {
+              "moduleid": 22,
+              "container_name": "sense-go",
+              "module_name": "ccs811",
+              "module_type": "ccs811",
+              "protocol": "i2c",
+              "address": "0x53",
+              "internal_address": "",
+              "included_sensors": [
+                {
+                  "sensorid": 77,
+                  "sensor_name": "co2_sensor",
+                  "measurement_name": "co2"
+                },
+                {
+                  "sensorid": 78,
+                  "sensor_name": "voc_sensor",
+                  "measurement_name": "voc"
+                }
+              ]
+            },
+            {
+              "moduleid": 44,
+              "container_name": "sense-go",
+              "module_name": "hcsr04",
+              "module_type": "hcsr04",
+              "protocol": "i2c",
+              "address": "0x53",
+              "internal_address": "",
+              "included_sensors": [
+                {
+                  "sensorid": 77,
+                  "sensor_name": "height_sensor",
+                  "measurement_name": "plant_height"
+                }
+              ]
+            },
+            {
               "moduleid": 11,
               "container_name": "sense-go",
               "module_name": "DS18B20",
@@ -141,6 +192,7 @@
             "resolutionX": 0,
             "resolutionY": 0
           },
+          "time_between_pictures_in_seconds": 600,
           "ac_outlets": [
             {
               "name": "intakeFan",
@@ -226,7 +278,8 @@
             "picamera": false,
             "resolutionX": 0,
             "resolutionY": 0
-          }
+          },
+          "time_between_pictures_in_seconds": 0
         },
         {
           "deviceid": 70000005,
@@ -278,6 +331,7 @@
             "resolutionX": 0,
             "resolutionY": 0
           },
+          "time_between_pictures_in_seconds": 0,
           "ac_outlets": [
             {
               "name": "lightVegetative",
@@ -293,7 +347,11 @@
           "name": "idle",
           "light_on_start_hour": 0,
           "hours_of_light": 0,
-          "environmental_targets": {}
+          "environmental_targets": {
+            "temperature": 0,
+            "humidity": 0,
+            "water_temperature": 0
+          }
         },
         {
           "name": "germination",
@@ -341,7 +399,8 @@
           "hours_of_light": 0,
           "environmental_targets": {
             "temperature": 80,
-            "humidity": 60
+            "humidity": 60,
+            "water_temperature": 0
           }
         },
         {
@@ -350,7 +409,8 @@
           "hours_of_light": 0,
           "environmental_targets": {
             "temperature": 80,
-            "humidity": 60
+            "humidity": 60,
+            "water_temperature": 0
           }
         }
       ],
@@ -380,7 +440,9 @@
         "current_light_type": "Grow Light Veg",
         "light_type_options": null
       },
-      "current_stage": "idle"
+      "current_stage": "idle",
+      "voc_sensor": true,
+      "co2_sensor": true
     }
   ]
 }
