@@ -13,6 +13,11 @@
 
 ![Your Repository's Stats](https://github-readme-stats.vercel.app/api?username=bubblesnet&show_icons=true)
 
+
+This repo is one of 6 repos that make up the BubblesNet project. If you've arrived at this repo through
+the side door (direct search), then you probably want to start at the [documentation repository](https://github.com/bubblesnet/documentation) for this 
+project. You can not understand this repo without seeing how it interacts with the other repos.
+
 A collection of containers that communicate via gRPC to get edge device data to the cloud.
 
 # Environment Variables
@@ -21,5 +26,5 @@ A collection of containers that communicate via gRPC to get edge device data to 
 * API_HOST = the DNS name or IP address of the API instance (api container on the CONTROLLER). Used by containers sense-go, storeandforward
 * API_PORT = the port the API server is running on (typically 4001). Used by containers sense-go, storeandforward
 * DEVICEID = the unique ID of this device in the system (e.g. 70000007) from device table in database. Used by containers sense-go, sense-python, storeandforward
-* NODE_ENV = one of PRODUCTION, DEVELOPMENT, TEST, CI typically (PRODUCTION).  Used by container store-and-forward
+* NODE_ENV = one of PRODUCTION, DEVELOPMENT, TEST, CI typically (PRODUCTION). Used by container store-and-forward
 * USERID = the unique ID of the user who owns this system (e.g. 90000009) from user table in database. Used by containers sense-go, storeandforward
