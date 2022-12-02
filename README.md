@@ -2,7 +2,7 @@
 
 
 [![codecov](https://codecov.io/gh/bubblesnet/edge-device/branch/develop/graph/badge.svg?token=4ETBIJSIKZ)](https://codecov.io/gh/bubblesnet/edge-device)
-![ci](https://github.com/bubblesnet/edge-device/workflows/BubblesNetCI/badge.svg)
+![ci](https://github.com/bubblesnet/edge-device/workflows/Go/badge.svg?branch=develop)
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
@@ -27,3 +27,17 @@ A collection of containers that communicate via gRPC to get edge device data to 
 | [sense-go](sense-go)                   | A Go language container that collects sensor data and forwards it to store-and-forward via GRPC and also controls the dispensers and AC devices and runs the automatic control code. The vast majority of the sensor and all the control functionality lives here. |
 | [sense-python](sense-python)           | A Python language container that collects temp/pressure/humidity data and forwards it to storea-and-forward via GRPC.                                                                                                                                              |
 | [store-and-forward](store-and-forward) | A custom block written in Go that uses a GRPC server to collect data from the sensor containers, uses BoltDB to store messages to be forwarded to the controller and forwards to the controller via the controller REST API.                                       |
+
+## Shared Data
+
+Balena applications have the concept of data that is shared across containers. In 
+[docker-compose.yml](docker-compose.yml) this is the volumes item at both the top
+level and the individual service level. For example, code within sense-go that refers
+to the filesystem path "/config/config.json" is referring to the exact same
+physical file as code in sense-python which refers to "/config/config.json".  
+
+## Configuration
+
+All containers take their configuration data from [/config/config.json](sense-go/testdata/config.json) 
+which the sense-go container is responsible for creating and keeping updated via the API.
+A change to configuration often requires a restart of all containers.
