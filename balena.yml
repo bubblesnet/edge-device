@@ -7,7 +7,7 @@ post-provisioning: >-
   device to measure the environment inside a cabinet/tent and through attached relay-controlled environmental control
   devices (heater, humidifier ...) to keep that environment in an ideal state to grow for whatever stage the crop 
   may be at.
-  
+
   Thanks to Balena [OpenFleets](https://hub.balena.io/organizations/gh_bubblesnet), you benefit from having automatic updates. As soon as updates are shipped, they will be deployed to your device.
 assets:
   repository:
@@ -18,3 +18,27 @@ assets:
     type: "blob.asset"
     data:
       url: "https://raw.githubusercontent.com/bubblesnet/edge-device/main/static/img/BubblesNetLogo.png"
+data:
+  applicationConfigVariables:
+    - BALENA_HOST_CONFIG_gpu_mem: 128
+    - BALENA_HOST_CONFIG_dtoverlay: "i2c_arm=on","spi=on","audio=on"
+
+  applicationEnvironmentVariables:
+    - ACTIVEMQ_HOST: ''
+    - ACTIVEMQ_PORT: 61614
+    - API_HOST: ''
+    - API_PORT: 4004
+    - NODE_ENV: PRODUCTION
+    - ROARR_LOG: true
+    - SLEEP_ON_EXIT_FOR_DEBUGGING: 60
+    - PORTAL_DHCP_RANGE: 192.168.49.3,192.168.49.254
+    - PORTAL_GATEWAY: 192.168.49.2
+    - DEBUG: true
+    - DEVICEID: 70000008
+    - NO_FAN_WITH_HEATER: false
+    - PORTAL_SSID: BubblesNet_Edge
+    - USERID: 90000009
+  defaultDeviceType: raspberry-pi
+  supportedDeviceTypes:
+    - raspberrypi3
+version: 0.1.1
