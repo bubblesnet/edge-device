@@ -1,5 +1,5 @@
-name: "BubblesNet Edge-Device"
-type: "sw.application"
+name: BubblesNet Edge-Device
+type: sw.application
 description: >-
   Deep-water-culture hydroponics ... automated
 post-provisioning: >-
@@ -11,17 +11,17 @@ post-provisioning: >-
   Thanks to Balena [OpenFleets](https://hub.balena.io/organizations/gh_bubblesnet), you benefit from having automatic updates. As soon as updates are shipped, they will be deployed to your device.
 assets:
   repository:
-    type: "blob.asset"
+    type: blob.asset
     data:
-      url: "https://github.com/bubblesnet/edge-device"
+      url: 'https://github.com/bubblesnet/edge-device'
   logo:
-    type: "blob.asset"
+    type: blob.asset
     data:
-      url: "https://raw.githubusercontent.com/bubblesnet/edge-device/main/static/img/BubblesNetLogo.png"
+      url: >-
+        https://raw.githubusercontent.com/bubblesnet/edge-device/main/static/img/BubblesNetLogo.png
 data:
   applicationConfigVariables:
     - BALENA_HOST_CONFIG_gpu_mem: 128
-    - BALENA_HOST_CONFIG_dtoverlay: "i2c_arm=on","spi=on","audio=on"
 
   applicationEnvironmentVariables:
     - ACTIVEMQ_HOST: ''
@@ -31,8 +31,8 @@ data:
     - NODE_ENV: PRODUCTION
     - ROARR_LOG: true
     - SLEEP_ON_EXIT_FOR_DEBUGGING: 60
-    - PORTAL_DHCP_RANGE: 192.168.49.3,192.168.49.254
-    - PORTAL_GATEWAY: 192.168.49.2
+    - PORTAL_DHCP_RANGE: '192.168.49.3,192.168.49.254'
+    - PORTAL_GATEWAY: '192.168.49.2'
     - DEBUG: true
     - DEVICEID: 70000008
     - NO_FAN_WITH_HEATER: false
