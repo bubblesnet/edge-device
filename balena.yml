@@ -1,0 +1,20 @@
+name: "BubblesNet Edge-Device"
+type: "sw.application"
+description: >-
+  Deep-water-culture hydroponics ... automated
+post-provisioning: >-
+  BubblesNet Edge-Device is the measurement and control component of the BubblesNet system, a Raspberry Pi 3B+ based 
+  device to measure the environment inside a cabinet/tent and through attached relay-controlled environmental control
+  devices (heater, humidifier ...) to keep that environment in an ideal state to grow for whatever stage the crop 
+  may be at.
+  
+  Thanks to Balena [OpenFleets](https://hub.balena.io/organizations/gh_bubblesnet), you benefit from having automatic updates. As soon as updates are shipped, they will be deployed to your device.
+assets:
+  repository:
+    type: "blob.asset"
+    data:
+      url: "https://github.com/bubblesnet/edge-device"
+  logo:
+    type: "blob.asset"
+    data:
+      url: "https://raw.githubusercontent.com/bubblesnet/edge-device/main/static/img/BubblesNetLogo.png"
