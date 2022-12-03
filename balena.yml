@@ -22,22 +22,8 @@ assets:
 data:
   applicationConfigVariables:
     - BALENA_HOST_CONFIG_gpu_mem: 128
-
   applicationEnvironmentVariables:
-    - ACTIVEMQ_HOST: ''
-    - ACTIVEMQ_PORT: 61614
-    - API_HOST: ''
-    - API_PORT: 4004
     - NODE_ENV: PRODUCTION
-    - ROARR_LOG: true
-    - SLEEP_ON_EXIT_FOR_DEBUGGING: 60
-    - PORTAL_DHCP_RANGE: '192.168.49.3,192.168.49.254'
-    - PORTAL_GATEWAY: '192.168.49.2'
-    - DEBUG: true
-    - DEVICEID: 70000008
-    - NO_FAN_WITH_HEATER: false
-    - PORTAL_SSID: BubblesNet_Edge
-    - USERID: 90000009
   defaultDeviceType: raspberry-pi
   supportedDeviceTypes:
     - raspberrypi3

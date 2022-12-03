@@ -1,7 +1,7 @@
 # base-image for python on any machine using a template variable,
 # see more about dockerfile templates here: https://www.balena.io/docs/learn/develop/dockerfile/
 # FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-buster-run  THIS FAILS WITH GLIBC 2.29 NOT FOUND ERROR
-FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3.7.4-buster-run
+FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-bullseye-run
 
 # Install Python.
 RUN apt-get update
