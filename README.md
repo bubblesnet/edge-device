@@ -2,7 +2,7 @@
 
 
 [![codecov](https://codecov.io/gh/bubblesnet/edge-device/branch/develop/graph/badge.svg?token=4ETBIJSIKZ)](https://codecov.io/gh/bubblesnet/edge-device)
-![ci](https://github.com/bubblesnet/edge-device/workflows/Go/badge.svg?branch=develop)
+![edge-device-ci](https://github.com/bubblesnet/edge-device/workflows/edge-device-ci/badge.svg?branch=develop)
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
