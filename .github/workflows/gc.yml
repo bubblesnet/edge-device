@@ -26,7 +26,7 @@ jobs:
 
       - name: Test BubblesGRPC
         working-directory: store-and-forward/bubblesgrpc-server
-        run: go test -v ./...
+        run: go test -coverprofile=coverage.out -v ./...
 
       - name: Build Sense Go
         working-directory: sense-go
@@ -34,7 +34,7 @@ jobs:
 
       - name: Test Sense Go
         working-directory: sense-go
-        run: go test -v ./...
+        run: go test -coverprofile=coverage.out -v ./...
 
       - name: Setup Sense-Python
         uses: actions/setup-python@v2
