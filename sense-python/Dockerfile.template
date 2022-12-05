@@ -5,7 +5,7 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-bullseye-run
 
 # Install Python.
 RUN apt-get update
-RUN apt-get install -y python python-dev python-pip git wireless-tools network-manager python-smbus vim
+RUN apt-get install -y python-dev  git wireless-tools network-manager python3-smbus vim
 RUN apt-get install -y gcc g++
 RUN apt-get install python3-pigpio python3-gpiozero
 
@@ -22,13 +22,13 @@ WORKDIR /usr/src/app
 COPY src/requirements.txt requirements.txt
 
   # pip install python deps from requirements.txt on the resin.io build server
-RUN export READTHEDOCS=True;pip install -r requirements.txt
+RUN export READTHEDOCS=True;pip3 install -r requirements.txt
 # RUN python -m pip install --target=".python_packages/lib/site-packages" -r requirements.txt
 # RUN echo "" > requirements.txt
 
 # ADD config.json /config/config.json
 
-  # This will copy all files in our root to the working  directory in the container
+# This will copy all files in our root to the working  directory in the container
 COPY . ./
 
 # Enable udevd so that plugged dynamic hardware devices show up in our container.

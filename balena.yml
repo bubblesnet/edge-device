@@ -3,6 +3,8 @@ type: sw.application
 description: >-
   Deep-water-culture hydroponics ... automated
 post-provisioning: >-
+  DO NOT USE THIS FLEET YET. I CAN'T GET ENVIRONMENT VARIABLES TO FLOW THROUGH FROM BALENA.YML YET.  STAY TUNED.
+
   BubblesNet Edge-Device is the measurement and control component of the BubblesNet system, a Raspberry Pi 3B+ based 
   device to measure the environment inside a cabinet/tent and through attached relay-controlled environmental control
   devices (heater, humidifier ...) to keep that environment in an ideal state to grow for whatever stage the crop 
