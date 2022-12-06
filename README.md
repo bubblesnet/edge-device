@@ -13,7 +13,7 @@
 
 ![Your Repository's Stats](https://github-readme-stats.vercel.app/api?username=bubblesnet&show_icons=true)
 
-[![balena deploy button](https://www.balena.io/deploy.svg)](https://dashboard.balena-cloud.com/deploy?repoUrl=https://github.com/bubblesnet/edge-device&configUrl=https://github.com/bubblesnet/edge-device/blob/develop/balena.yml)
+[![balena deploy button](https://www.balena.io/deploy.svg)](https://dashboard.balena-cloud.com/deploy?repoUrl=https://github.com/bubblesnet/edge-device)
 
 This repo is one of 6 repos that make up the BubblesNet project. If you've arrived at this repo through
 the side door (direct search), then you probably want to start with 
