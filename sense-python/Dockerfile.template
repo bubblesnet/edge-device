@@ -1,34 +1,36 @@
 # base-image for python on any machine using a template variable,
 # see more about dockerfile templates here: https://www.balena.io/docs/learn/develop/dockerfile/
-# FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-buster-run  THIS FAILS WITH GLIBC 2.29 NOT FOUND ERROR
-FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3-bullseye-run
+# GET THE BASE IMAGE/PYTHON VERSION/GRPC VERSION WRONG AND IT WILL FAILS= WITH GLIBC X.XX NOT FOUND ERROR
+# upgraded from buster/3.7 to sid/3.11 under extreme duress when grpc (i think) changed out from under us
+# This is the third time this has happened which probably means I have a more fundamental build issue
+FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3.11-sid-run
 
-# Install Python.
+# apt update - don't know why I have to do this, but I do.
 RUN apt-get update
-RUN apt-get install -y python-dev  git wireless-tools network-manager python3-smbus vim
-RUN apt-get install -y gcc g++
-RUN apt-get install python3-pigpio python3-gpiozero
 
+# These are required for container-install but not for run-time
+RUN apt-get install -y python3-dev git wireless-tools network-manager vim
+RUN apt-get install -y gcc g++
+
+# These are useful for debugging but a security risk so comment them out
+# RUN apt install inetutils-telnet
+
+# These are required for run-time
+RUN apt-get install python3-pigpio python3-gpiozero python3-smbus
+
+# Set everyone to US-east timezone for my convenience.  Open to changing this.
 RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 
-  # use `install_packages` if you need to install dependencies,
-  # for instance if you need git, just uncomment the line below.
-  # RUN install_packages git
-
-  # Set our working directory
+# Set our working directory
 WORKDIR /usr/src/app
 
-  # Copy requirements.txt first for better cache on later pushes
+# Copy requirements.txt first for better cache on later pushes
 COPY src/requirements.txt requirements.txt
 
-  # pip install python deps from requirements.txt on the resin.io build server
+# pip install python deps from requirements.txt
 RUN export READTHEDOCS=True;pip3 install -r requirements.txt
-# RUN python -m pip install --target=".python_packages/lib/site-packages" -r requirements.txt
-# RUN echo "" > requirements.txt
 
-# ADD config.json /config/config.json
-
-# This will copy all files in our root to the working  directory in the container
+  # This will copy all files in our root to the working  directory in the container
 COPY . ./
 
 # Enable udevd so that plugged dynamic hardware devices show up in our container.
@@ -40,5 +42,7 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # ENV INITSYSTEM on
 
 CMD ["modprobe i2c-dev; export I2C_BUS=1"]
+
+# When debugging, uncomment the bash line, comment the "python" line
 # CMD ["bash"]
 CMD ["python", "src/main.py"]
