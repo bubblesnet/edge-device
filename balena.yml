@@ -23,9 +23,9 @@ data:
   applicationConfigVariables:
     - BALENA_HOST_CONFIG_gpu_mem: 128
   applicationEnvironmentVariables:
-    - ACTIVEMQ_HOST: 'bubblesnet-controller'
+    - ACTIVEMQ_HOST: 'bubblesnet-controller.local'
     - ACTIVEMQ_PORT: 61614
-    - API_HOST: 'bubblesnet-controller'
+    - API_HOST: 'bubblesnet-controller.local'
     - API_PORT: 4004
     - NODE_ENV: PRODUCTION
     - ROARR_LOG: true
