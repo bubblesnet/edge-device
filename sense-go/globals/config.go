@@ -217,6 +217,8 @@ type ACOutlet struct {
 	BCMPinNumber int    `json:"bcm_pin_number"`
 }
 
+var LogFile *os.File
+
 // ReadMyDeviceId reads the deviceid of this device from the config directory
 func ReadMyDeviceId() (id int64, err error) {
 	retval, _ := strconv.ParseInt(os.Getenv(ENV_DEVICEID), 10, 64)
@@ -340,11 +342,40 @@ func (c *CustomHandler) Log(e log.Entry) {
 		_, _ = fmt.Fprintf(b, " %s=%#v", f.Key, f.Value)
 	}
 	fmt.Println(b.String())
+
+	if LogFile != nil {
+		_, _ = LogFile.WriteString(b.String())
+		_, _ = LogFile.WriteString("\n")
+	}
+
+}
+
+func openLogFile(path string) (*os.File, error) {
+	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		return nil, err
+	}
+	logFile.Truncate(0)
+	logFile.Seek(0, 0)
+	return logFile, nil
+}
+
+func StopLogging() {
+	if LogFile != nil {
+		LogFile.Close()
+		LogFile = nil
+	}
 }
 
 // ConfigureLogging adds log handlers for each log level enabled in the site configuration
 func ConfigureLogging(site Site, containerName string) {
 	cLog := new(CustomHandler)
+	/*	if fqFilename, exists := os.LookupEnv(ENV_LOGFILENAME); exists == true {
+			if logfile, err := openLogFile(fqFilename); err == nil {
+				LogFile = logfile
+			}
+		}
+	*/
 
 	if strings.Contains(site.LogLevel, "error") {
 		log.AddHandler(cLog, log.ErrorLevel)

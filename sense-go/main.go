@@ -467,6 +467,7 @@ func SleepBeforeExit() {
 		naptime = 60
 	}
 	fmt.Printf("Exiting because of bad configuration - sleeping for %d seconds to allow intervention\n", naptime)
+	globals.StopLogging()
 	time.Sleep(time.Duration(naptime) * time.Second)
 }
 
@@ -750,6 +751,7 @@ func testableSubmain(isUnitTest bool) {
 		log.Infof("all go routines started, waiting for waitgroup to finish")
 		wg.Wait()
 		log.Infof("exiting main - because waitgroup finished")
+		globals.StopLogging()
 	}
 }
 
