@@ -16,6 +16,7 @@ services:
     build: ./sense-go
     privileged: true
     restart: always
+    network_mode: host
     labels:
       io.balena.features.kernel-modules: '1'
       io.balena.features.dbus: '1'
@@ -26,6 +27,7 @@ services:
     build: ./store-and-forward
     privileged: true
     restart: always
+    network_mode: host
     labels:
       io.balena.features.kernel-modules: '1'
       io.balena.features.dbus: '1'
@@ -39,6 +41,8 @@ services:
   sense-python:
     build: ./sense-python
     privileged: true
+    restart: always
+    network_mode: host
     labels:
       io.balena.features.kernel-modules: '1'
       io.balena.features.dbus: '1'
