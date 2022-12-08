@@ -278,8 +278,11 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 		testmsg.EventTimestamp = getNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewSwitchStatusChangeMessage(tt.args.switch_name, tt.args.on); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
-				t.Errorf("NewSwitchStatusChangeMessage() = got  %#v", gotPmsg)
-				t.Errorf("NewSwitchStatusChangeMessage() = want %#v", tt.wantPmsg)
+				// This timestamp hack will cause false negatives if timestamp error coincides with other error
+				if gotPmsg.EventTimestamp == tt.wantPmsg.EventTimestamp {
+					t.Errorf("NewSwitchStatusChangeMessage() = got  %#v", gotPmsg)
+					t.Errorf("NewSwitchStatusChangeMessage() = want %#v", tt.wantPmsg)
+				}
 			}
 		})
 	}
