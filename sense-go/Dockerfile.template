@@ -8,7 +8,6 @@ COPY ca-certificates.crt /etc/ssl/certs/
 RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 
 COPY build/sense-go /go/bin
-# ADD config.json /go
 
 RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/sense-go; ls -la /go/bin'
 
@@ -16,6 +15,24 @@ RUN /bin/bash -c 'ls -la /go/bin; chmod +x /go/bin/sense-go; ls -la /go/bin'
 ENV UDEV=1
 
 ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+
+RUN install_packages dbus systemd avahi-daemon libnss-mdns
+
+RUN systemctl mask \
+    dev-hugepages.mount \
+    sys-fs-fuse-connections.mount \
+    sys-kernel-config.mount \
+    display-manager.service \
+    getty@.service \
+    systemd-logind.service \
+    systemd-remount-fs.service \
+    getty.target \
+    graphical.target
+
+COPY entry.sh /usr/bin
+STOPSIGNAL 37
+ENTRYPOINT ["/usr/bin/entry.sh"]
+
 
 CMD ["modprobe i2c-dev; export I2C_BUS=1"]
 CMD ["/go/bin/sense-go"]

@@ -18,6 +18,13 @@ RUN apt-get install -y gcc g++
 # These are required for run-time
 RUN apt-get install python3-pigpio python3-gpiozero python3-smbus
 
+RUN apt update
+
+RUN install_packages avahi-daemon libnss-mdns avahi-utils
+COPY nsswitch.conf /etc/nsswitch.conf.mod
+COPY avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+
+
 # Set everyone to US-east timezone for my convenience.  Open to changing this.
 RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
 
@@ -42,6 +49,8 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # ENV INITSYSTEM on
 
 CMD ["modprobe i2c-dev; export I2C_BUS=1"]
+
+CMD ["/etc/init.d/avahi-daemon", "start"]
 
 # When debugging, uncomment the bash line, comment the "python" line
 # CMD ["bash"]
