@@ -597,6 +597,18 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	return nil
 }
 
+func FindController(fqFilename string) (ipaddress string, err error) {
+	buf, err := ioutil.ReadFile(fqFilename)
+	s := string(buf)
+	arr := strings.Split(s, "\t")
+	if len(arr) != 2 {
+		return ipaddress, errors.New(fmt.Sprintf("bad bubbles-controller IP data at %s - %s", fqFilename, s))
+	}
+	ipaddress = strings.TrimSpace(arr[1])
+	fmt.Printf("Found bubblenet-controller at IP address %s", ipaddress)
+	return ipaddress, nil
+}
+
 func WriteConfig(storeMountPoint string, relativePath string, fileName string) (err error) {
 	log.Infof("WriteConfig stage now %s", MySite.Stations[0].CurrentStage)
 	siteBytes, err := json.MarshalIndent(MySite, "", "  ")

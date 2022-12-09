@@ -265,7 +265,17 @@ func SleepBeforeExit() {
 func main() {
 	log.ConfigureLogging("fatal,error,warn,info,debug,", ".")
 
-	if err := handleVersioningFromLoader(); err != nil {
+	ipaddress, err := FindController("/config/bubblesnet-controller.txt")
+	if err != nil {
+		fmt.Errorf("couldn't get bubblesnet-controller IP address %#v", err)
+		SleepBeforeExit()
+		os.Exit(221)
+	}
+	fmt.Printf("Found bubblesnet-controller at %s", ipaddress)
+	os.Setenv(ENV_API_HOST, ipaddress)
+	os.Setenv(ENV_ACTIVEMQ_HOST, ipaddress)
+
+	if err = handleVersioningFromLoader(); err != nil {
 		log.Errorf("handleVersioningFromLoader %+v", err)
 		SleepBeforeExit()
 		os.Exit(222)
@@ -281,7 +291,6 @@ func main() {
 		storeMountPoint = "./testdata"
 		databaseFilename = "./messages.db"
 	}
-	var err error
 	MyDeviceID, err = ReadMyDeviceId()
 	fmt.Printf("Read deviceid %d\n", MyDeviceID)
 	if err != nil {

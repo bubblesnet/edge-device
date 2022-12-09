@@ -350,6 +350,18 @@ func (c *CustomHandler) Log(e log.Entry) {
 
 }
 
+func FindController(fqFilename string) (ipaddress string, err error) {
+	buf, err := ioutil.ReadFile(fqFilename)
+	s := string(buf)
+	arr := strings.Split(s, "\t")
+	if len(arr) != 2 {
+		return ipaddress, errors.New(fmt.Sprintf("bad bubbles-controller IP data at %s - %s", fqFilename, s))
+	}
+	ipaddress = strings.TrimSpace(arr[1])
+	fmt.Printf("Found bubblenet-controller at IP address %s", ipaddress)
+	return ipaddress, nil
+}
+
 func openLogFile(path string) (*os.File, error) {
 	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {

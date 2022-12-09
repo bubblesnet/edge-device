@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 volumes:
   resin-data:
 services:
@@ -11,6 +11,13 @@ services:
     labels:
       io.balena.features.dbus: "1"
       io.balena.features.firmware: "1"
+
+  mdns:
+    build: ./mdns
+    privileged: true
+    network_mode: host
+    volumes:
+      - 'resin-data:/config'
 
   sense-go:
     build: ./sense-go

@@ -699,6 +699,16 @@ func testableSubmain(isUnitTest bool) {
 	fmt.Printf(globals.ContainerName)
 	log.Infof(globals.ContainerName)
 
+	ipaddress, err := globals.FindController("/config/bubblesnet-controller.txt")
+	if err != nil {
+		fmt.Errorf("couldn't get bubblesnet-controller IP address %#v", err)
+		SleepBeforeExit()
+		os.Exit(221)
+	}
+	fmt.Printf("Found bubblesnet-controller at %s", ipaddress)
+	os.Setenv(globals.ENV_API_HOST, ipaddress)
+	os.Setenv(globals.ENV_ACTIVEMQ_HOST, ipaddress)
+
 	initGlobals(isUnitTest)
 
 	// Set up a connection to the server.
