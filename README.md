@@ -20,7 +20,13 @@ the side door (direct search), then you probably want to start with
 the [documentation repository](https://github.com/bubblesnet/documentation) for this 
 project. You can not understand this repo without seeing how it interacts with the other repos.
 
-A collection of containers that communicate via gRPC to get edge device data to the cloud.
+## What is the Edge Device?
+
+A collection of containers that communicate via gRPC to get edge device data to the controller where
+it can be viewed, analyzed and acted upon. These containers listen for commands from the controller
+to manage attached environmental control devices like heaters, fans and liquid dispensers. The 
+sense-go container also implements automated control of attached devices via crop-stage 
+environmental targets and schedules.
 
 | Container                              | Description                                                                                                                                                                                                                                                        |
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
