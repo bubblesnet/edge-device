@@ -583,17 +583,16 @@ if __name__ == "__main__":
 
     try:
         if my_device['time_between_sensor_polling_in_seconds'] < 10:
-            logging.error("Exiting because my_device['time_between_sensor_polling_in_seconds'] value too low ",
-                          my_device['time_between_sensor_polling_in_seconds'])
+            logging.error("Exiting because my_device['time_between_sensor_polling_in_seconds'] value too low " +
+                          str(my_device['time_between_sensor_polling_in_seconds']))
             exit(1)
 
         logging.debug('Connecting to grpc at store-and-forward:50051')
         channel = grpcio.insecure_channel('store-and-forward:50051')
         stub = grpcStub(channel)
         try:
-            s = 'Entering sensor polling loop at {0} seconds'.format(
-                my_device['time_between_sensor_polling_in_seconds'])
-            logging.debug(s)
+            logging.debug("Entering sensor polling loop at seconds " +
+                          str(my_device['time_between_sensor_polling_in_seconds']))
             while True:
                 #                        toggleRelays(relay,sequence)
 
