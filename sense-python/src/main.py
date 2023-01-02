@@ -316,7 +316,7 @@ TESTED
 
 def bme280_names(device):
     global my_site
-#    global my_device
+    #    global my_device
     global humidity_sensor_name
     global pressure_sensor_name
     global temperature_sensor_name
@@ -328,7 +328,8 @@ def bme280_names(device):
 
     print(my_device)
     for module in device[constants.MODULES]:
-        if module[constants.CONTAINER_NAME] == constants.CONTAINER_NAME_SENSE_PYTHON and module[constants.MODULE_TYPE] == constants.MT_BMP280:
+        if module[constants.CONTAINER_NAME] == constants.CONTAINER_NAME_SENSE_PYTHON and module[
+            constants.MODULE_TYPE] == constants.MT_BMP280:
             for included_sensor in module[constants.INCLUDED_SENSORS]:
                 if 'temp' in included_sensor[constants.MEASUREMENT_NAME]:
                     temperature_sensor_name = included_sensor[constants.SENSOR_NAME]
@@ -337,7 +338,8 @@ def bme280_names(device):
                     pressure_sensor_name = included_sensor[constants.SENSOR_NAME]
                     pressure_measurement_name = included_sensor[constants.MEASUREMENT_NAME]
 
-        if module[constants.CONTAINER_NAME] == constants.CONTAINER_NAME_SENSE_PYTHON and module[constants.MODULE_TYPE] == constants.MT_BME280:
+        if module[constants.CONTAINER_NAME] == constants.CONTAINER_NAME_SENSE_PYTHON and module[
+            constants.MODULE_TYPE] == constants.MT_BME280:
             for included_sensor in module[constants.INCLUDED_SENSORS]:
                 if 'temp' in included_sensor[constants.MEASUREMENT_NAME]:
                     temperature_sensor_name = included_sensor[constants.SENSOR_NAME]
@@ -530,8 +532,10 @@ def get_sequence():
 
 def send_message(msg):
     global my_site
-    logging.info('siteid ' + format(my_site[constants.SITEID], 'd') + ' stationid ' + format(my_station[constants.STATIONID],
-                                        'd') + " deviceid " + format(my_device[constants.DEVICEID], 'd'))
+    logging.info(
+        'siteid ' + format(my_site[constants.SITEID], 'd') + ' stationid ' + format(my_station[constants.STATIONID],
+                                                                                    'd') + " deviceid " + format(
+            my_device[constants.DEVICEID], 'd'))
     seq = get_sequence()
     millis = int(time.time() * 1000)
     msg[constants.MM_SAMPLE_TIMESTAMP] = int(millis)
@@ -561,7 +565,8 @@ if __name__ == "__main__":
     my_site[constants.DEVICEID] = read_deviceid(filename='/config/deviceid')
     logging.info(f'deviceid from file is {my_site[constants.DEVICEID]:d}')
     wait_for_config(filename='/config/config.json')  # wait for the config file to exist, exit directly if it times out
-    b = read_config(fullpath='/config/config.json', deviceid=my_site[constants.DEVICEID])  # config file exists, read it in
+    b = read_config(fullpath='/config/config.json',
+                    deviceid=my_site[constants.DEVICEID])  # config file exists, read it in
     if not b:
         logging.error(f'invalid config.json - not validating - exiting after {naptime_in_seconds} seconds')
         time.sleep(naptime_in_seconds)
@@ -577,11 +582,18 @@ if __name__ == "__main__":
     bus = smbus2.SMBus(bus_number)
 
     try:
+        if my_device['time_between_sensor_polling_in_seconds'] < 10:
+            logging.error("Exiting because my_device['time_between_sensor_polling_in_seconds'] value too low ",
+                          my_device['time_between_sensor_polling_in_seconds'])
+            exit(1)
+
         logging.debug('Connecting to grpc at store-and-forward:50051')
         channel = grpcio.insecure_channel('store-and-forward:50051')
         stub = grpcStub(channel)
         try:
-            logging.debug('Entering sensor polling loop')
+            s = 'Entering sensor polling loop at {0} seconds'.format(
+                my_device['time_between_sensor_polling_in_seconds'])
+            logging.debug(s)
             while True:
                 #                        toggleRelays(relay,sequence)
 
