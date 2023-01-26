@@ -50,7 +50,7 @@ func ReadAllChannels(index int, adcMessage *ADCMessage) (err error) {
 
 func readAllChannels(moduleIndex int, ads1115 *i2c.ADS1x15Driver, config AdapterConfig, adcMessage *ADCMessage) (err error) {
 
-	log.Debugf("ads1115: readAllChannels on address 0x%x", config.address)
+	log.Debugf("ads1115: readAllChannels on address 0x%x at interval %d seconds", config.address, config.channelWaitMillis)
 	var err1 error
 	adcMessage.Address = config.address
 	adcMessage.BusId = config.bus_id

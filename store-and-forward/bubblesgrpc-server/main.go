@@ -227,7 +227,7 @@ func postIt(message []byte) (err error) {
 		}
 	}
 	url := fmt.Sprintf("http://%s:%d/api/%s/%8.8d/%8.8d", MySite.ControllerAPIHostName, MySite.ControllerAPIPort, apiName, MySite.UserID, MyDeviceID)
-	//	log.Infof("Sending to %s", url)
+	log.Infof("Sending to %s", url)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(message))
 	if err != nil {
 		log.Errorf("post error %v", err)

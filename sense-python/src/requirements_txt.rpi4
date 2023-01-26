@@ -2,7 +2,7 @@ RPi.bme280==0.2.3
 adafruit-circuitpython-busdevice==4.1.1
 adafruit-circuitpython-hcsr04==0.3.4
 # Adafruit-GPIO==1.0.3
-Adafruit-PlatformDetect==1.4.3
+# Adafruit-PlatformDetect==1.4.3
 # Adafruit-PureIO==1.0.4
 Flask==1.1.1
 gpiozero==1.5.1
