@@ -30,10 +30,7 @@ import traceback
 import os
 import constants
 
-try:
-    import bme280
-except ImportError:
-    bme280 = None
+import bme280
 
 try:
     import board
@@ -606,7 +603,9 @@ if __name__ == "__main__":
             logging.debug('broke out of temp/hum/distance polling loop')
         except Exception as e:
             logging.debug('bubbles2 main loop failed')
+            logging.error(e)
             logging.debug(traceback.format_exc())
     except Exception as eee:
         logging.debug('GRPC failed to initialize')
+        logging.error(eee)
     logging.debug('end of main')
