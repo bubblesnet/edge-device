@@ -1,15 +1,19 @@
 name: BubblesNet Edge-Device
 type: sw.application
 description: >-
-  Deep-water-culture hydroponics ... automated
+  Deep-water-culture (DWC) hydroponics ... automated
 post-provisioning: >-
   BubblesNet Edge-Device is the measurement and control component of the BubblesNet system, a Raspberry Pi 3B+ based 
   device to measure the environment inside a cabinet/tent and through attached relay-controlled environmental control
   devices (heater, humidifier ...) to keep that environment in an ideal state to grow for whatever stage the crop 
   may be at.
 
-  This is literally an alpha-release. The underlying code has been in production for months, but the deployment to
-  a Balena public fleet is brand new and has required a number of modifications.
+  - Bring a sandwich to this process.  After you flash a micro-SD card and start it up, it can take 30+ minutes for the device to connect and update via Balena.
+
+
+  THIS FLEET IS NOT READY FOR PRIMETIME YET. THIS BRANCH IS THE FINAL PUSH.  ALTHOUGH THE PROJECT IS MATURE AND HAS ITERATED THROUGH A NUMBER OF CROPS, I STILL HAVE TO DEBUG A NUMBER OF ISSUES THAT ARE 
+  UNIQUE TO BALENA PUBLIC FLEETS. THIS REQUIRES ME TO TURN PUBLIC VISIBILITY ON AND OFF FAIRLY FREQUENTLY. PLEASE DO NOT JOIN THIS FLEET UNTIL THIS MESSAGE IS GONE.
+
 assets:
   repository:
     type: blob.asset

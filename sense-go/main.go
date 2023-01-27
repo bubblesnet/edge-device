@@ -618,6 +618,10 @@ func startGoRoutines(onceOnly bool) {
 		log.Errorf("NO DISPENSERS IN MYSTATION! %+v", globals.MyStation)
 	}
 
+	if globals.MyDevice.TimeBetweenSensorPollingInSeconds < 10 || globals.MyDevice.TimeBetweenSensorPollingInSeconds > 86400 {
+		log.Errorf("Skipping sensor reads because TimeBetweenSensorPollingInSeconds %d out of range", globals.MyDevice.TimeBetweenSensorPollingInSeconds)
+		return
+	}
 	if moduleShouldBeHere(globals.ContainerName, globals.MyStation, globals.MyDevice.DeviceID, globals.MyStation.CO2Sensor, globals.Module_type_ccs811) {
 		log.Info("automation: CO2 and VOC configured for this device, starting")
 		go co2vocmeter.ReadCO2VOC(&globals.ExternalCurrentState.TempAirMiddle, &globals.ExternalCurrentState.HumidityInternal)

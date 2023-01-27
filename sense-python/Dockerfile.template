@@ -3,27 +3,32 @@
 # GET THE BASE IMAGE/PYTHON VERSION/GRPC VERSION WRONG AND IT WILL FAILS= WITH GLIBC X.XX NOT FOUND ERROR
 # upgraded from buster/3.7 to sid/3.11 under extreme duress when grpc (i think) changed out from under us
 # This is the third time this has happened which probably means I have a more fundamental build issue
-FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3.11-sid-run
+# FROM balenalib/%%BALENA_MACHINE_NAME%%-bullseye-run
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-bullseye-run
 
 # apt update - don't know why I have to do this, but I do.
-RUN apt-get update
-
-# These are required for container-install but not for run-time
-RUN apt-get install -y python3-dev git wireless-tools network-manager vim
-RUN apt-get install -y gcc g++
-
-# These are useful for debugging but a security risk so comment them out
-# RUN apt install inetutils-telnet
-
-# These are required for run-time
-RUN apt-get install python3-pigpio python3-gpiozero python3-smbus
-
 RUN apt update
 
+# These are required for container-install but not for run-time
+RUN install_packages -y git wireless-tools network-manager vim
+RUN install_packages -y gcc g++
+
+# These are useful for debugging but a security risk so comment them out
+RUN install_packages inetutils-telnet
+
+# These are required for python run-time
+RUN install_packages python3 python3-dev python3-pip
+
+# These are required for GPIO
+RUN install_packages python3-pigpio python3-gpiozero python3-smbus
+
+# These are required for GRPC
+RUN install_packages python3-protobuf
+
+# These are required to do mdns finds of bubblesnet-controller
 RUN install_packages avahi-daemon libnss-mdns avahi-utils
 COPY nsswitch.conf /etc/nsswitch.conf.mod
 COPY avahi-daemon.conf /etc/avahi/avahi-daemon.conf
-
 
 # Set everyone to US-east timezone for my convenience.  Open to changing this.
 RUN ln -sf /usr/share/zoneinfo/US/Eastern /etc/localtime
@@ -35,7 +40,7 @@ WORKDIR /usr/src/app
 COPY src/requirements.txt requirements.txt
 
 # pip install python deps from requirements.txt
-RUN export READTHEDOCS=True;pip3 install -r requirements.txt
+RUN export READTHEDOCS=True;pip install -r requirements.txt
 
   # This will copy all files in our root to the working  directory in the container
 COPY . ./
@@ -49,9 +54,11 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # ENV INITSYSTEM on
 
 CMD ["modprobe i2c-dev; export I2C_BUS=1"]
-
 CMD ["/etc/init.d/avahi-daemon", "start"]
+CMD ["pip3", "uninstall", "protobuf"]
+CMD ["rm", "-rf", "/usr/local/lib/python3.11/site-packages/google/protobuf"]
+CMD ["pip3", "install", "protobuf==4.21.12"]
 
 # When debugging, uncomment the bash line, comment the "python" line
 # CMD ["bash"]
-CMD ["python", "src/main.py"]
+CMD ["python3", "src/main.py"]

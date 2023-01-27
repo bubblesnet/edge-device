@@ -1,16 +1,8 @@
+Adafruit_Blinka==7.2.1
+Adafruit_CircuitPython_BusDevice==5.2.3
+Adafruit_PlatformDetect==3.22.1
+grpcio==1.27.1
+protobuf==4.21.12
 RPi.bme280==0.2.4
-adafruit-circuitpython-busdevice>=4.1.1
-
-# Adafruit-GPIO==1.0.3
-Adafruit-PlatformDetect>=2.1.0
-Adafruit-PureIO>=1.0.4
-Flask==2.2.2
-gpiozero==1.6.2
-grpcio==1.50.0
-protobuf==4.21.9
-RPi.GPIO==0.7.1
-
-#;  platform_machine=='armv7l' or platform_machine=='armv6l'
-smbus2==0.4.2
-stringify==0.1.1
-#picamera==1.13
+setuptools==65.6.3
+smbus2==0.3.0
