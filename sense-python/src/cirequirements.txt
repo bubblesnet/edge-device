@@ -1,0 +1,7 @@
+Adafruit_Blinka==7.2.1
+Adafruit_CircuitPython_BusDevice==5.2.3
+Adafruit_PlatformDetect==3.22.1
+protobuf==4.21.12
+RPi.bme280==0.2.4
+setuptools==65.6.3
+smbus2==0.3.0

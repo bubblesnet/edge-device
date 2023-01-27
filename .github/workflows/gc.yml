@@ -43,7 +43,7 @@ jobs:
       - name: Setup Sense-Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.9.2
 
       - name: Test sense-python
         working-directory: sense-python/src
