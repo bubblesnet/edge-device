@@ -1,4 +1,5 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-buster-run
+# FROM balenalib/%%BALENA_MACHINE_NAME%%-golang-buster-run
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.18.10-buster-run
 
 RUN install_packages dbus systemd avahi-daemon avahi-utils libnss-mdns vim
 

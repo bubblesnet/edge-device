@@ -639,6 +639,7 @@ func GetConfigFromServer(storeMountPoint string, relativePath string, fileName s
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Printf("post error %#v\n", err)
+		fmt.Printf("Check controller hostname/IP: %s and API port on controller: %d\n", MySite.ControllerAPIHostName, MySite.ControllerAPIPort)
 		return err
 	}
 	defer func(Body io.ReadCloser) {

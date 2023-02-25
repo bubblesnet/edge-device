@@ -4,7 +4,7 @@
 # upgraded from buster/3.7 to sid/3.11 under extreme duress when grpc (i think) changed out from under us
 # This is the third time this has happened which probably means I have a more fundamental build issue
 # FROM balenalib/%%BALENA_MACHINE_NAME%%-bullseye-run
-FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.14-bullseye-run
+FROM balenalib/%%BALENA_MACHINE_NAME%%-golang:1.18.10-bullseye-run
 
 # apt update - don't know why I have to do this, but I do.
 RUN apt update
@@ -60,5 +60,5 @@ CMD ["rm", "-rf", "/usr/local/lib/python3.11/site-packages/google/protobuf"]
 CMD ["pip3", "install", "protobuf==4.21.12"]
 
 # When debugging, uncomment the bash line, comment the "python" line
-# CMD ["bash"]
-CMD ["python3", "src/main.py"]
+CMD ["bash"]
+# CMD ["python3", "src/main.py"]

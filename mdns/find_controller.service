@@ -2,7 +2,7 @@
 Description=Find the bubblesnet-controller device on mdns
 
 [Service]
-ExecStart=/bin/bash -c "/usr/bin/avahi-resolve -n -4 bubblesnet-controller.local > /config/bubblesnet-controller.txt"
+ExecStart=/bin/bash -c "/usr/bin/avahi-resolve -n -4 taffy3.local > /config/bubblesnet-controller.txt"
 
 [Install]
 WantedBy=basic.target
