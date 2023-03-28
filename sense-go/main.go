@@ -477,6 +477,7 @@ func reportVersion() {
 }
 
 func initGlobals(testing bool) {
+	fmt.Printf("initGlobals\n")
 	globals.BubblesnetVersionMajorString = BubblesnetVersionMajorString
 	globals.BubblesnetVersionMinorString = BubblesnetVersionMinorString
 	globals.BubblesnetVersionPatchString = BubblesnetVersionPatchString
@@ -700,12 +701,12 @@ func main() {
 }
 
 func testableSubmain(isUnitTest bool) {
-	fmt.Printf(globals.ContainerName)
+	fmt.Printf("testableSubmain %s\n", globals.ContainerName)
 	log.Infof(globals.ContainerName)
 
 	ipaddress, err := globals.FindController("/config/bubblesnet-controller.txt")
 	if err != nil {
-		fmt.Errorf("couldn't get bubblesnet-controller IP address %#v", err)
+		fmt.Printf("couldn't get bubblesnet-controller IP address %#v", err)
 		SleepBeforeExit()
 		os.Exit(221)
 	}

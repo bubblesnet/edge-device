@@ -249,7 +249,7 @@ def append_bme280_pressure(i2cbus, msg, sensor_name, measurement_name, address):
         msg[direction_name] = direction
         lastPressure = data.humidity
     except Exception as ee:
-        logging.error(f'bme280 error {ee}')
+        logging.error(f'bme280 error for device at {address} error is {ee}')
         logging.debug(traceback.format_exc())
 
 

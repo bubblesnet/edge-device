@@ -464,7 +464,7 @@ func ValidateConfigured(situation string) (err error) {
 		}
 		return errors.New("bad MyStation.StationID")
 	}
-	if MyStation.EnclosureType != "CABINET" && MyStation.EnclosureType != "TENT" {
+	if strings.ToUpper(MyStation.EnclosureType) != "CABINET" && strings.ToUpper(MyStation.EnclosureType) != "TENT" {
 		fmt.Printf("bad enclosuretype %s\n", MyStation.EnclosureType)
 		fmt.Printf("ValidateConfigured failed at %s. Sleeping for 1 minute to allow devops container intervention before container restart", situation)
 		if situation != "test" {

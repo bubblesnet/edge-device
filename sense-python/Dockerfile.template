@@ -60,5 +60,5 @@ CMD ["rm", "-rf", "/usr/local/lib/python3.11/site-packages/google/protobuf"]
 CMD ["pip3", "install", "protobuf==4.21.12"]
 
 # When debugging, uncomment the bash line, comment the "python" line
-CMD ["bash"]
-# CMD ["python3", "src/main.py"]
+# CMD ["bash"]
+CMD ["python3", "src/main.py"]
