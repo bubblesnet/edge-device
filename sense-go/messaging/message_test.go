@@ -54,7 +54,7 @@ func TestNewADCSensorMessage(t *testing.T) {
 				SiteId:    1,
 				StationId: 1,
 
-				SampleTimestamp:   getNowMillis(),
+				SampleTimestamp:   GetNowMillis(),
 				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 				MeasurementName:   "",
 				MessageType:       globals.Message_type_measurement,
@@ -104,7 +104,7 @@ func TestNewDistanceSensorMessage(t *testing.T) {
 				SiteId:            1,
 				StationId:         1,
 				DeviceId:          globals.MyDevice.DeviceID,
-				SampleTimestamp:   getNowMillis(),
+				SampleTimestamp:   GetNowMillis(),
 				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 				MessageType:       globals.Message_type_measurement,
 				ExecutableVersion: "..  ",
@@ -151,7 +151,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 				SiteId:            1,
 				StationId:         1,
 				DeviceId:          globals.MyDevice.DeviceID,
-				SampleTimestamp:   getNowMillis(),
+				SampleTimestamp:   GetNowMillis(),
 				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 				MessageType:       globals.Message_type_measurement,
 				ExecutableVersion: "..  ",
@@ -166,7 +166,7 @@ func TestNewGenericSensorMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.wantPmsg.SampleTimestamp = getNowMillis()
+			tt.wantPmsg.SampleTimestamp = GetNowMillis()
 			gotPmsg := NewGenericSensorMessage(tt.args.sensor_name, tt.args.measurement_name, tt.args.value, tt.args.units, tt.args.direction)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
@@ -205,7 +205,7 @@ func TestNewTamperSensorMessage(t *testing.T) {
 				SiteId:            1,
 				StationId:         1,
 				DeviceId:          globals.MyDevice.DeviceID,
-				SampleTimestamp:   getNowMillis(),
+				SampleTimestamp:   GetNowMillis(),
 				ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 				MessageType:       "event",
 				ExecutableVersion: "..  ",
@@ -223,7 +223,7 @@ func TestNewTamperSensorMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.wantPmsg.SampleTimestamp = getNowMillis()
+			tt.wantPmsg.SampleTimestamp = GetNowMillis()
 			gotPmsg := NewTamperSensorMessage(tt.args.sensor_name, tt.args.value, tt.args.units, tt.args.direction, tt.args.moveX, tt.args.moveY, tt.args.moveZ)
 			tt.wantPmsg.SampleTimestamp = gotPmsg.SampleTimestamp
 			if !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
@@ -243,8 +243,8 @@ func Test_getNowMillis(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getNowMillis(); got != tt.want {
-				t.Errorf("getNowMillis() = %#v, want %#v", got, tt.want)
+			if got := GetNowMillis(); got != tt.want {
+				t.Errorf("GetNowMillis() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -258,7 +258,7 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 		StationId:         1,
 		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 		ExecutableVersion: "..  ",
-		EventTimestamp:    getNowMillis(),
+		EventTimestamp:    GetNowMillis(),
 		MessageType:       "switch_event",
 		SwitchName:        "testswitch",
 		On:                true,
@@ -275,7 +275,7 @@ func TestNewSwitchStatusChangeMessage(t *testing.T) {
 		{name: "happy", args: args{switch_name: "testswitch", on: true}, wantPmsg: &testmsg},
 	}
 	for _, tt := range tests {
-		testmsg.EventTimestamp = getNowMillis()
+		testmsg.EventTimestamp = GetNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewSwitchStatusChangeMessage(tt.args.switch_name, tt.args.on); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				// This timestamp hack will cause false negatives if timestamp error coincides with other error
@@ -323,7 +323,7 @@ func TestNewVOCSensorMessage(t *testing.T) {
 			direction: globals.Directions_none}, wantPmsg: &testmsg},
 	}
 	for _, tt := range tests {
-		testmsg.SampleTimestamp = getNowMillis()
+		testmsg.SampleTimestamp = GetNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewVOCSensorMessage(tt.args.sensor_name, tt.args.measurement_name,
 				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
@@ -369,7 +369,7 @@ func TestNewCO2SensorMessage(t *testing.T) {
 			direction: globals.Directions_none}, wantPmsg: &testmsg},
 	}
 	for _, tt := range tests {
-		testmsg.SampleTimestamp = getNowMillis()
+		testmsg.SampleTimestamp = GetNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewCO2SensorMessage(tt.args.sensor_name, tt.args.measurement_name,
 				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
@@ -405,6 +405,8 @@ func TestNewCCS811CurrentMessage(t *testing.T) {
 		direction        string
 	}
 
+	sampleTimestamp := GetNowMillis()
+
 	tests := []struct {
 		name     string
 		args     args
@@ -416,10 +418,10 @@ func TestNewCCS811CurrentMessage(t *testing.T) {
 			direction: globals.Directions_none}, wantPmsg: &testmsg},
 	}
 	for _, tt := range tests {
-		testmsg.SampleTimestamp = getNowMillis()
+		testmsg.SampleTimestamp = GetNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewCCS811CurrentMessage(tt.args.sensor_name, tt.args.measurement_name,
-				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
+				tt.args.value, tt.args.units, tt.args.direction, sampleTimestamp); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				t.Errorf("NewCCS811CurrentMessage() = got  %#v", gotPmsg)
 				t.Errorf("NewCCS811CurrentMessage() = want %#v", tt.wantPmsg)
 			}
@@ -463,7 +465,7 @@ func TestNewCCS811VoltageMessage(t *testing.T) {
 			direction: globals.Directions_none}, wantPmsg: &testmsg},
 	}
 	for _, tt := range tests {
-		testmsg.SampleTimestamp = getNowMillis()
+		testmsg.SampleTimestamp = GetNowMillis()
 		t.Run(tt.name, func(t *testing.T) {
 			if gotPmsg := NewCCS811VoltageMessage(tt.args.sensor_name, tt.args.measurement_name,
 				tt.args.value, tt.args.units, tt.args.direction); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
@@ -482,7 +484,7 @@ func TestNewPictureTakenMessage(t *testing.T) {
 		DeviceId:          70000008,
 		ContainerName:     globals.CONTAINER_NAME_SENSE_GO,
 		ExecutableVersion: "..  ",
-		EventTimestamp:    getNowMillis(),
+		EventTimestamp:    GetNowMillis(),
 		MessageType:       "picture_event",
 		PictureFilename:   "blah.jpg",
 	}
@@ -494,7 +496,7 @@ func TestNewPictureTakenMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testmsg.EventTimestamp = getNowMillis()
+			testmsg.EventTimestamp = GetNowMillis()
 			if gotPmsg := NewPictureTakenMessage("blah.jpg", 0); !reflect.DeepEqual(gotPmsg, tt.wantPmsg) {
 				t.Errorf("NewPictureTakenMessage() got  %#v", gotPmsg)
 				t.Errorf("NewPictureTakenMessage() want %#v", tt.wantPmsg)

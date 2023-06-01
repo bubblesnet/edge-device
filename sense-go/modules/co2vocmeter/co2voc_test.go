@@ -81,18 +81,18 @@ func Test_getCCCS811SensorMessages(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCo2msg, gotVocmsg, gotRawcurrentmsg, gotRawvoltagemsg := getCCCS811SensorMessages(tt.args.sensorValues)
+			gotCo2msg, gotVocmsg, gotRawcurrentmsg, gotRawvoltagemsg := getCCS811SensorMessages(tt.args.sensorValues)
 			if !reflect.DeepEqual(gotCo2msg, tt.wantCo2msg) {
-				t.Errorf("getCCCS811SensorMessages() gotCo2msg = %v, want %v", gotCo2msg, tt.wantCo2msg)
+				t.Errorf("getCCS811SensorMessages() gotCo2msg = %v, want %v", gotCo2msg, tt.wantCo2msg)
 			}
 			if !reflect.DeepEqual(gotVocmsg, tt.wantVocmsg) {
-				t.Errorf("getCCCS811SensorMessages() gotVocmsg = %v, want %v", gotVocmsg, tt.wantVocmsg)
+				t.Errorf("getCCS811SensorMessages() gotVocmsg = %v, want %v", gotVocmsg, tt.wantVocmsg)
 			}
 			if !reflect.DeepEqual(gotRawcurrentmsg, tt.wantRawcurrentmsg) {
-				t.Errorf("getCCCS811SensorMessages() gotRawcurrentmsg = %v, want %v", gotRawcurrentmsg, tt.wantRawcurrentmsg)
+				t.Errorf("getCCS811SensorMessages() gotRawcurrentmsg = %v, want %v", gotRawcurrentmsg, tt.wantRawcurrentmsg)
 			}
 			if !reflect.DeepEqual(gotRawvoltagemsg, tt.wantRawvoltagemsg) {
-				t.Errorf("getCCCS811SensorMessages() gotRawvoltagemsg = %v, want %v", gotRawvoltagemsg, tt.wantRawvoltagemsg)
+				t.Errorf("getCCS811SensorMessages() gotRawvoltagemsg = %v, want %v", gotRawvoltagemsg, tt.wantRawvoltagemsg)
 			}
 		})
 	}

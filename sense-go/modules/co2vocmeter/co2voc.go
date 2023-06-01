@@ -278,7 +278,7 @@ func ReadCO2VOC(ptemp *float32, phumidity *float32) {
 
 				typeId := globals.Grpc_message_typeid_sensor
 
-				co2m, vocm, curm, voltm := getCCCS811SensorMessages(sensorValues)
+				co2m, vocm, curm, voltm := getCCS811SensorMessages(sensorValues)
 				log.Infof("ccs811: co2m = %#v", co2m)
 				bytearray, err := json.Marshal(co2m)
 				if err != nil {
@@ -442,13 +442,13 @@ func reportStatus(status byte) (statstring string) {
 	return statstring
 }
 
-func getCCCS811SensorMessages(sensorValues ccs811.SensorValues) (co2msg *messaging.CO2SensorMessage, vocmsg *messaging.VOCSensorMessage,
+func getCCS811SensorMessages(sensorValues ccs811.SensorValues) (co2msg *messaging.CO2SensorMessage, vocmsg *messaging.VOCSensorMessage,
 	rawcurrentmsg *messaging.CCS811CurrentMessage, rawvoltagemsg *messaging.CCS811VoltageMessage) {
 
 	co2msg = messaging.NewCO2SensorMessage("co2_sensor", "co2", float64(sensorValues.ECO2), "ppm", "")
 	vocmsg = messaging.NewVOCSensorMessage("voc_sensor", "voc", float64(sensorValues.VOC), "ppb", "")
 	rawcurrentmsg = messaging.NewCCS811CurrentMessage("ccs811_current_sensor", "ccs811_rawcurrent",
-		float64(sensorValues.RawDataCurrent), "ua", "")
+		float64(sensorValues.RawDataCurrent), "ua", "", messaging.GetNowMillis())
 	rawvoltagemsg = messaging.NewCCS811VoltageMessage("ccs811_voltage_sensor", "ccs811_rawvoltage",
 		float64(sensorValues.RawDataVoltage), "uv", "")
 
