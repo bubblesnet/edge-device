@@ -45,7 +45,7 @@ import (
 )
 
 func SendPictureTakenEvent(PictureFilename string, PictureDatetimeMillis int64) {
-	dm := messaging.NewPictureTakenMessage(PictureFilename, PictureDatetimeMillis)
+	dm := messaging.NewPictureTakenMessage(PictureFilename, PictureDatetimeMillis, messaging.GetNowMillis())
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: globals.Grpc_message_typeid_picture, Data: string(bytearray)}
 	_, err = globals.Client.StoreAndForward(context.Background(), &message)

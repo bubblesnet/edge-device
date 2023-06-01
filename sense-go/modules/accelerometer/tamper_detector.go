@@ -80,7 +80,7 @@ func (r *RealTamperDetector) RunTamperDetector(onceOnly bool) {
 				if xmove > globals.MyStation.TamperSpec.Xmove || ymove > globals.MyStation.TamperSpec.Ymove || zmove > globals.MyStation.TamperSpec.Zmove {
 					log.Infof("adxl345: new tamper message !! x: %.3f | y: %.3f | z: %.3f ", xmove, ymove, zmove)
 					var tamperMessage = messaging.NewTamperSensorMessage(globals.Sensor_name_tamper_sensor,
-						0.0, "", "", xmove, ymove, zmove)
+						0.0, "", "", xmove, ymove, zmove, messaging.GetNowMillis())
 					bytearray, err := json.Marshal(tamperMessage)
 					if err != nil {
 						fmt.Println(err)

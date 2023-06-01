@@ -71,7 +71,7 @@ func GetPowerstripService() PowerstripService {
 
 func (r *RealPowerStrip) SendSwitchStatusChangeEvent(switch_name string, on bool, sequence int32) {
 	log.Infof("Reporting switch %s status %#v", switch_name, on)
-	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on)
+	dm := messaging.NewSwitchStatusChangeMessage(switch_name, on, messaging.GetNowMillis())
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: sequence, TypeId: globals.Grpc_message_typeid_switch, Data: string(bytearray)}
 	if globals.Client == nil {

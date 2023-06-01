@@ -445,12 +445,12 @@ func reportStatus(status byte) (statstring string) {
 func getCCS811SensorMessages(sensorValues ccs811.SensorValues) (co2msg *messaging.CO2SensorMessage, vocmsg *messaging.VOCSensorMessage,
 	rawcurrentmsg *messaging.CCS811CurrentMessage, rawvoltagemsg *messaging.CCS811VoltageMessage) {
 
-	co2msg = messaging.NewCO2SensorMessage("co2_sensor", "co2", float64(sensorValues.ECO2), "ppm", "")
-	vocmsg = messaging.NewVOCSensorMessage("voc_sensor", "voc", float64(sensorValues.VOC), "ppb", "")
+	co2msg = messaging.NewCO2SensorMessage("co2_sensor", "co2", float64(sensorValues.ECO2), "ppm", "", messaging.GetNowMillis())
+	vocmsg = messaging.NewVOCSensorMessage("voc_sensor", "voc", float64(sensorValues.VOC), "ppb", "", messaging.GetNowMillis())
 	rawcurrentmsg = messaging.NewCCS811CurrentMessage("ccs811_current_sensor", "ccs811_rawcurrent",
 		float64(sensorValues.RawDataCurrent), "ua", "", messaging.GetNowMillis())
 	rawvoltagemsg = messaging.NewCCS811VoltageMessage("ccs811_voltage_sensor", "ccs811_rawvoltage",
-		float64(sensorValues.RawDataVoltage), "uv", "")
+		float64(sensorValues.RawDataVoltage), "uv", "", messaging.GetNowMillis())
 
 	return co2msg, vocmsg, rawcurrentmsg, rawvoltagemsg
 }

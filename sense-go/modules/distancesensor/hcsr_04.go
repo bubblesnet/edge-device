@@ -76,7 +76,7 @@ func RunDistanceWatcher1(once_only bool, isUnitTest bool) {
 		}
 		lastDistance = mydistance
 		//		log.Debugf("%.2f inches %.2f distance %.2f nanos %.2f cm\n", distance/2.54, distance, nanos, mydistance))
-		dm := messaging.NewDistanceSensorMessage(globals.Sensor_name_height_sensor, globals.Measurement_name_plant_height, mydistance, globals.Distance_units_centimeters, direction, mydistance, mydistance/2.54)
+		dm := messaging.NewDistanceSensorMessage(globals.Sensor_name_height_sensor, globals.Measurement_name_plant_height, mydistance, globals.Distance_units_centimeters, direction, mydistance, mydistance/2.54, messaging.GetNowMillis())
 		bytearray, err := json.Marshal(dm)
 		if err == nil {
 			log.Debugf("sending distance msg %s?", string(bytearray))

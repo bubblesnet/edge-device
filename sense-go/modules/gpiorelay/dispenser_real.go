@@ -107,7 +107,7 @@ func GetDispenserService() DispenserService {
 
 func (r *RealDispenser) SendDispenserStatusChangeEvent(dispenser_name string, on bool, sequence int32) {
 	log.Infof("Reporting switch %s status %#v", dispenser_name, on)
-	dm := messaging.NewDispenserStatusChangeMessage(dispenser_name, on)
+	dm := messaging.NewDispenserStatusChangeMessage(dispenser_name, on, messaging.GetNowMillis())
 	bytearray, err := json.Marshal(dm)
 	message := pb.SensorRequest{Sequence: sequence, TypeId: globals.Grpc_message_typeid_dispenser, Data: string(bytearray)}
 	if globals.Client == nil {
