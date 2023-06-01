@@ -179,7 +179,7 @@ func getADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex int, chan
 	ads := messaging.NewADCSensorMessage(sensorName, sensorName,
 		adcMessage.ChannelValues[channelIndex].Voltage, globals.UNIT_VOLTS,
 		direction,
-		adcMessage.ChannelValues[channelIndex].ChannelNumber, adcMessage.ChannelValues[channelIndex].Gain, adcMessage.ChannelValues[channelIndex].Rate)
+		adcMessage.ChannelValues[channelIndex].ChannelNumber, adcMessage.ChannelValues[channelIndex].Gain, adcMessage.ChannelValues[channelIndex].Rate, messaging.GetNowMillis())
 	bytearray, err := json.Marshal(ads)
 	if err != nil {
 		log.Errorf("ads1115: loopforever error %#v", err)
@@ -215,7 +215,7 @@ func getTranslatedADCSensorMessageForChannel(adcMessage *ADCMessage, moduleIndex
 			globals.LastWaterLevel = float32(measurementValue)
 
 			ads := messaging.NewGenericSensorMessage(sensorName, measurementName,
-				measurementValue, measurementUnits, direction)
+				measurementValue, measurementUnits, direction, messaging.GetNowMillis())
 			bytearray, err := json.Marshal(ads)
 			if err != nil {
 				log.Errorf("ads1115: loopforever error %#v", err)

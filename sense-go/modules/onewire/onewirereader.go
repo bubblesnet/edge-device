@@ -79,7 +79,7 @@ func ReadOneWire() {
 				}
 				globals.LastWaterTemp = float32(fahrenheit)
 
-				phm := messaging.NewGenericSensorMessage(globals.Sensor_name_thermometer_water, globals.Measurement_name_temp_water, fahrenheit, globals.Temperature_units_fahrenheit, direction)
+				phm := messaging.NewGenericSensorMessage(globals.Sensor_name_thermometer_water, globals.Measurement_name_temp_water, fahrenheit, globals.Temperature_units_fahrenheit, direction, messaging.GetNowMillis())
 				bytearray, err := json.Marshal(phm)
 				message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: globals.Grpc_message_typeid_sensor, Data: string(bytearray)}
 				if globals.Client != nil {

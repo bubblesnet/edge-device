@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-func getNowMillis() int64 {
+func GetNowMillis() int64 {
 	now := time.Now()
 	nanos := now.UnixNano()
 	millis := nanos / 1000000
@@ -226,7 +226,7 @@ type PictureTakenMessage struct {
 	MessageType           string `json:"message_type"`
 }
 
-func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStatusChangeMessage) {
+func NewSwitchStatusChangeMessage(switch_name string, on bool, sampleTimeStamp int64) (pmsg *SwitchStatusChangeMessage) {
 	msg := SwitchStatusChangeMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -235,7 +235,7 @@ func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStat
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		EventTimestamp: getNowMillis(),
+		EventTimestamp: sampleTimeStamp,
 		MessageType:    "switch_event",
 		SwitchName:     switch_name,
 		On:             on}
@@ -243,7 +243,7 @@ func NewSwitchStatusChangeMessage(switch_name string, on bool) (pmsg *SwitchStat
 
 }
 
-func NewDispenserStatusChangeMessage(dispenser_name string, on bool) (pmsg *DispenserStatusChangeMessage) {
+func NewDispenserStatusChangeMessage(dispenser_name string, on bool, sampleTimestamp int64) (pmsg *DispenserStatusChangeMessage) {
 	msg := DispenserStatusChangeMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -252,7 +252,7 @@ func NewDispenserStatusChangeMessage(dispenser_name string, on bool) (pmsg *Disp
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		EventTimestamp: getNowMillis(),
+		EventTimestamp: sampleTimestamp,
 		MessageType:    "dispenser_event",
 		DispenserName:  dispenser_name,
 		On:             on}
@@ -260,7 +260,7 @@ func NewDispenserStatusChangeMessage(dispenser_name string, on bool) (pmsg *Disp
 
 }
 
-func NewPictureTakenMessage(PictureFilename string, PictureDatetimeMillis int64) (pmsg *PictureTakenMessage) {
+func NewPictureTakenMessage(PictureFilename string, PictureDatetimeMillis int64, sampleTimestamp int64) (pmsg *PictureTakenMessage) {
 	msg := PictureTakenMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -269,7 +269,7 @@ func NewPictureTakenMessage(PictureFilename string, PictureDatetimeMillis int64)
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		EventTimestamp:        getNowMillis(),
+		EventTimestamp:        sampleTimestamp,
 		MessageType:           "picture_event",
 		PictureFilename:       PictureFilename,
 		PictureDateTimeMillis: PictureDatetimeMillis,
@@ -278,7 +278,7 @@ func NewPictureTakenMessage(PictureFilename string, PictureDatetimeMillis int64)
 
 }
 
-func NewVOCSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *VOCSensorMessage) {
+func NewVOCSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, sampleTimestamp int64) (pmsg *VOCSensorMessage) {
 	msg := VOCSensorMessage{
 		DeviceId:        globals.MyDevice.DeviceID,
 		StationId:       globals.MyStation.StationID,
@@ -289,7 +289,7 @@ func NewVOCSensorMessage(sensor_name string, measurement_name string, value floa
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
 		SensorName:      sensor_name,
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimestamp,
 		MessageType:     globals.Message_type_measurement,
 		Value:           value,
 		FloatValue:      value,
@@ -300,7 +300,7 @@ func NewVOCSensorMessage(sensor_name string, measurement_name string, value floa
 	return &msg
 }
 
-func NewCO2SensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *CO2SensorMessage) {
+func NewCO2SensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, sampleTimestamp int64) (pmsg *CO2SensorMessage) {
 	msg := CO2SensorMessage{
 		DeviceId:        globals.MyDevice.DeviceID,
 		StationId:       globals.MyStation.StationID,
@@ -311,7 +311,7 @@ func NewCO2SensorMessage(sensor_name string, measurement_name string, value floa
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
 		SensorName:      sensor_name,
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimestamp,
 		MessageType:     globals.Message_type_measurement,
 		Value:           value,
 		FloatValue:      value,
@@ -322,7 +322,7 @@ func NewCO2SensorMessage(sensor_name string, measurement_name string, value floa
 	return &msg
 }
 
-func NewCCS811CurrentMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *CCS811CurrentMessage) {
+func NewCCS811CurrentMessage(sensor_name string, measurement_name string, value float64, units string, direction string, sampleTimeStamp int64) (pmsg *CCS811CurrentMessage) {
 	msg := CCS811CurrentMessage{
 		DeviceId:        globals.MyDevice.DeviceID,
 		StationId:       globals.MyStation.StationID,
@@ -333,7 +333,7 @@ func NewCCS811CurrentMessage(sensor_name string, measurement_name string, value 
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
 		SensorName:      sensor_name,
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimeStamp,
 		MessageType:     globals.Message_type_measurement,
 		Value:           value,
 		FloatValue:      value,
@@ -343,7 +343,7 @@ func NewCCS811CurrentMessage(sensor_name string, measurement_name string, value 
 	return &msg
 }
 
-func NewCCS811VoltageMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *CCS811VoltageMessage) {
+func NewCCS811VoltageMessage(sensor_name string, measurement_name string, value float64, units string, direction string, sampleTimeStamp int64) (pmsg *CCS811VoltageMessage) {
 	msg := CCS811VoltageMessage{
 		DeviceId:        globals.MyDevice.DeviceID,
 		StationId:       globals.MyStation.StationID,
@@ -354,7 +354,7 @@ func NewCCS811VoltageMessage(sensor_name string, measurement_name string, value 
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
 		SensorName:      sensor_name,
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimeStamp,
 		MessageType:     globals.Message_type_measurement,
 		Value:           value,
 		FloatValue:      value,
@@ -364,7 +364,7 @@ func NewCCS811VoltageMessage(sensor_name string, measurement_name string, value 
 	return &msg
 }
 
-func NewGenericSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string) (pmsg *GenericSensorMessage) {
+func NewGenericSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, sampleTimestamp int64) (pmsg *GenericSensorMessage) {
 	msg := GenericSensorMessage{
 		DeviceId:        globals.MyDevice.DeviceID,
 		StationId:       globals.MyStation.StationID,
@@ -375,7 +375,7 @@ func NewGenericSensorMessage(sensor_name string, measurement_name string, value 
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
 		SensorName:      sensor_name,
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimestamp,
 		MessageType:     globals.Message_type_measurement,
 		Value:           value,
 		FloatValue:      value,
@@ -386,7 +386,7 @@ func NewGenericSensorMessage(sensor_name string, measurement_name string, value 
 	return &msg
 }
 
-func NewADCSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, channel int, gain int, rate int) (pmsg *ADCSensorMessage) {
+func NewADCSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, channel int, gain int, rate int, sampleTimestamp int64) (pmsg *ADCSensorMessage) {
 	msg := ADCSensorMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -395,7 +395,7 @@ func NewADCSensorMessage(sensor_name string, measurement_name string, value floa
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimestamp,
 		MessageType:     globals.Message_type_measurement,
 		SensorName:      sensor_name,
 		MeasurementName: measurement_name,
@@ -411,7 +411,7 @@ func NewADCSensorMessage(sensor_name string, measurement_name string, value floa
 	return &msg
 }
 
-func NewDistanceSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, distanceCm float64, distanceIn float64) (pmsg *DistanceSensorMessage) {
+func NewDistanceSensorMessage(sensor_name string, measurement_name string, value float64, units string, direction string, distanceCm float64, distanceIn float64, sampleTimestamp int64) (pmsg *DistanceSensorMessage) {
 	msg := DistanceSensorMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -420,7 +420,7 @@ func NewDistanceSensorMessage(sensor_name string, measurement_name string, value
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimestamp,
 		MessageType:     globals.Message_type_measurement,
 		SensorName:      sensor_name,
 		MeasurementName: measurement_name,
@@ -435,7 +435,7 @@ func NewDistanceSensorMessage(sensor_name string, measurement_name string, value
 	return &msg
 }
 
-func NewTamperSensorMessage(sensor_name string, value float64, units string, direction string, moveX float64, moveY float64, moveZ float64) (pmsg *TamperEventMessage) {
+func NewTamperSensorMessage(sensor_name string, value float64, units string, direction string, moveX float64, moveY float64, moveZ float64, sampleTimestamp int64) (pmsg *TamperEventMessage) {
 	msg := TamperEventMessage{
 		DeviceId:      globals.MyDevice.DeviceID,
 		StationId:     globals.MyStation.StationID,
@@ -444,7 +444,7 @@ func NewTamperSensorMessage(sensor_name string, value float64, units string, dir
 		ExecutableVersion: fmt.Sprintf("%s.%s.%s %s %s",
 			globals.BubblesnetVersionMajorString, globals.BubblesnetVersionMinorString,
 			globals.BubblesnetVersionPatchString, globals.BubblesnetBuildTimestamp, globals.BubblesnetGitHash),
-		SampleTimestamp: getNowMillis(),
+		SampleTimestamp: sampleTimestamp,
 		MessageType:     "event",
 		SensorName:      sensor_name,
 		MeasurementName: "tamper",

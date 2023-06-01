@@ -92,7 +92,7 @@ func ReadPh(once_only bool) error {
 				direction = globals.Directions_down
 			}
 			lastPh = ph
-			phm := messaging.NewGenericSensorMessage(globals.Sensor_name_root_ph_sensor, globals.Measurement_name_root_ph, ph, globals.Ph_units_default, direction)
+			phm := messaging.NewGenericSensorMessage(globals.Sensor_name_root_ph_sensor, globals.Measurement_name_root_ph, ph, globals.Ph_units_default, direction, messaging.GetNowMillis())
 			bytearray, err := json.Marshal(phm)
 			message := pb.SensorRequest{Sequence: globals.GetSequence(), TypeId: globals.Grpc_message_typeid_sensor, Data: string(bytearray)}
 			if globals.Client != nil {
