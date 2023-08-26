@@ -697,10 +697,10 @@ func pictureTaker(onceOnly bool) {
 			globals.MyDevice.TimeBetweenPicturesInSeconds = 600
 		}
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
-			log.Info("pictureTaker - GERMINATION stage turning light off")
+			log.Info("pictureTaker - GERMINATION stage turning light off ")
 			if turned_light_on {
 				if turned_light_off := Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
-					log.Info("Light on HEATER outlet was used, then turned OFF")
+					log.Info("Light on HEATER outlet was used, then turned OFF ")
 				}
 			}
 			time.Sleep(time.Duration(30) * time.Minute)
