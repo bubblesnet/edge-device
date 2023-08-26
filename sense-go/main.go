@@ -681,13 +681,32 @@ func startGoRoutines(onceOnly bool) {
 }
 
 func pictureTaker(onceOnly bool) {
+	turned_light_on := false
+	Powerstrip := gpiorelay.GetPowerstripService()
+
 	for {
+		if globals.MyStation.CurrentStage == globals.GERMINATION {
+			log.Info("pictureTaker - GERMINATION stage turning light on")
+			if turned_light_on = Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_on == true {
+				log.Info("Light on HEATER outlet was OFF, turning ON")
+			}
+		}
 		camera.TakeAPicture()
 		if globals.MyDevice.TimeBetweenPicturesInSeconds <= 0 {
 			log.Errorf("globals.MyDevice.TimeBetweenPicturesInSeconds is zero, resetting to 10 minutes")
 			globals.MyDevice.TimeBetweenPicturesInSeconds = 600
 		}
-		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenPicturesInSeconds) * time.Second)
+		if globals.MyStation.CurrentStage == globals.GERMINATION {
+			log.Info("pictureTaker - GERMINATION stage turning light off ")
+			if turned_light_on {
+				if turned_light_off := Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
+					log.Info("Light on HEATER outlet was used, then turned OFF ")
+				}
+			}
+			time.Sleep(time.Duration(30) * time.Minute)
+		} else {
+			time.Sleep(time.Duration(globals.MyDevice.TimeBetweenPicturesInSeconds) * time.Second)
+		}
 		if onceOnly {
 			break
 		}
