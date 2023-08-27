@@ -160,7 +160,7 @@ func processCommand(msg *stomp.Message, Powerstrip gpiorelay.PowerstripService) 
 		if globals.MyDevice.Camera.PiCamera == false {
 			log.Infof("No camera configured, skipping picture")
 		} else {
-			log.Infof("switch calling takeAPicture")
+			log.Infof("UI Command processor calling takeAPicture")
 			camera.TakeAPicture()
 		}
 		break
@@ -509,7 +509,7 @@ func initGlobals(testing bool) {
 	reportVersion()
 
 	log.Debug("debug")
-	log.Info("automation: info")
+	log.Info("info")
 	log.Notice("notice")
 	log.Warn("warn")
 	log.Error("error")
@@ -685,6 +685,7 @@ func pictureTaker(onceOnly bool) {
 	Powerstrip := gpiorelay.GetPowerstripService()
 
 	for {
+		fmt.Printf("pictureTaker currentStage == %s", globals.MyStation.CurrentStage)
 		log.Infof("pictureTaker currentStage == %s", globals.MyStation.CurrentStage)
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
 			log.Info("pictureTaker - GERMINATION stage turning light on")
