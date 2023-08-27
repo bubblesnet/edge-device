@@ -685,7 +685,6 @@ func pictureTaker(onceOnly bool) {
 	Powerstrip := gpiorelay.GetPowerstripService()
 
 	for {
-		fmt.Printf("pictureTaker currentStage == %s", globals.MyStation.CurrentStage)
 		log.Infof("pictureTaker currentStage == %s", globals.MyStation.CurrentStage)
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
 			log.Info("pictureTaker - GERMINATION stage turning light on")
@@ -701,7 +700,7 @@ func pictureTaker(onceOnly bool) {
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
 			log.Info("pictureTaker - GERMINATION stage turning light off ")
 			if turned_light_on {
-				if turned_light_off := Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
+				if turned_light_off := Powerstrip.TurnOffOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
 					log.Info("pictureTaker Light on HEATER outlet was used, then turned OFF ")
 				}
 			}
