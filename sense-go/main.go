@@ -689,7 +689,7 @@ func pictureTaker(onceOnly bool) {
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
 			log.Info("pictureTaker - GERMINATION stage turning light on")
 			if turned_light_on = Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_on == true {
-				log.Info("pictureTaker Light on HEATER outlet was OFF, turning ON")
+				log.Infof("pictureTaker Light on HEATER outlet was OFF, turning ON - turned_light_on==%v", turned_light_on)
 			}
 		}
 		camera.TakeAPicture()
@@ -699,11 +699,11 @@ func pictureTaker(onceOnly bool) {
 		}
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
 			log.Info("pictureTaker - GERMINATION stage turning light off ")
-			if turned_light_on {
-				if turned_light_off := Powerstrip.TurnOffOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
-					log.Info("pictureTaker Light on HEATER outlet was used, then turned OFF ")
-				}
+			//			if turned_light_on {
+			if turned_light_off := Powerstrip.TurnOffOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
+				log.Infof("pictureTaker Light on HEATER outlet was used, then turned OFF - turned_light_off==%v", turned_light_off)
 			}
+			//			}
 			time.Sleep(time.Duration(30) * time.Minute)
 		} else {
 			time.Sleep(time.Duration(globals.MyDevice.TimeBetweenPicturesInSeconds) * time.Second)
