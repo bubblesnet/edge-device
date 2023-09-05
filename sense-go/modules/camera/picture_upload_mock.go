@@ -29,3 +29,11 @@ package camera
 
 func TakeAPicture() {
 }
+
+func WaitForLightToRegister() bool {
+	return true
+}
+
+func IsEnoughLightForCamera() bool {
+	return true
+}

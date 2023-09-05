@@ -38,10 +38,30 @@ import (
 	"time"
 )
 
+func IsEnoughLightForCamera() bool {
+	if globals.ExternalCurrentState.LightInternal < 2.0 {
+		return false
+	}
+	return true
+}
+
+func WaitForLightToRegister() bool {
+	for i := 0; i < 10; i++ {
+		if IsEnoughLightForCamera() {
+			if i > 0 {
+				return true
+			}
+			return false
+		}
+		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds/10) * time.Second)
+	}
+	return false
+}
+
 func TakeAPicture() {
 
 	// Is there any light?  - check the bh1750
-	if globals.MyStation.LightSensorInternal && globals.ExternalCurrentState.LightInternal < 2.0 {
+	if globals.MyStation.LightSensorInternal && !IsEnoughLightForCamera() {
 		log.Infof("LightInternal value is available AND too low to take picture %f", globals.ExternalCurrentState.LightInternal)
 		return
 	}
