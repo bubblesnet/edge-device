@@ -156,7 +156,7 @@ func (r *RealDispenser) TurnOffDispenserByName(MyStation *globals.Station, MyDev
 		}
 		if (*MyStation).Dispensers[i].DispenserName == dispenser_name {
 			log.Infof("RealDispenser.TurnOffDispenserByName  %s", dispenser_name)
-			log.Infof("RealDispenser.TurnOffDispenserByName offbyname found outlet %s at index %d BCM%d", dispenser_name, MyStation.Dispensers[i].Index, MyStation.Dispensers[i].BCMPinNumber)
+			log.Infof("RealDispenser.TurnOffDispenserByName offbyname found dispenser %s at index %d BCM%d", dispenser_name, MyStation.Dispensers[i].Index, MyStation.Dispensers[i].BCMPinNumber)
 			(*MyStation).Dispensers[i].OnOff = false
 			singletonDispenser.TurnOffDispenserByIndex((*MyStation).Dispensers[i].Index)
 			singletonDispenser.SendDispenserStatusChangeEvent(dispenser_name, false, globals.GetSequence())
@@ -212,7 +212,7 @@ func (r *RealDispenser) TurnOnDispenserByName(MyStation *globals.Station, MyDevi
 		}
 		if (*MyStation).Dispensers[i].DispenserName == dispenserName {
 			log.Infof("RealDispenser.TurnOnDispenserByName turnOnDispenserByName %s force %#v", dispenserName, force)
-			log.Infof("RealDispenser.TurnOnDispenserByName onbyname found outlet %s at index %d BCM%d", dispenserName, (*MyStation).Dispensers[i].Index, (*MyStation).Dispensers[i].BCMPinNumber)
+			log.Infof("RealDispenser.TurnOnDispenserByName onbyname found dispenser %s at index %d BCM%d", dispenserName, (*MyStation).Dispensers[i].Index, (*MyStation).Dispensers[i].BCMPinNumber)
 			(*MyStation).Dispensers[i].OnOff = true
 			singletonDispenser.TurnOnDispenserByIndex((*MyStation).Dispensers[i].Index)
 			singletonDispenser.SendDispenserStatusChangeEvent(dispenserName, true, globals.GetSequence())
@@ -231,7 +231,7 @@ func (r *RealDispenser) ReportAll(MyStation *globals.Station, MyDevice *globals.
 			log.Infof("RealDispenser.ReportAll Not my device %d != %d", (*MyStation).Dispensers[i].DeviceID, (*MyDevice).DeviceID)
 			continue
 		}
-		fmt.Printf("RealDispenser.ReportAll outlet %s\n", (*MyStation).Dispensers[i].DispenserName)
+		fmt.Printf("RealDispenser.ReportAll dispenser %s\n", (*MyStation).Dispensers[i].DispenserName)
 		singletonDispenser.SendDispenserStatusChangeEvent((*MyStation).Dispensers[i].DispenserName, (*MyStation).Dispensers[i].OnOff, globals.GetSequence())
 		if timeout > 0 {
 			time.Sleep(timeout)
@@ -242,7 +242,7 @@ func (r *RealDispenser) ReportAll(MyStation *globals.Station, MyDevice *globals.
 func (r *RealDispenser) TurnAllOff(MyStation *globals.Station, MyDevice *globals.EdgeDevice, timeout time.Duration) {
 	print("RealDispenser.TurnAllOff Toggling dispenserPins OFF")
 	for i := 0; i < len((*MyStation).Dispensers); i++ {
-		fmt.Printf("RealDispenser.TurnAllOff  Turning off outlet %s\n", (*MyStation).Dispensers[i].DispenserName)
+		fmt.Printf("RealDispenser.TurnAllOff  Turning off dispenser %s\n", (*MyStation).Dispensers[i].DispenserName)
 		(*MyStation).Dispensers[i].OnOff = false
 		singletonDispenser.TurnOffDispenserByIndex((*MyStation).Dispensers[i].Index)
 		//		fmt.Printf("TurnAllOff 1 after\n")
@@ -294,7 +294,7 @@ turnAllOn is a PRIVATE function so that it doesn't get called by anything other 
 func turnAllOn(MyStation *globals.Station, MyDevice *globals.EdgeDevice, timeout time.Duration) {
 	print("RealDispenser.turnAllOn Toggling dispenserPins ON")
 	for i := 0; i < len((*MyStation).Dispensers); i++ {
-		fmt.Printf("RealDispenser.turnAllOn  Turning on outlet %s\n", (*MyStation).Dispensers[i].DispenserName)
+		fmt.Printf("RealDispenser.turnAllOn  Turning on dispenser %s\n", (*MyStation).Dispensers[i].DispenserName)
 		(*MyStation).Dispensers[i].OnOff = true
 		singletonDispenser.TurnOnDispenserByIndex((*MyStation).Dispensers[i].Index)
 		//		fmt.Printf("turnAllOn 1 after\n")

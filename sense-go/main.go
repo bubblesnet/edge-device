@@ -691,6 +691,8 @@ func pictureTaker(onceOnly bool) {
 			if turned_light_on = Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_on == true {
 				log.Infof("pictureTaker Light on HEATER outlet was OFF, turning ON - turned_light_on==%v", turned_light_on)
 			}
+			light_switch_from_off_to_on := camera.WaitForLightToRegister()
+			log.Infof("pictureTaker light switchded from off to on == %+v", light_switch_from_off_to_on)
 		}
 		camera.TakeAPicture()
 		if globals.MyDevice.TimeBetweenPicturesInSeconds <= 0 {
