@@ -685,14 +685,17 @@ func pictureTaker(onceOnly bool) {
 	Powerstrip := gpiorelay.GetPowerstripService()
 
 	for {
+		snaptime := os.Getenv(globals.ENV_SLEEP_BETWEEN_GERMINATION_PICTURES)
+		naptime, _ := strconv.ParseInt(snaptime, 10, 32)
+
 		log.Infof("pictureTaker currentStage == %s", globals.MyStation.CurrentStage)
 		if globals.MyStation.CurrentStage == globals.GERMINATION {
-			log.Info("pictureTaker - GERMINATION stage turning light on")
+			log.Infof("pictureTaker - GERMINATION stage turning light %s on", globals.HEATER)
 			if turned_light_on = Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_on == true {
 				log.Infof("pictureTaker Light on HEATER outlet was OFF, turning ON - turned_light_on==%v", turned_light_on)
 			}
-			light_switch_from_off_to_on := camera.WaitForLightToRegister()
-			log.Infof("pictureTaker light switchded from off to on == %+v", light_switch_from_off_to_on)
+			lightSwitchFromOffToOn := camera.WaitForLightToRegister()
+			log.Infof("pictureTaker light switched from off to on == %+v", lightSwitchFromOffToOn)
 		}
 		camera.TakeAPicture()
 		if globals.MyDevice.TimeBetweenPicturesInSeconds <= 0 {
@@ -705,8 +708,11 @@ func pictureTaker(onceOnly bool) {
 			if turned_light_off := Powerstrip.TurnOffOutletByName(globals.MyDevice, globals.HEATER, true); turned_light_off == true {
 				log.Infof("pictureTaker Light on HEATER outlet was used, then turned OFF - turned_light_off==%v", turned_light_off)
 			}
+			Powerstrip.TurnOnOutletByName(globals.MyDevice, globals.WATERPUMP, true)
+			log.Info("HACK!!!! TURNING WATER_PUMP BACK ON")
 			//			}
-			time.Sleep(time.Duration(30) * time.Minute)
+			log.Infof("pictureTaker sleeping for %d seconds", naptime)
+			time.Sleep(time.Duration(naptime) * time.Second)
 		} else {
 			time.Sleep(time.Duration(globals.MyDevice.TimeBetweenPicturesInSeconds) * time.Second)
 		}

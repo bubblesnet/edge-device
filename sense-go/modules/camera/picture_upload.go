@@ -46,15 +46,21 @@ func IsEnoughLightForCamera() bool {
 }
 
 func WaitForLightToRegister() bool {
-	for i := 0; i < 10; i++ {
+	log.Debugf("pictureTaker WaitForLightToRegister")
+	// Wait through 3 sensor iterations if necessary
+	for i := 0; i < 3*10; i++ {
 		if IsEnoughLightForCamera() {
 			if i > 0 {
+				log.Infof("pictureTaker WaitForLightToRegister returns true for light off to on after %d waits", i)
 				return true
 			}
+			log.Debugf("pictureTaker WaitForLightToRegister returns false for light already on")
 			return false
 		}
+		log.Debugf("pictureTaker sleeping %d seconds for light to register", globals.MyDevice.TimeBetweenSensorPollingInSeconds/10)
 		time.Sleep(time.Duration(globals.MyDevice.TimeBetweenSensorPollingInSeconds/10) * time.Second)
 	}
+	log.Info("pictureTaker WaitForLightToRegister returns false for light STILL OFF!!!!")
 	return false
 }
 
