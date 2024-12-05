@@ -17,8 +17,7 @@ require (
 	github.com/stianeikeland/go-rpio v4.2.0+incompatible
 	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	gobot.io/x/gobot v1.14.0
-	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/net v0.7.0
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1 // indirect
